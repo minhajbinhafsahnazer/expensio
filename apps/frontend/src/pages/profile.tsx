@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, RefreshCw, Download, Palette, CheckCircle2, Database, AlertCircle, WifiOff, ChevronLeft } from "lucide-react";
+import { LogOut, RefreshCw, Download, Palette, CheckCircle2, Database, AlertCircle, WifiOff, ChevronLeft, Terminal, ChevronDown } from "lucide-react";
 import { useAuth } from "../core/providers/AuthContext";
 import { useSyncEngine } from "../core/sync/SyncEngine";
 import { queue } from "../core/sync/db";
@@ -10,15 +10,34 @@ import { AppShell, Container, Stack } from "@expenseflow/ui";
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { pendingCount, syncStatus, isOnline } = useSyncEngine();
+  const { pendingCount, syncStatus, isOnline, flush } = useSyncEngine();
   const queryClient = useQueryClient();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isManualSyncing, setIsManualSyncing] = useState(false);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
     }, 3000);
+  };
+
+  const handleManualSync = async () => {
+    if (!isOnline) {
+      showToast("Cannot sync while offline.");
+      return;
+    }
+    try {
+      setIsManualSyncing(true);
+      await flush();
+      showToast("Sync completed successfully.");
+    } catch (e) {
+      console.error(e);
+      showToast("Manual sync failed.");
+    } finally {
+      setIsManualSyncing(false);
+    }
   };
 
   const handleClearData = async () => {
@@ -224,14 +243,79 @@ export default function ProfilePage() {
               <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2 px-2">
                 Advanced
               </h3>
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col divide-y divide-slate-100">
+                {/* Manual Force Sync */}
+                <button
+                  onClick={handleManualSync}
+                  disabled={isManualSyncing || !isOnline}
+                  className="flex items-center justify-between p-4 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left disabled:opacity-50"
+                >
+                  <div className="flex items-center gap-3 text-slate-700 font-medium">
+                    <RefreshCw size={18} className={`text-slate-500 ${isManualSyncing ? "animate-spin" : ""}`} />
+                    <div>
+                      <div className="text-sm font-semibold text-slate-900">Force Resync Now</div>
+                      <div className="text-xs text-slate-500">Trigger immediate sync of pending transactions</div>
+                    </div>
+                  </div>
+                  <span className="text-xs font-semibold text-sky-600 bg-sky-50 px-2.5 py-1 rounded-full border border-sky-100">
+                    {isManualSyncing ? "Syncing..." : "Sync"}
+                  </span>
+                </button>
+
+                {/* System Diagnostics */}
+                <button
+                  onClick={() => setShowDiagnostics(!showDiagnostics)}
+                  className="flex items-center justify-between p-4 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left"
+                >
+                  <div className="flex items-center gap-3 text-slate-700 font-medium">
+                    <Terminal size={18} className="text-slate-500" />
+                    <div>
+                      <div className="text-sm font-semibold text-slate-900">System Diagnostics</div>
+                      <div className="text-xs text-slate-500">View engine, database, and network state</div>
+                    </div>
+                  </div>
+                  <ChevronDown size={16} className={`text-slate-400 transition-transform duration-200 ${showDiagnostics ? "rotate-180" : ""}`} />
+                </button>
+
+                {/* Diagnostics Panel */}
+                {showDiagnostics && (
+                  <div className="p-4 bg-slate-900 text-slate-200 text-xs font-mono rounded-b-2xl space-y-2.5 border-t border-slate-800 animate-in fade-in duration-200">
+                    <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                      <span className="text-slate-400">Environment</span>
+                      <span className="text-emerald-400 font-bold">Production (Monorepo)</span>
+                    </div>
+                    <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                      <span className="text-slate-400">Sync Status</span>
+                      <span className="text-sky-400 font-semibold uppercase">{syncStatus}</span>
+                    </div>
+                    <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                      <span className="text-slate-400">Outbox Queue</span>
+                      <span className="text-amber-400 font-semibold">{pendingCount} item(s) pending</span>
+                    </div>
+                    <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                      <span className="text-slate-400">Network Connection</span>
+                      <span className={isOnline ? "text-emerald-400" : "text-rose-400"}>
+                        {isOnline ? "Online" : "Offline"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center pt-1">
+                      <span className="text-slate-400">Client Engine</span>
+                      <span className="text-slate-400">Expencio Offline-First v1.0.0</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Reset Local Data */}
                 <button
                   onClick={handleClearData}
                   className="flex items-center justify-between p-4 hover:bg-rose-50 active:bg-rose-100 transition-colors text-left"
                 >
                   <div className="flex items-center gap-3 text-rose-600 font-medium">
                     <AlertCircle size={18} className="text-rose-500" />
-                    Reset Local Data
+                    <div>
+                      <div className="text-sm font-semibold text-rose-600">Reset Local Data</div>
+                      <div className="text-xs text-rose-400">Clear cached data and unsynced queue from device</div>
+                    </div>
                   </div>
                 </button>
               </div>
