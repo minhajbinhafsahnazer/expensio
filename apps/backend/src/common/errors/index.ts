@@ -23,6 +23,13 @@ export class AppError extends Error {
   }
 }
 
+/** 400 — Bad Request. */
+export class BadRequestError extends AppError {
+  constructor(message = 'Bad Request') {
+    super(message, 400, 'BAD_REQUEST');
+  }
+}
+
 /** 401 — Missing token, expired token, invalid credentials, inactive user. */
 export class UnauthorizedError extends AppError {
   constructor(message = 'Unauthorized') {

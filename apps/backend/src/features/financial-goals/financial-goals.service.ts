@@ -1,5 +1,5 @@
 import { ulid } from 'ulid';
-import { NotFoundError } from '../../common/errors/index.js';
+import { NotFoundError, BadRequestError } from '../../common/errors/index.js';
 import { financialGoalsRepository } from './financial-goals.repository.js';
 import type { 
   CreateFinancialGoalPayload, 
@@ -58,10 +58,16 @@ export const financialGoalsService = {
     if (!existing) throw new NotFoundError('Goal not found');
 
     const newAmount = parseFloat(existing.currentAmount) + data.amount;
+    if (newAmount < 0) {
+      throw new BadRequestError(`Deduction amount exceeds current balance of ${existing.currentAmount}`);
+    }
+
     let status = existing.status;
     
     if (newAmount >= parseFloat(existing.targetAmount)) {
       status = 'COMPLETED';
+    } else if (status === 'COMPLETED' && newAmount < parseFloat(existing.targetAmount)) {
+      status = 'ACTIVE';
     }
 
     const updated = await financialGoalsRepository.update(id, userId, { 

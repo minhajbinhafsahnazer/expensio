@@ -14,13 +14,31 @@ export const DateSlider: React.FC<DateSliderProps> = ({ selectedDate, onSelectDa
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Generate dates: 30 days past, 7 days future
+    // Generate dates: default 30 days past (or more if selectedDate is further past), 7 days future
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let pastDays = 30;
+    if (selectedDate) {
+      const [sy, sm, sd] = selectedDate.split("-").map(Number);
+      if (sy && sm && sd) {
+        const sel = new Date(sy, sm - 1, sd);
+        const diffTime = today.getTime() - sel.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays > pastDays) {
+          pastDays = diffDays + 7;
+        }
+      }
+    }
+
     const newDates = [];
-    for (let i = -30; i <= 7; i++) {
+    for (let i = -pastDays; i <= 7; i++) {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
-      const isoDate = d.toISOString().split("T")[0];
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      const isoDate = `${yyyy}-${mm}-${dd}`;
       const dayName = d.toLocaleDateString("en-US", { weekday: "short" });
       const dayNum = d.getDate();
       newDates.push({ date: isoDate, dayName, dayNum });
@@ -28,7 +46,7 @@ export const DateSlider: React.FC<DateSliderProps> = ({ selectedDate, onSelectDa
     setDates(newDates);
     // Allow a small delay before triggering the first scroll to ensure layout is computed
     setTimeout(() => setIsReady(true), 10);
-  }, []);
+  }, [selectedDate]);
 
   // Center selected item
   useEffect(() => {

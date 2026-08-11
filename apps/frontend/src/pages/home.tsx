@@ -29,6 +29,7 @@ export interface ExpenseEntry {
   amount: number;
   dateGroup: "Today" | "Yesterday" | "Earlier";
   type?: "expense" | "income";
+  spentAt?: string;
 }
 
 export const HomePage: React.FC = () => {
@@ -153,7 +154,8 @@ export const HomePage: React.FC = () => {
         title: t.category,
         amount,
         dateGroup: groups[dateKey].label as any,
-        type
+        type,
+        spentAt: t.spentAt,
       });
       
       groups[dateKey].total += type === "income" ? -amount : amount;
@@ -256,11 +258,48 @@ export const HomePage: React.FC = () => {
     showToast(`Deleted ${exp.title}`);
   };
 
+  const getSpentAtISO = (dateStr: string) => {
+    if (!dateStr) return new Date().toISOString();
+    const parts = dateStr.split("-").map(Number);
+    if (parts.length < 3 || isNaN(parts[0]) || isNaN(parts[1]) || isNaN(parts[2])) {
+      return new Date().toISOString();
+    }
+    const [y, m, d] = parts;
+    const dateObj = new Date(y, m - 1, d, 12, 0, 0);
+    return dateObj.toISOString();
+  };
+
   const handleEditClick = (exp: ExpenseEntry) => {
     setEditingTransaction(exp);
     setCurrencyVal(exp.amount);
     setSelectedCategory(exp.title);
+    setNewCategoryName(exp.title);
     setEntryType(exp.type || "expense");
+    setIsAddingCategory(false);
+
+    if (exp.spentAt) {
+      const d = new Date(exp.spentAt);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      const formattedDate = `${yyyy}-${mm}-${dd}`;
+
+      setCustomDate(formattedDate);
+
+      const todayStr = new Date().toLocaleDateString('en-CA');
+      const yesterdayObj = new Date();
+      yesterdayObj.setDate(yesterdayObj.getDate() - 1);
+      const yesterdayStr = yesterdayObj.toLocaleDateString('en-CA');
+
+      if (formattedDate === todayStr) {
+        setSelectedDateTag("Today");
+      } else if (formattedDate === yesterdayStr) {
+        setSelectedDateTag("Yesterday");
+      } else {
+        setSelectedDateTag("Custom");
+      }
+    }
+
     setIsSheetOpen(true);
   };
 
@@ -277,6 +316,8 @@ export const HomePage: React.FC = () => {
       setSelectedCategory(finalCategory);
     }
 
+    const selectedSpentAtISO = getSpentAtISO(customDate);
+
     // Check if there is an unadded amount in the input field
     const apiTransactions: TransactionCreatePayload[] = [];
     const uiTransactions: ExpenseEntry[] = [];
@@ -287,14 +328,15 @@ export const HomePage: React.FC = () => {
         id: cid,
         title: finalCategory,
         amount: currencyVal,
-        dateGroup: selectedDateTag === "Yesterday" ? "Yesterday" : "Today",
+        dateGroup: selectedDateTag === "Yesterday" ? "Yesterday" : selectedDateTag === "Today" ? "Today" : "Earlier",
         type: entryType,
+        spentAt: selectedSpentAtISO,
       });
       apiTransactions.push({
         clientGeneratedId: cid,
         amount: currencyVal,
         category: finalCategory,
-        spentAt: new Date().toISOString(),
+        spentAt: selectedSpentAtISO,
         currency: 'INR'
       });
     }
@@ -308,12 +350,13 @@ export const HomePage: React.FC = () => {
         amount: item.amount,
         dateGroup: item.date === "Yesterday" ? "Yesterday" : "Today",
         type: item.type || "expense",
+        spentAt: selectedSpentAtISO,
       });
       apiTransactions.push({
         clientGeneratedId: cid,
         amount: item.amount,
         category: item.label,
-        spentAt: new Date().toISOString(),
+        spentAt: selectedSpentAtISO,
         currency: 'INR'
       });
     });
@@ -327,7 +370,7 @@ export const HomePage: React.FC = () => {
             if (!old) return old;
             return old.map((t: any) => 
               t.id === editingTransaction.id 
-                ? { ...t, category: tx.category, amount: tx.amount.toString() } 
+                ? { ...t, category: tx.category, amount: tx.amount.toString(), spentAt: tx.spentAt } 
                 : t
             );
           });
@@ -485,7 +528,7 @@ export const HomePage: React.FC = () => {
                     {/* Two-Column Date Header */}
                     <div className="grid grid-cols-[minmax(0,1fr)_88px] items-center pb-2 border-b border-slate-100 px-2">
                       <span className="font-semibold text-[14px] text-slate-900 tracking-tight">{group.label}</span>
-                      <span className="font-semibold text-[14px] text-slate-900 text-right tabular-nums">
+                      <span className="font-bold text-[14px] text-purple-600 text-right tabular-nums">
                         {group.total.toLocaleString("en-IN")}
                       </span>
                     </div>
@@ -540,7 +583,17 @@ export const HomePage: React.FC = () => {
 
       {/* Dominating Floating Action Dock: Analytics, (+) Add Expense, Budget */}
       <HeroActionButton
-        onAddExpense={() => setIsSheetOpen(true)}
+        onAddExpense={() => {
+          setEditingTransaction(null);
+          setCurrencyVal(undefined);
+          setReceiptItems([]);
+          setEntryType("expense");
+          setSelectedCategory(expenseCategories[0]);
+          const todayStr = new Date().toLocaleDateString('en-CA');
+          setCustomDate(todayStr);
+          setSelectedDateTag("Today");
+          setIsSheetOpen(true);
+        }}
         onAnalyticsClick={() => navigate("/portfolio")}
         onBudgetClick={() => navigate("/analytics")}
       />
@@ -640,6 +693,7 @@ export const HomePage: React.FC = () => {
                     <div
                       onClick={(e) => {
                         e.stopPropagation();
+                        setNewCategoryName(selectedCategory);
                         setIsAddingCategory(true);
                         setIsCategoryDropdownOpen(false);
                       }}
@@ -661,6 +715,7 @@ export const HomePage: React.FC = () => {
                         className="flex items-center justify-between px-2 py-2 rounded-lg hover:bg-slate-100 cursor-pointer group"
                         onClick={() => {
                           setSelectedCategory(cat);
+                          setNewCategoryName(cat);
                           setIsCategoryDropdownOpen(false);
                         }}
                       >
@@ -706,10 +761,10 @@ export const HomePage: React.FC = () => {
           {/* 3. Amount Input */}
           <CurrencyField
             value={currencyVal}
-            onChange={(val) => setCurrencyVal(val)}
+            onChange={(val: number | undefined) => setCurrencyVal(val)}
             placeholder="0"
             currencySymbol="₹"
-            onKeyDown={(e) => {
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
               if (e.key === "Enter" && currencyVal && currencyVal > 0) {
                 e.preventDefault();
                 handleAddAnother();
@@ -743,7 +798,7 @@ export const HomePage: React.FC = () => {
             <div className="w-full bg-slate-50/50 border border-slate-200/60 rounded-xl overflow-hidden py-1">
               <DateSlider
                 selectedDate={customDate}
-                onSelectDate={(date) => {
+                onSelectDate={(date: string) => {
                   setCustomDate(date);
                   const isToday = date === new Date().toISOString().split("T")[0];
                   setSelectedDateTag(isToday ? "Today" : "Custom");
@@ -768,7 +823,7 @@ export const HomePage: React.FC = () => {
             currencySymbol="₹"
             onAddAnother={handleAddAnother}
             onDone={handleDone}
-            onRemoveItem={(id) => {
+            onRemoveItem={(id: string) => {
               setReceiptItems((prev) => prev.filter((item) => item.id !== id));
             }}
           />

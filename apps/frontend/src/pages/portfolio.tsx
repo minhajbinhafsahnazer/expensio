@@ -17,6 +17,9 @@ import {
   useAddGoalProgress 
 } from "../features/financial-goals/hooks/useFinancialGoals";
 import { type FinancialGoal } from "../features/financial-goals/api/financial-goals.api";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSyncEngine } from "../core/sync/SyncEngine";
+import { ulid } from "ulid";
 import {
   ArrowLeft,
   Pencil,
@@ -24,6 +27,8 @@ import {
   Bell,
   BellRing,
   Plus,
+  Minus,
+  ArrowUpDown,
   CheckCircle2,
   Calendar,
   X,
@@ -33,7 +38,6 @@ import {
   User,
   ShieldCheck,
   Download,
-  TrendingUp,
 } from "lucide-react";
 
 
@@ -142,6 +146,11 @@ export const PortfolioPage: React.FC = () => {
   const [depositGoalId, setDepositGoalId] = useState<string | null>(null);
   const [depositGoalTitle, setDepositGoalTitle] = useState("");
   const [depositAmount, setDepositAmount] = useState("");
+  const [depositMode, setDepositMode] = useState<"add" | "deduct">("add");
+  const [addToTransactions, setAddToTransactions] = useState(false);
+
+  const { enqueue, isOnline } = useSyncEngine();
+  const queryClient = useQueryClient();
 
   // Computed Goals Summary
   const totalSavedAcrossGoals = goals.reduce((acc, g) => acc + parseFloat(g.currentAmount), 0);
@@ -160,6 +169,10 @@ export const PortfolioPage: React.FC = () => {
   };
 
   const handleOpenEditGoal = (g: FinancialGoal) => {
+    if (!isOnline) {
+      showToast('Internet connection required. Goal changes cannot be made offline.');
+      return;
+    }
     setEditingGoalId(g.id);
     setGoalFormTitle(g.title);
     setGoalFormTarget(g.targetAmount.toString());
@@ -171,6 +184,10 @@ export const PortfolioPage: React.FC = () => {
   };
 
   const handleDeleteGoal = (id: string, title: string) => {
+    if (!isOnline) {
+      showToast('Internet connection required. Goal changes cannot be made offline.');
+      return;
+    }
     deleteGoalMutation.mutate(id, {
       onError: () => showToast(`Failed to delete "${title}". Changes rolled back.`)
     });
@@ -179,6 +196,10 @@ export const PortfolioPage: React.FC = () => {
 
   const handleSaveGoal = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isOnline) {
+      showToast('Internet connection required. Goal changes cannot be made offline.');
+      return;
+    }
     if (!goalFormTitle.trim() || !goalFormTarget || Number(goalFormTarget) <= 0) return;
 
     if (editingGoalId) {
@@ -213,22 +234,108 @@ export const PortfolioPage: React.FC = () => {
   };
 
   const handleOpenDeposit = (id: string, title: string) => {
+    if (!isOnline) {
+      showToast('Internet connection required. Goal changes cannot be made offline.');
+      return;
+    }
     setDepositGoalId(id);
     setDepositGoalTitle(title);
     setDepositAmount("");
+    setDepositMode("add");
+    setAddToTransactions(false);
     setIsDepositModalOpen(true);
   };
 
-  const handleConfirmDeposit = (e: React.FormEvent) => {
+  const handleConfirmDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!depositGoalId) return;
-    const addAmt = Number(depositAmount);
-    if (isNaN(addAmt) || addAmt <= 0) return;
+    const numAmt = Number(depositAmount);
+    if (isNaN(numAmt) || numAmt <= 0) return;
 
-    addProgressMutation.mutate({ id: depositGoalId, data: { amount: addAmt } }, {
-      onError: () => showToast(`Failed to add funds. Changes rolled back.`)
+    // Guard: re-check online status at submission time
+    if (!isOnline) {
+      showToast('Internet connection required. Goal changes cannot be made offline.');
+      setIsDepositModalOpen(false);
+      return;
+    }
+
+    const deltaAmount = depositMode === "deduct" ? -numAmt : numAmt;
+
+    // --- Goal progress API call ---
+    addProgressMutation.mutate({ id: depositGoalId, data: { amount: deltaAmount } }, {
+      onError: () => showToast(`Couldn't update goal. Please check your connection and try again.`)
     });
-    showToast(`Added ₹${addAmt.toLocaleString("en-IN")} to "${depositGoalTitle}"!`);
+
+    // --- Transaction creation (only for deduct mode) ---
+    if (depositMode === "deduct") {
+      const cid = ulid();
+      const spentAtIso = new Date().toISOString();
+      
+      if (addToTransactions) {
+        // addToBalance = TRUE:
+        //   Goal decreases by X.
+        //   Available balance increases by X  (Income +X).
+        //   User is withdrawing goal savings back to their wallet.
+        const txCategory = `Goal Withdrawal: ${depositGoalTitle}`;
+        
+        queryClient.setQueryData(["transactions"], (old: any) => {
+          const optimisticTx = {
+            id: cid,
+            category: txCategory,
+            amount: numAmt.toString(),
+            spentAt: spentAtIso,
+            type: "income",
+            status: "pending"
+          };
+          return [optimisticTx, ...(old || [])];
+        });
+
+        await enqueue({
+          action: "CREATE",
+          clientGeneratedId: cid,
+          amount: numAmt,
+          currency: "INR",
+          category: txCategory,
+          spentAt: spentAtIso,
+          type: "income",
+        });
+
+        showToast(`Deducted ₹${numAmt.toLocaleString("en-IN")} — added to your balance.`);
+      } else {
+        // addToBalance = FALSE (default):
+        //   Goal decreases by X.
+        //   Available balance does NOT increase — money is spent, not recovered.
+        //   Record as Expense -X so spending history reflects the outflow.
+        const txCategory = `Goal Expense: ${depositGoalTitle}`;
+
+        queryClient.setQueryData(["transactions"], (old: any) => {
+          const optimisticTx = {
+            id: cid,
+            category: txCategory,
+            amount: numAmt.toString(),
+            spentAt: spentAtIso,
+            type: "expense",
+            status: "pending"
+          };
+          return [optimisticTx, ...(old || [])];
+        });
+
+        await enqueue({
+          action: "CREATE",
+          clientGeneratedId: cid,
+          amount: numAmt,
+          currency: "INR",
+          category: txCategory,
+          spentAt: spentAtIso,
+          type: "expense",
+        });
+
+        showToast(`Deducted ₹${numAmt.toLocaleString("en-IN")} — recorded as an expense.`);
+      }
+    } else {
+      showToast(`Added ₹${numAmt.toLocaleString("en-IN")} to "${depositGoalTitle}"!`);
+    }
+
     setIsDepositModalOpen(false);
   };
 
@@ -507,8 +614,8 @@ export const PortfolioPage: React.FC = () => {
                               "bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20"
                             )}
                           >
-                            <Plus size={12} strokeWidth={3} />
-                            <span>Deposit</span>
+                            <ArrowUpDown size={12} className="text-current" />
+                            <span>Manage</span>
                           </button>
 
                           <button
@@ -1035,55 +1142,115 @@ export const PortfolioPage: React.FC = () => {
         </div>
       )}
 
-      {/* DEPOSIT MODAL */}
+      {/* UPDATE GOAL MODAL */}
       {isDepositModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
           <form
             onSubmit={handleConfirmDeposit}
-            className="w-full max-w-sm bg-white border border-slate-200 rounded-3xl p-5 shadow-2xl flex flex-col gap-5 animate-in zoom-in-95 duration-200 text-slate-900"
+            className="w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-5 shadow-xl flex flex-col gap-4 animate-in zoom-in-95 duration-150 text-slate-900"
           >
             {/* Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white shadow-xs">
-                  <TrendingUp size={16} strokeWidth={2.5} />
-                </div>
-                <h3 className="font-bold text-base text-slate-900 tracking-tight">Deposit Funds</h3>
-              </div>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="font-semibold text-base text-slate-900">Update Goal Progress</h3>
               <button
                 type="button"
                 onClick={() => setIsDepositModalOpen(false)}
-                className="w-7 h-7 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200 flex items-center justify-center cursor-pointer transition-colors"
+                className="w-7 h-7 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center cursor-pointer transition-colors"
               >
-                <X size={15} />
+                <X size={16} />
               </button>
             </div>
 
-            <div className="flex flex-col gap-4 text-center">
-              <p className="text-[13px] text-slate-500 font-medium">
-                Adding funds to <strong className="text-slate-800">{depositGoalTitle}</strong>
-              </p>
-              
-              <div className="relative flex items-center justify-center group">
-                <span className="absolute left-6 text-2xl font-bold text-slate-300 group-focus-within:text-slate-900 transition-colors">₹</span>
+            <div className="flex flex-col gap-3">
+              <span className="text-xs text-slate-500 font-normal">
+                Updating progress for <strong className="text-slate-900 font-semibold">{depositGoalTitle}</strong>
+              </span>
+
+              {/* Add vs Deduct Mode Toggle */}
+              <div className="flex items-center p-1 bg-slate-100/80 rounded-md border border-slate-200/60">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDepositMode("add");
+                    setAddToTransactions(false);
+                  }}
+                  className={cn(
+                    "flex-1 py-1.5 rounded text-xs font-semibold transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5",
+                    depositMode === "add"
+                      ? "bg-white shadow-xs border border-slate-200/60 text-slate-900"
+                      : "text-slate-500 hover:text-slate-700 border border-transparent"
+                  )}
+                >
+                  <Plus size={14} />
+                  <span>Add</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setDepositMode("deduct")}
+                  className={cn(
+                    "flex-1 py-1.5 rounded text-xs font-semibold transition-all duration-150 cursor-pointer flex items-center justify-center gap-1.5",
+                    depositMode === "deduct"
+                      ? "bg-white shadow-xs border border-slate-200/60 text-amber-600 font-bold"
+                      : "text-slate-500 hover:text-slate-700 border border-transparent"
+                  )}
+                >
+                  <Minus size={14} />
+                  <span>Deduct</span>
+                </button>
+              </div>
+
+              {/* Amount Input */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  {depositMode === "deduct" ? "Deduction Amount (₹)" : "Amount to Add (₹)"}
+                </label>
                 <input
+                  required
                   type="number"
                   placeholder="0"
                   value={depositAmount}
                   onChange={(e) => setDepositAmount(e.target.value)}
                   autoFocus
-                  required
-                  className="w-full h-16 pl-12 pr-6 bg-slate-50/50 border border-slate-200 rounded-2xl text-3xl font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 focus:bg-white placeholder:text-slate-200 transition-all text-center tabular-nums"
+                  className="w-full h-10 px-3 bg-white border border-slate-200/80 rounded-md text-xs font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-400 placeholder:text-slate-400 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
                 />
               </div>
+
+              {/* Deduct mode: destination selector */}
+              {depositMode === "deduct" && (
+                <div className="flex flex-col gap-2">
+                  {/* Default state helper — shown when unchecked */}
+                  {!addToTransactions && (
+                    <p className="text-[11px] text-slate-500 leading-tight px-0.5">
+                      Money will be recorded as an expense.
+                    </p>
+                  )}
+
+                  <label className="flex items-start gap-2.5 p-2.5 rounded-md bg-amber-50/60 border border-amber-200/60 text-amber-950 cursor-pointer transition-all hover:bg-amber-50">
+                    <input
+                      type="checkbox"
+                      checked={addToTransactions}
+                      onChange={(e) => setAddToTransactions(e.target.checked)}
+                      className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-amber-300 cursor-pointer mt-0.5"
+                    />
+                    <div className="flex flex-col text-left">
+                      <span className="text-xs font-semibold text-amber-950">Add to balance</span>
+                      <span className="text-[11px] text-amber-700 font-normal">
+                        {addToTransactions
+                          ? "Money will be added to your available balance."
+                          : "Check this to return the money to your available balance."}
+                      </span>
+                    </div>
+                  </label>
+                </div>
+              )}
             </div>
 
             <button
               type="submit"
-              className="w-full h-12 mt-2 bg-slate-900 hover:bg-slate-800 text-white rounded-full font-bold text-[14px] uppercase tracking-wider transition-all duration-150 active:scale-[0.98] cursor-pointer shadow-md shadow-slate-900/20 flex items-center justify-center gap-2"
+              className="w-full h-11 mt-2 bg-slate-900 hover:bg-slate-800 text-white rounded-md font-semibold text-sm transition-all duration-150 active:scale-[0.98] cursor-pointer shadow-xs"
             >
-              <Plus size={16} strokeWidth={3} />
-              <span>Confirm Deposit</span>
+              {depositMode === "deduct" ? "Confirm Deduction" : "Confirm Update"}
             </button>
           </form>
         </div>
@@ -1316,7 +1483,7 @@ export const PortfolioPage: React.FC = () => {
         activeTab="portfolio"
         variant="hero"
         items={pillNavItems}
-        onTabChange={(tabId) => {
+        onTabChange={(tabId: string) => {
           if (tabId === "home") {
             navigate("/");
           } else if (tabId === "settings") {

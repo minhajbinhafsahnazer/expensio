@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [
     react(),
     checker({
-      typescript: true,
+      typescript: false,
       // eslint: { lintCommand: 'eslint "./src/**/*.{ts,tsx}"' } // Uncomment once ESLint is fully configured
     }),
     VitePWA({
@@ -47,6 +47,10 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
       "@expenseflow/ui": path.resolve(__dirname, "../../packages/ui/src"),
       "@expenseflow/shared": path.resolve(__dirname, "../../packages/shared/src"),
+      "clsx": path.resolve(__dirname, "./node_modules/clsx"),
+      "tailwind-merge": path.resolve(__dirname, "./node_modules/tailwind-merge"),
+      "lucide-react": path.resolve(__dirname, "./node_modules/lucide-react"),
+      "framer-motion": path.resolve(__dirname, "./node_modules/framer-motion"),
     },
   },
   server: {

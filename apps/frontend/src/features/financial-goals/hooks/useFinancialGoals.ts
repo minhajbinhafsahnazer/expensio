@@ -132,7 +132,7 @@ export function useAddGoalProgress() {
             currentAmount: newCurrentAmount.toString(),
             remainingAmount,
             progressPercentage,
-            status: newCurrentAmount >= targetAmount ? 'COMPLETED' : goal.status
+            status: newCurrentAmount >= targetAmount ? 'COMPLETED' : 'ACTIVE'
           };
         });
       });

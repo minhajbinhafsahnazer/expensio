@@ -22,6 +22,8 @@ export type CreateTransactionPayload = {
   note?: string;
   spentAt: Date;
   status: string;
+  /** 'expense' (default) | 'income' — determines balance effect */
+  type: 'expense' | 'income';
 };
 
 export const expenseSessionsRepository = {
@@ -48,6 +50,9 @@ export const expenseSessionsRepository = {
 
       // 2. Insert all transactions
       // Handle idempotency: ON CONFLICT DO NOTHING (if ID exists)
+      // transactionsData already includes the `type` field from the payload.
+      // The DB enum default is 'expense', but we pass it explicitly so that
+      // income transactions (e.g., goal withdrawals) are stored correctly.
       const insertedTransactions = await tx
         .insert(transactions)
         .values(transactionsData)

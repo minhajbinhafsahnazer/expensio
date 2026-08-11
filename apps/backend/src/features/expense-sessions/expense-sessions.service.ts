@@ -28,6 +28,9 @@ export const expenseSessionsService = {
         note: t.note,
         spentAt: new Date(t.spentAt),
         status: t.status,
+        // Pass type explicitly — 'expense' | 'income'.
+        // Zod schema defaults to 'expense' so existing clients without this field are safe.
+        type: t.type as 'expense' | 'income',
       };
     });
 

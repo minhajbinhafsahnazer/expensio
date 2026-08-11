@@ -50,7 +50,7 @@ export async function addProgress(
   const goal = await financialGoalsService.addProgress(userId, request.params.id, request.body);
   return reply.status(200).send({
     success: true,
-    message: 'Progress added successfully',
+    message: 'Progress updated successfully',
     data: { goal },
   });
 }

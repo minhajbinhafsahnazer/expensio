@@ -11,7 +11,8 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["react"],
+    "jsxImportSource": "react",
+    "typeRoots": ["../../apps/frontend/node_modules/@types"],
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -19,7 +20,14 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "react": ["../../apps/frontend/node_modules/react"],
+      "react/*": ["../../apps/frontend/node_modules/react/*"],
+      "react/jsx-runtime": ["../../apps/frontend/node_modules/react/jsx-runtime"],
+      "lucide-react": ["../../apps/frontend/node_modules/lucide-react"],
+      "clsx": ["../../apps/frontend/node_modules/clsx"],
+      "tailwind-merge": ["../../apps/frontend/node_modules/tailwind-merge"],
+      "framer-motion": ["../../apps/frontend/node_modules/framer-motion"]
     }
   },
   "include": ["src"]

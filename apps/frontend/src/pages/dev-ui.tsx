@@ -163,7 +163,7 @@ export const DevUIPage: React.FC = () => {
               <Label>A. CurrencyField (Sticky Keypad, Live Formatting)</Label>
               <CurrencyField
                 value={currencyVal}
-                onChange={(val) => setCurrencyVal(val)}
+                onChange={(val: number | undefined) => setCurrencyVal(val)}
                 placeholder="0"
                 currencySymbol="₹"
               />
@@ -195,7 +195,7 @@ export const DevUIPage: React.FC = () => {
                 onDone={() => {
                   showToast("Session concluded. [Undo]");
                 }}
-                onRemoveItem={(id) => {
+                onRemoveItem={(id: string) => {
                   setReceiptItems((prev) => prev.filter((item) => item.id !== id));
                 }}
               />
@@ -221,7 +221,7 @@ export const DevUIPage: React.FC = () => {
           <CurrencyField
             autoFocus={isSheetOpen}
             value={currencyVal}
-            onChange={(val) => setCurrencyVal(val)}
+            onChange={(val: number | undefined) => setCurrencyVal(val)}
             placeholder="0"
             currencySymbol="₹"
           />
@@ -252,7 +252,7 @@ export const DevUIPage: React.FC = () => {
             items={receiptItems}
             onAddAnother={handleAddAnother}
             onDone={handleDone}
-            onRemoveItem={(id) => {
+            onRemoveItem={(id: string) => {
               setReceiptItems((prev) => prev.filter((item) => item.id !== id));
             }}
           />

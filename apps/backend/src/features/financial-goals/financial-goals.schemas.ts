@@ -41,6 +41,6 @@ export const UpdateFinancialGoalSchema = z.object({
 export type UpdateFinancialGoalPayload = z.infer<typeof UpdateFinancialGoalSchema>;
 
 export const GoalProgressSchema = z.object({
-  amount: z.number().positive(),
+  amount: z.number().refine(val => val !== 0, { message: 'amount cannot be 0' }),
 });
 export type GoalProgressPayload = z.infer<typeof GoalProgressSchema>;
