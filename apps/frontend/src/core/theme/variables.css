@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f6f6f6;
+  --foreground: #0f172a;
+
+  --primary: #000000;
+  --primary-hover: #171717;
+  --accent-emerald: #10b981;
+
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --border: #e2e8f0;
+
+  --radius-card: 20px;
+  --radius-button: 14px;
+
+  --shadow-perslace: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-perslace-hover: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+*, ::before, ::after {
+  font-family: 'Inter', 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+body {
+  background-color: #f6f6f6;
+  color: #0f172a;
+  font-family: 'Inter', 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* ==========================================================================
+   PERSLACE x LINEAR TACTILE BUTTON SYSTEM
+   ========================================================================== */
+
+/* Base Human-Designed Button Physics */
+button, .btn {
+  font-family: 'Inter', 'Manrope', sans-serif !important;
+  letter-spacing: -0.01em;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+button:active:not(:disabled), .btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+/* Linear Style Dark Glass Secondary Button */
+.btn-dark-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 2px 6px rgba(0, 0, 0, 0.3);
+  color: #e2e8f0;
+}
+
+.btn-dark-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+/* Raycast Style Cyan Glow Primary Button */
+.btn-cyan-primary {
+  background: linear-gradient(180deg, #22d3ee 0%, #06b6d4 100%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 4px 14px rgba(6, 182, 212, 0.35);
+  color: #042f2e;
+  font-weight: 700;
+}
+
+.btn-cyan-primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #67e8f9 0%, #22d3ee 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 6px 18px rgba(6, 182, 212, 0.45);
+}
+
+/* Emerald Primary Button */
+.btn-emerald-primary {
+  background: linear-gradient(180deg, #34d399 0%, #10b981 100%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 4px 14px rgba(16, 185, 129, 0.35);
+  color: #022c22;
+  font-weight: 700;
+}
+
+.btn-emerald-primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #6ee7b7 0%, #34d399 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 6px 18px rgba(16, 185, 129, 0.45);
+}
+
+/* Card Styling */
+.perslace-card {
+  border-radius: 20px;
+  background-color: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: var(--shadow-perslace);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.perslace-card:hover {
+  box-shadow: var(--shadow-perslace-hover);
+}
+
+/* Utility: spin animation for sync indicators */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}

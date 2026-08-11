@@ -1,0 +1,107 @@
+================================================================================
+  EXPENCIO — DEVELOPER COMMAND REFERENCE
+  Monorepo: C:\Users\minha\expencio
+================================================================================
+
+
+── FRONTEND (apps/frontend) ─────────────────────────────────────────────────
+
+  Start dev server (http://localhost:5173)
+    cd apps\frontend
+    npm run dev
+
+  Build for production
+    cd apps\frontend
+    npm run build
+
+  Preview production build
+    cd apps\frontend
+    npm run preview
+
+
+── BACKEND (apps/backend) ───────────────────────────────────────────────────
+
+  Start dev server (http://localhost:4000)
+    cd apps\backend
+    npm run dev
+
+  Start production server
+    cd apps\backend
+    npm run build
+    npm run start
+
+  Check API health
+    curl http://localhost:4000/api/v1/health
+
+  Open Swagger UI (dev only)
+    Start-Process "http://localhost:4000/api/docs"
+
+
+── DATABASE (Drizzle ORM + Neon PostgreSQL) ─────────────────────────────────
+
+  Generate migration files (after schema changes)
+    cd apps\backend
+    npm run db:generate
+
+  Run migrations (push to Neon DB)
+    cd apps\backend
+    npm run db:migrate
+
+  Run seed script
+    cd apps\backend
+    npm run db:seed
+
+  Open Drizzle Studio (visual DB browser)
+    cd apps\backend
+    npx drizzle-kit studio
+
+
+── PACKAGES (shared UI library) ─────────────────────────────────────────────
+
+  Install/sync all workspace dependencies
+    npm install                         (from monorepo root)
+
+  Build shared UI package
+    cd packages\ui
+    npm run build
+
+
+── MONOREPO ROOT ─────────────────────────────────────────────────────────────
+
+  Install all dependencies (all apps + packages)
+    npm install
+
+  Run all dev servers at once (via Turborepo)
+    npx turbo dev
+
+
+── SECRETS — HOW TO GENERATE ────────────────────────────────────────────────
+
+  Generate a new JWT_SECRET (96-char hex)
+    node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+
+  Generate a new COOKIE_SECRET (64-char hex)
+    node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+
+── ENV FILES ─────────────────────────────────────────────────────────────────
+
+  Backend env file location:
+    apps\backend\.env
+
+  Required variables:
+    NODE_ENV=development
+    PORT=4000
+    DATABASE_URL=postgresql://...@neon.tech/neondb?sslmode=require
+    JWT_SECRET=<generated above>
+    COOKIE_SECRET=<generated above>
+
+
+── URLS ──────────────────────────────────────────────────────────────────────
+
+  Frontend      →  http://localhost:5173
+  Backend API   →  http://localhost:4000
+  Swagger Docs  →  http://localhost:4000/api/docs
+  Neon Console  →  https://console.neon.tech
+
+================================================================================

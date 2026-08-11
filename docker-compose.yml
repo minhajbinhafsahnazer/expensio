@@ -1,0 +1,73 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: expenseflow-api
+    command: sh -c "pnpm install && pnpm --filter expenseflow-backend dev"
+    ports:
+      - "4000:4000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/backend/node_modules
+      - /app/apps/frontend/node_modules
+      - pnpm-store:/root/.local/share/pnpm/store
+    environment:
+      - NODE_ENV=development
+      - PORT=4000
+      # Internal Docker networking — api reaches db and redis by service name.
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/expenseflow
+      - REDIS_URL=redis://redis:6379
+      - ALLOWED_ORIGIN=http://localhost:5173
+      # Dev secrets — safe placeholder values for local development only.
+      # In production these MUST be overridden with real secrets.
+      # Generate: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+      - JWT_SECRET=051f2e36d4ef8ffed36dbc40393fa23e589d87c41266b6411789f78777dc17d7
+      - COOKIE_SECRET=3d009502bda419bd6e7016a2914cefccb135ca5f2b267b288350c6a5081952b9
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    container_name: expenseflow-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: expenseflow
+    # DEV ONLY: ports exposed for local DB clients (TablePlus, psql, etc.)
+    # Remove or comment out these port bindings before production deployment.
+    # In production, the API connects via the internal Docker network (db:5432).
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d expenseflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: expenseflow-redis
+    # DEV ONLY: port exposed for local Redis clients (RedisInsight, redis-cli, etc.)
+    # Remove or comment out before production deployment.
+    # In production, the API connects via the internal Docker network (redis:6379).
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pnpm-store:
+  postgres-data:
+  redis-data:

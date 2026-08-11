@@ -1,0 +1,55 @@
+{
+  "version": "6",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1785695522466,
+      "tag": "0000_yummy_silver_samurai",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1785696629293,
+      "tag": "0001_blushing_lenny_balinger",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1786044520625,
+      "tag": "0002_dry_wolfpack",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1786122211443,
+      "tag": "0003_romantic_blue_marvel",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1786270020314,
+      "tag": "0004_freezing_marvel_zombies",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1786272778954,
+      "tag": "0005_tidy_maddog",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1786274340757,
+      "tag": "0006_charming_jane_foster",
+      "breakpoints": true
+    }
+  ]
+}

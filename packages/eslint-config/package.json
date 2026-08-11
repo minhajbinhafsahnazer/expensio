@@ -1,0 +1,10 @@
+{
+  "name": "@expenseflow/eslint-config",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "dependencies": {
+    "eslint": "^8.0.0",
+    "eslint-plugin-boundaries": "^4.2.2"
+  }
+}

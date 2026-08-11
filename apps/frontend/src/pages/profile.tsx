@@ -1,0 +1,252 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { LogOut, RefreshCw, Download, Palette, CheckCircle2, Database, AlertCircle, WifiOff, ChevronLeft } from "lucide-react";
+import { useAuth } from "../core/providers/AuthContext";
+import { useSyncEngine } from "../core/sync/SyncEngine";
+import { queue } from "../core/sync/db";
+import { useQueryClient } from "@tanstack/react-query";
+import { AppShell, Container, Stack } from "@expenseflow/ui";
+
+export default function ProfilePage() {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const { pendingCount, syncStatus, isOnline } = useSyncEngine();
+  const queryClient = useQueryClient();
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3000);
+  };
+
+  const handleClearData = async () => {
+    if (pendingCount > 0) {
+      const confirmed = window.confirm(
+        `Reset Local Data?\n\nYou have ${pendingCount} expense${pendingCount === 1 ? '' : 's'} that haven't synced yet. ` +
+        `Clearing local data will permanently discard these from this device.\n\n` +
+        `Your synced expenses in your account are not affected.\n\nPress OK to discard unsynced expenses and reset.`
+      );
+      if (!confirmed) return;
+    } else {
+      const confirmed = window.confirm(
+        "Reset Local Data?\n\nThis will clear locally cached data from this device. Your synced expenses will remain in your account."
+      );
+      if (!confirmed) return;
+    }
+
+    try {
+      // Clear only this user's queue entries — never touch other users' data.
+      if (user?.id) {
+        await queue.clearForUser(user.id);
+      }
+
+      // Clear React Query cache so stale data isn't shown.
+      queryClient.clear();
+
+      showToast("Local data cleared successfully.");
+
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    } catch (e) {
+      console.error(e);
+      showToast("Failed to clear local data.");
+    }
+  };
+
+  const handleSignOut = async () => {
+    if (pendingCount > 0) {
+      const confirmed = window.confirm(
+        `Sign out of Expencio?\n\n` +
+        `You have ${pendingCount} expense${pendingCount === 1 ? '' : 's'} that haven't synced yet.\n\n` +
+        `They're saved on this device and will sync automatically the next time you sign in.\n\n` +
+        `Sign out anyway?`
+      );
+      if (!confirmed) return;
+    } else {
+      const confirmed = window.confirm("Sign out of Expencio?");
+      if (!confirmed) return;
+    }
+    await logout();
+  };
+
+  const renderSyncStatus = () => {
+    if (!isOnline) {
+      return (
+        <span className="flex items-center gap-1.5 text-amber-600">
+          <WifiOff size={14} />
+          Offline
+        </span>
+      );
+    }
+    if (syncStatus === "syncing") {
+      return (
+        <span className="flex items-center gap-1.5 text-sky-600">
+          <RefreshCw size={14} className="animate-spin" />
+          Syncing…
+        </span>
+      );
+    }
+    if (syncStatus === "error") {
+      return (
+        <span className="flex items-center gap-1.5 text-rose-600">
+          <AlertCircle size={14} />
+          Sync failed
+        </span>
+      );
+    }
+    if (pendingCount > 0) {
+      return (
+        <span className="flex items-center gap-1.5 text-amber-600">
+          <Database size={14} />
+          {pendingCount} pending
+        </span>
+      );
+    }
+    return (
+      <span className="flex items-center gap-1.5 text-emerald-600">
+        <CheckCircle2 size={14} />
+        Synced
+      </span>
+    );
+  };
+
+  return (
+    <AppShell className="bg-slate-50 min-h-screen pb-28 selection:bg-slate-900 selection:text-white">
+      <Container size="sm" className="pt-2 sm:pt-4">
+        <Stack gap={6}>
+          {/* Header */}
+          <div className="flex items-center gap-2 px-2 pb-6">
+            <button
+              onClick={() => navigate("/")}
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors -ml-2 text-slate-600"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <h1 className="text-xl font-bold tracking-tight text-slate-900">Profile</h1>
+          </div>
+
+          {/* Profile Hero */}
+          <div className="flex flex-col items-center justify-center pt-2 pb-8">
+            <div className="w-20 h-20 bg-slate-900 text-white rounded-full flex items-center justify-center text-3xl font-bold shadow-md mb-4">
+              {user?.email ? (user.email.split('@')[0].charAt(0) + user.email.split('@')[0].slice(-1)).toUpperCase() : "MJ"}
+            </div>
+            <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+              {user?.email ? user.email.split("@")[0] : "Minhaj"}
+            </h2>
+            <p className="text-sm text-slate-500 font-medium">
+              {user?.email || "minhaj@example.com"}
+            </p>
+          </div>
+
+          {/* Sections */}
+          <div className="flex flex-col gap-6 px-2">
+            
+            {/* PREFERENCES */}
+            <section className="flex flex-col gap-1">
+              <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2 px-2">
+                Preferences
+              </h3>
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                <div className="flex items-center justify-between p-4 border-b border-slate-100">
+                  <div className="flex items-center gap-3 text-slate-700 font-medium">
+                    <span className="w-5 h-5 flex items-center justify-center text-slate-400">
+                      ₹
+                    </span>
+                    Currency
+                  </div>
+                  <span className="text-sm font-semibold text-slate-900">
+                    ₹ INR
+                  </span>
+                </div>
+                <div className="flex items-center justify-between p-4">
+                  <div className="flex items-center gap-3 text-slate-700 font-medium">
+                    <Palette size={18} className="text-slate-400" />
+                    Appearance
+                  </div>
+                  <span className="text-sm font-semibold text-slate-900">
+                    System
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            {/* DATA */}
+            <section className="flex flex-col gap-1">
+              <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2 px-2">
+                Data
+              </h3>
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                <button
+                  onClick={() => showToast("Export data feature coming soon")}
+                  className="flex items-center justify-between p-4 border-b border-slate-100 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left"
+                >
+                  <div className="flex items-center gap-3 text-slate-700 font-medium">
+                    <Download size={18} className="text-slate-400" />
+                    Export Data
+                  </div>
+                  <span className="text-slate-400">
+                    <ChevronLeft size={16} className="rotate-180" />
+                  </span>
+                </button>
+                <div className="flex items-center justify-between p-4">
+                  <div className="flex items-center gap-3 text-slate-700 font-medium">
+                    <RefreshCw size={18} className="text-slate-400" />
+                    Sync Status
+                  </div>
+                  <span className="text-sm font-semibold">
+                    {renderSyncStatus()}
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            {/* ACCOUNT */}
+            <section className="flex flex-col gap-1">
+              <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2 px-2">
+                Account
+              </h3>
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center justify-between p-4 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left"
+                >
+                  <div className="flex items-center gap-3 text-rose-600 font-medium">
+                    <LogOut size={18} className="text-rose-500" />
+                    Sign Out
+                  </div>
+                </button>
+              </div>
+            </section>
+
+            {/* ADVANCED */}
+            <section className="flex flex-col gap-1 mt-4">
+              <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2 px-2">
+                Advanced
+              </h3>
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                <button
+                  onClick={handleClearData}
+                  className="flex items-center justify-between p-4 hover:bg-rose-50 active:bg-rose-100 transition-colors text-left"
+                >
+                  <div className="flex items-center gap-3 text-rose-600 font-medium">
+                    <AlertCircle size={18} className="text-rose-500" />
+                    Reset Local Data
+                  </div>
+                </button>
+              </div>
+            </section>
+
+          </div>
+        </Stack>
+      </Container>
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-4 py-2 rounded-full shadow-lg text-sm font-medium animate-in fade-in slide-in-from-top-4">
+          {toastMessage}
+        </div>
+      )}
+    </AppShell>
+  );
+}

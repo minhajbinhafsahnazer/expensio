@@ -1,0 +1,30 @@
+FROM node:20-slim
+
+# Install git, python, and build tools (often required for native node modules)
+RUN apt-get update && apt-get install -y git python3 make g++ && rm -rf /var/lib/apt/lists/*
+
+# Install pnpm globally
+RUN npm install -g pnpm@9.1.0
+
+# Set working directory
+WORKDIR /app
+
+# Copy workspace configuration and lockfile
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+
+# Copy individual package.json files to maintain workspace structure before install
+COPY apps/backend/package.json apps/backend/
+COPY apps/frontend/package.json apps/frontend/
+COPY packages/ui/package.json packages/ui/
+# If there are other packages, you can add them, or use a tool to copy all package.json files.
+# For now, this covers the known ones. We can also just copy the entire source code because during dev it's cached anyway, but it's cleaner this way.
+
+# We will actually just copy everything because the host mounts over it anyway,
+# but copying package files first caches the install step.
+COPY . .
+
+# Install all dependencies using the lockfile
+RUN pnpm install --frozen-lockfile
+
+# The command will be provided by docker-compose.yml, but setting a default
+CMD ["pnpm", "--filter", "expenseflow-backend", "dev"]
