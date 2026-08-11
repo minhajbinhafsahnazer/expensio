@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, RefreshCw, Download, Palette, CheckCircle2, Database, AlertCircle, WifiOff, ChevronLeft, Terminal, ChevronDown } from "lucide-react";
+import { LogOut, RefreshCw, Download, Palette, CheckCircle2, Database, AlertCircle, WifiOff, ChevronLeft, Terminal, ChevronDown, Sliders, Globe, Layers } from "lucide-react";
 import { useAuth } from "../core/providers/AuthContext";
 import { useSyncEngine } from "../core/sync/SyncEngine";
 import { queue } from "../core/sync/db";
@@ -14,13 +14,34 @@ export default function ProfilePage() {
   const queryClient = useQueryClient();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isManualSyncing, setIsManualSyncing] = useState(false);
-  const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+  const [multiCurrency, setMultiCurrency] = useState(() => {
+    return localStorage.getItem("expencio_multi_currency") === "true";
+  });
+  const [superiorCategory, setSuperiorCategory] = useState(() => {
+    return localStorage.getItem("expencio_superior_category") !== "false";
+  });
+  const [developerMode, setDeveloperMode] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
     }, 3000);
+  };
+
+  const toggleMultiCurrency = () => {
+    const next = !multiCurrency;
+    setMultiCurrency(next);
+    localStorage.setItem("expencio_multi_currency", String(next));
+    showToast(next ? "Multi-currency mode enabled" : "Multi-currency mode disabled");
+  };
+
+  const toggleSuperiorCategory = () => {
+    const next = !superiorCategory;
+    setSuperiorCategory(next);
+    localStorage.setItem("expencio_superior_category", String(next));
+    showToast(next ? "Superior categorization enabled" : "Superior categorization disabled");
   };
 
   const handleManualSync = async () => {
@@ -238,86 +259,174 @@ export default function ProfilePage() {
               </div>
             </section>
 
-            {/* ADVANCED */}
-            <section className="flex flex-col gap-1 mt-4">
+            {/* ADVANCED SECTION */}
+            <section className="flex flex-col gap-1 mt-2">
               <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2 px-2">
                 Advanced
               </h3>
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col divide-y divide-slate-100">
-                {/* Manual Force Sync */}
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col transition-all">
+                {/* Main Accordion Trigger */}
                 <button
-                  onClick={handleManualSync}
-                  disabled={isManualSyncing || !isOnline}
-                  className="flex items-center justify-between p-4 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left disabled:opacity-50"
-                >
-                  <div className="flex items-center gap-3 text-slate-700 font-medium">
-                    <RefreshCw size={18} className={`text-slate-500 ${isManualSyncing ? "animate-spin" : ""}`} />
-                    <div>
-                      <div className="text-sm font-semibold text-slate-900">Force Resync Now</div>
-                      <div className="text-xs text-slate-500">Trigger immediate sync of pending transactions</div>
-                    </div>
-                  </div>
-                  <span className="text-xs font-semibold text-sky-600 bg-sky-50 px-2.5 py-1 rounded-full border border-sky-100">
-                    {isManualSyncing ? "Syncing..." : "Sync"}
-                  </span>
-                </button>
-
-                {/* System Diagnostics */}
-                <button
-                  onClick={() => setShowDiagnostics(!showDiagnostics)}
+                  onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
                   className="flex items-center justify-between p-4 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left"
                 >
                   <div className="flex items-center gap-3 text-slate-700 font-medium">
-                    <Terminal size={18} className="text-slate-500" />
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                      <Sliders size={18} />
+                    </div>
                     <div>
-                      <div className="text-sm font-semibold text-slate-900">System Diagnostics</div>
-                      <div className="text-xs text-slate-500">View engine, database, and network state</div>
+                      <div className="text-sm font-semibold text-slate-900">Advanced Settings & Tools</div>
+                      <div className="text-xs text-slate-500">Multi-currency, superior categories, sync & debug</div>
                     </div>
                   </div>
-                  <ChevronDown size={16} className={`text-slate-400 transition-transform duration-200 ${showDiagnostics ? "rotate-180" : ""}`} />
+                  <ChevronDown
+                    size={18}
+                    className={`text-slate-400 transition-transform duration-200 ${isAdvancedOpen ? "rotate-180" : ""}`}
+                  />
                 </button>
 
-                {/* Diagnostics Panel */}
-                {showDiagnostics && (
-                  <div className="p-4 bg-slate-900 text-slate-200 text-xs font-mono rounded-b-2xl space-y-2.5 border-t border-slate-800 animate-in fade-in duration-200">
-                    <div className="flex justify-between items-center pb-2 border-b border-slate-800">
-                      <span className="text-slate-400">Environment</span>
-                      <span className="text-emerald-400 font-bold">Production (Monorepo)</span>
+                {/* Expanded Drill-Down Options */}
+                {isAdvancedOpen && (
+                  <div className="flex flex-col divide-y divide-slate-100 border-t border-slate-100 bg-slate-50/50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {/* Option 1: Multi Currency */}
+                    <div className="flex items-center justify-between p-4 bg-white">
+                      <div className="flex items-start gap-3">
+                        <Globe size={18} className="text-indigo-500 mt-0.5" />
+                        <div>
+                          <div className="text-sm font-semibold text-slate-800">Multi Currency</div>
+                          <div className="text-xs text-slate-500">Support dynamic FX rates & multi-currency transactions</div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={toggleMultiCurrency}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          multiCurrency ? 'bg-indigo-600' : 'bg-slate-200'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            multiCurrency ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
                     </div>
-                    <div className="flex justify-between items-center pb-2 border-b border-slate-800">
-                      <span className="text-slate-400">Sync Status</span>
-                      <span className="text-sky-400 font-semibold uppercase">{syncStatus}</span>
+
+                    {/* Option 2: Superior Category */}
+                    <div className="flex items-center justify-between p-4 bg-white">
+                      <div className="flex items-start gap-3">
+                        <Layers size={18} className="text-indigo-500 mt-0.5" />
+                        <div>
+                          <div className="text-sm font-semibold text-slate-800">Superior Categorization</div>
+                          <div className="text-xs text-slate-500">Enable smart sub-categories & automated tags</div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={toggleSuperiorCategory}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          superiorCategory ? 'bg-indigo-600' : 'bg-slate-200'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            superiorCategory ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
                     </div>
-                    <div className="flex justify-between items-center pb-2 border-b border-slate-800">
-                      <span className="text-slate-400">Outbox Queue</span>
-                      <span className="text-amber-400 font-semibold">{pendingCount} item(s) pending</span>
+
+                    {/* Option 3: Force Resync */}
+                    <div className="flex items-center justify-between p-4 bg-white">
+                      <div className="flex items-start gap-3">
+                        <RefreshCw size={18} className={`text-slate-500 mt-0.5 ${isManualSyncing ? "animate-spin" : ""}`} />
+                        <div>
+                          <div className="text-sm font-semibold text-slate-800">Force Resync Now</div>
+                          <div className="text-xs text-slate-500">Trigger immediate sync of pending transactions</div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleManualSync}
+                        disabled={isManualSyncing || !isOnline}
+                        className="px-3 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-100 transition-colors disabled:opacity-50"
+                      >
+                        {isManualSyncing ? "Syncing..." : "Sync"}
+                      </button>
                     </div>
-                    <div className="flex justify-between items-center pb-2 border-b border-slate-800">
-                      <span className="text-slate-400">Network Connection</span>
-                      <span className={isOnline ? "text-emerald-400" : "text-rose-400"}>
-                        {isOnline ? "Online" : "Offline"}
-                      </span>
+
+                    {/* Option 4: System Diagnostics Toggle */}
+                    <div className="flex flex-col bg-white">
+                      <div className="flex items-center justify-between p-4">
+                        <div className="flex items-start gap-3">
+                          <Terminal size={18} className="text-slate-500 mt-0.5" />
+                          <div>
+                            <div className="text-sm font-semibold text-slate-800">System Diagnostics</div>
+                            <div className="text-xs text-slate-500">Show engine, outbox queue, and telemetry data</div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setDeveloperMode(!developerMode)}
+                          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                            developerMode ? 'bg-slate-900' : 'bg-slate-200'
+                          }`}
+                        >
+                          <span
+                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                              developerMode ? 'translate-x-5' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                      </div>
+
+                      {/* Developer Mode Diagnostics Panel */}
+                      {developerMode && (
+                        <div className="p-4 bg-slate-900 text-slate-200 text-xs font-mono space-y-2 border-t border-slate-800 animate-in fade-in duration-200">
+                          <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                            <span className="text-slate-400">Environment</span>
+                            <span className="text-emerald-400 font-bold">Production (Monorepo)</span>
+                          </div>
+                          <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                            <span className="text-slate-400">Sync Engine Status</span>
+                            <span className="text-sky-400 font-semibold uppercase">{syncStatus}</span>
+                          </div>
+                          <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                            <span className="text-slate-400">Pending Outbox Queue</span>
+                            <span className="text-amber-400 font-semibold">{pendingCount} item(s)</span>
+                          </div>
+                          <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                            <span className="text-slate-400">Network Connection</span>
+                            <span className={isOnline ? "text-emerald-400" : "text-rose-400"}>
+                              {isOnline ? "Online" : "Offline"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center pt-1">
+                            <span className="text-slate-400">Client Engine Version</span>
+                            <span className="text-slate-400">v1.0.0</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex justify-between items-center pt-1">
-                      <span className="text-slate-400">Client Engine</span>
-                      <span className="text-slate-400">Expencio Offline-First v1.0.0</span>
+
+                    {/* Option 5: Reset Local Data */}
+                    <div className="flex items-center justify-between p-4 bg-white">
+                      <div className="flex items-start gap-3">
+                        <AlertCircle size={18} className="text-rose-500 mt-0.5" />
+                        <div>
+                          <div className="text-sm font-semibold text-rose-600">Reset Local Data</div>
+                          <div className="text-xs text-rose-400">Clear cached data and unsynced outbox queue</div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleClearData}
+                        className="px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-100 transition-colors"
+                      >
+                        Reset
+                      </button>
                     </div>
+
                   </div>
                 )}
-
-                {/* Reset Local Data */}
-                <button
-                  onClick={handleClearData}
-                  className="flex items-center justify-between p-4 hover:bg-rose-50 active:bg-rose-100 transition-colors text-left"
-                >
-                  <div className="flex items-center gap-3 text-rose-600 font-medium">
-                    <AlertCircle size={18} className="text-rose-500" />
-                    <div>
-                      <div className="text-sm font-semibold text-rose-600">Reset Local Data</div>
-                      <div className="text-xs text-rose-400">Clear cached data and unsynced queue from device</div>
-                    </div>
-                  </div>
-                </button>
               </div>
             </section>
 
