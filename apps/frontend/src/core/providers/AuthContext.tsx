@@ -76,7 +76,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         // If no access token in memory, try a silent refresh first
         if (!tokenStore.get()) {
-          await client.refreshSession();
+          try {
+            await client.refreshSession();
+          } catch (err) {
+            if (err instanceof ApiError && (err.status === 401 || err.status === 429)) {
+              // No valid session cookie present or rate limited — user is cleanly unauthenticated
+              setState({ status: 'unauthenticated', user: null });
+              return;
+            }
+            throw err; // Network or server errors rethrown to outer catch
+          }
         }
 
         // Now try to fetch the current user
@@ -97,7 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setState({ status: 'unauthenticated', user: null });
       } catch (err) {
-        // Network errors or 500s from the backend shouldn't log the user out
+        // Network errors or server failures rethrown here
         setState({ status: 'error', user: null });
       }
     }

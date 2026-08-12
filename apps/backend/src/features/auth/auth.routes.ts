@@ -20,7 +20,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
    */
   fastify.post('/register', {
     config: {
-      rateLimit: { max: 5, timeWindow: '15 minutes' },
+      rateLimit: { max: 30, timeWindow: '1 minute' },
     },
     preHandler: [validate(RegisterBodySchema)],
     handler: controller.register,
@@ -28,12 +28,12 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * POST /auth/login
-   * Rate limited: 5 requests per 15 minutes per IP.
+   * Rate limited: 30 requests per 1 minute per IP.
    * Validate body → controller → service → repository.
    */
   fastify.post('/login', {
     config: {
-      rateLimit: { max: 5, timeWindow: '15 minutes' },
+      rateLimit: { max: 30, timeWindow: '1 minute' },
     },
     preHandler: [validate(LoginBodySchema)],
     handler: controller.login,
@@ -41,12 +41,12 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * POST /auth/refresh
-   * Rate limited: 10 requests per 15 minutes per IP.
+   * Rate limited: 100 requests per 1 minute per IP.
    * Reads refresh_token cookie — no body validation needed.
    */
   fastify.post('/refresh', {
     config: {
-      rateLimit: { max: 10, timeWindow: '15 minutes' },
+      rateLimit: { max: 100, timeWindow: '1 minute' },
     },
     handler: controller.refresh,
   });
