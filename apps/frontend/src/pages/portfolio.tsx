@@ -1494,7 +1494,7 @@ export const PortfolioPage: React.FC = () => {
           } else if (tabId === "settings") {
             setIsSettingsOpen(true);
           } else if (tabId === "profile") {
-            showToast("Profile & Account management (Future release)");
+            navigate("/profile");
           }
         }}
       />
