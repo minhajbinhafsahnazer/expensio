@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2, ChevronDown, Keyboard, Wifi, WifiOff, RefreshCw, Wallet } from "lucide-react";
+import { Trash2, ChevronDown, Keyboard, Wifi, WifiOff, RefreshCw, Wallet, X } from "lucide-react";
 import {
   AppShell,
   Container,
@@ -726,20 +726,39 @@ export const HomePage: React.FC = () => {
                       setSelectedCategory(entryType === "expense" ? expenseCategories[0] : incomeCategories[0]);
                     }
                   }}
-                  className="w-full h-10 pl-3 pr-10 bg-white border border-slate-900 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
+                  className="w-full h-10 pl-3 pr-16 bg-white border border-slate-900 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
                 />
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsAddingCategory(false);
-                    setNewCategoryName("");
-                    setIsCategoryDropdownOpen(true);
-                  }}
-                  className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 hover:bg-slate-100 rounded-md text-slate-400 hover:text-slate-700 transition-colors cursor-pointer flex items-center justify-center"
-                  role="button"
-                  aria-label="Back to dropdown"
-                >
-                  <ChevronDown size={16} />
+                <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (newCategoryName) {
+                        setNewCategoryName("");
+                        categoryInputRef.current?.focus();
+                      } else {
+                        setIsAddingCategory(false);
+                        setSelectedCategory(entryType === "expense" ? expenseCategories[0] : incomeCategories[0]);
+                      }
+                    }}
+                    className="p-1 hover:bg-slate-100 rounded-md text-slate-400 hover:text-slate-700 transition-colors flex items-center justify-center cursor-pointer"
+                    aria-label="Clear category input"
+                  >
+                    <X size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsAddingCategory(false);
+                      setNewCategoryName("");
+                      setIsCategoryDropdownOpen(true);
+                    }}
+                    className="p-1 hover:bg-slate-100 rounded-md text-slate-400 hover:text-slate-700 transition-colors cursor-pointer flex items-center justify-center"
+                    aria-label="Back to dropdown"
+                  >
+                    <ChevronDown size={16} />
+                  </button>
                 </div>
               </div>
             ) : (
