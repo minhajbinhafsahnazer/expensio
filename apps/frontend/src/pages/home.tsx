@@ -453,7 +453,7 @@ export const HomePage: React.FC = () => {
 
   return (
     <AppShell className="bg-slate-50 min-h-screen pb-28 selection:bg-slate-900 selection:text-white">
-      <Container size="sm" className="pt-2 sm:pt-4">
+      <Container size="sm" className="pt-12 sm:pt-14">
         <Stack gap={6}>
           {/* Dashboard Header */}
           <div className="flex items-center justify-between px-2 pb-2">

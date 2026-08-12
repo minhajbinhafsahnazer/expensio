@@ -485,7 +485,7 @@ export const PortfolioPage: React.FC = () => {
       )}
 
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-200/80">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-200/80 pt-8 sm:pt-10">
         <Container size="md" className="h-16 flex items-center justify-between px-4">
           <button
             type="button"

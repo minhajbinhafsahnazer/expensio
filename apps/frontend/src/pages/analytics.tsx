@@ -59,7 +59,7 @@ export default function AnalyticsPage() {
 
   return (
     <AppShell className="bg-slate-50 min-h-screen pb-28 selection:bg-slate-900 selection:text-white">
-      <Container size="sm" className="pt-2 sm:pt-4">
+      <Container size="sm" className="pt-12 sm:pt-14">
         <Stack gap={6}>
           {/* Header & Nudge */}
           <div className="flex flex-col gap-3 px-2 pb-2">
