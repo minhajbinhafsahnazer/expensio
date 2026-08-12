@@ -144,6 +144,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
               category:  tx.category,
               note:      tx.note,
               spentAt:   tx.spentAt,
+              type:      tx.type,
             })),
           };
           await client.post('/expense-sessions', payload, { signal });
@@ -158,6 +159,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
             category: tx.category,
             note:     tx.note,
             spentAt:  tx.spentAt,
+            type:     tx.type,
           }, { signal });
           await queue.dequeue(tx.clientGeneratedId);
         }

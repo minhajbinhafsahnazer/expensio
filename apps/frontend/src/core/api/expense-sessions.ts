@@ -8,6 +8,7 @@ export interface TransactionCreatePayload {
   note?: string;
   spentAt: string; // ISO string
   status?: 'pending' | 'synced';
+  type?: 'expense' | 'income' | string;
 }
 
 export interface ExpenseSessionCreatePayload {

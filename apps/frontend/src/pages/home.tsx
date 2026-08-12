@@ -378,7 +378,8 @@ export const HomePage: React.FC = () => {
         amount: currencyVal,
         category: finalCategory,
         spentAt: selectedSpentAtISO,
-        currency: 'INR'
+        currency: 'INR',
+        type: entryType
       });
     }
 
@@ -398,7 +399,8 @@ export const HomePage: React.FC = () => {
         amount: item.amount,
         category: item.label,
         spentAt: selectedSpentAtISO,
-        currency: 'INR'
+        currency: 'INR',
+        type: item.type || "expense"
       });
     });
 
@@ -411,7 +413,7 @@ export const HomePage: React.FC = () => {
             if (!old) return old;
             return old.map((t: any) => 
               t.id === editingTransaction.id 
-                ? { ...t, category: tx.category, amount: tx.amount.toString(), spentAt: tx.spentAt } 
+                ? { ...t, category: tx.category, amount: tx.amount.toString(), spentAt: tx.spentAt, type: tx.type } 
                 : t
             );
           });
@@ -422,11 +424,24 @@ export const HomePage: React.FC = () => {
             const newAmount = parseFloat(tx.amount.toString());
             const oldAmount = parseFloat(editingTransaction.amount.toString());
             const diff = newAmount - oldAmount;
+            
+            // If type changed, we need to handle it differently (subtract from old, add to new)
+            if (editingTransaction.type !== tx.type) {
+              return {
+                ...old,
+                totalSpent: tx.type === "expense" ? old.totalSpent + newAmount : old.totalSpent - oldAmount,
+                totalIncome: tx.type === "income" ? old.totalIncome + newAmount : old.totalIncome - oldAmount,
+                netCashFlow: tx.type === "income" 
+                  ? old.netCashFlow + newAmount + oldAmount 
+                  : old.netCashFlow - newAmount - oldAmount
+              };
+            }
+            
             return {
               ...old,
-              totalSpent: editingTransaction.type === "expense" ? old.totalSpent + diff : old.totalSpent,
-              totalIncome: editingTransaction.type === "income" ? old.totalIncome + diff : old.totalIncome,
-              netCashFlow: editingTransaction.type === "income" ? old.netCashFlow + diff : old.netCashFlow - diff
+              totalSpent: tx.type === "expense" ? old.totalSpent + diff : old.totalSpent,
+              totalIncome: tx.type === "income" ? old.totalIncome + diff : old.totalIncome,
+              netCashFlow: tx.type === "income" ? old.netCashFlow + diff : old.netCashFlow - diff
             };
           });
           
@@ -437,7 +452,7 @@ export const HomePage: React.FC = () => {
             category: tx.category,
             spentAt: tx.spentAt,
             currency: tx.currency || 'INR',
-            type: editingTransaction.type || "expense",
+            type: (tx.type as 'expense' | 'income') || "expense",
           });
         }
       } else {
@@ -476,7 +491,7 @@ export const HomePage: React.FC = () => {
           currency: tx.currency || 'INR',
           category: tx.category,
           spentAt: tx.spentAt,
-          type: uiTransactions[i]?.type || "expense",
+          type: (uiTransactions[i]?.type as 'expense' | 'income') || "expense",
         }));
         await enqueueMany(pendingTxs);
       }
