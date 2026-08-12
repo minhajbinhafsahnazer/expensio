@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://expensio-backend-bewr.onrender.com/api/$1"
+    }
+  ]
+}
