@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, RefreshCw, Download, Palette, CheckCircle2, Database, AlertCircle, WifiOff, ChevronLeft, Terminal, ChevronDown, Sliders, Globe, Layers } from "lucide-react";
+import { LogOut, RefreshCw, Download, Palette, CheckCircle2, Database, AlertCircle, WifiOff, ChevronLeft, Terminal, ChevronDown, Sliders, Globe, Layers, Home } from "lucide-react";
 import { useAuth } from "../core/providers/AuthContext";
 import { useSyncEngine } from "../core/sync/SyncEngine";
 import { queue } from "../core/sync/db";
 import { useQueryClient } from "@tanstack/react-query";
-import { AppShell, Container, Stack } from "@expenseflow/ui";
+import { AppShell, Container, Stack, BottomNav } from "@expenseflow/ui";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -440,6 +440,24 @@ export default function ProfilePage() {
           {toastMessage}
         </div>
       )}
+
+      {/* Floating Bottom Nav (Home Only) */}
+      <BottomNav
+        activeTab="profile"
+        variant="hero"
+        items={[
+          {
+            id: "home",
+            label: "Go Home",
+            icon: <Home className="w-5 h-5 stroke-[2.5] text-slate-950" />,
+          }
+        ]}
+        onTabChange={(tabId: string) => {
+          if (tabId === "home") {
+            navigate("/");
+          }
+        }}
+      />
     </AppShell>
   );
 }
