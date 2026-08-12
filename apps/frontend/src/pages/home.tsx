@@ -552,7 +552,17 @@ export const HomePage: React.FC = () => {
           )}
 
           {/* 4. Upcoming Features Teasers */}
-          <section className="flex flex-col gap-3 pt-4 px-2">
+          <div className="flex items-center justify-center mt-4 mb-2">
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors shadow-sm cursor-pointer active:scale-95"
+            >
+              <RefreshCw size={14} className="text-slate-500" />
+              <span>Refresh Page</span>
+            </button>
+          </div>
+          <section className="flex flex-col gap-3 pt-2 px-2">
             <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-1">
               Coming Soon
             </h3>
