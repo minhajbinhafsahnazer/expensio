@@ -86,24 +86,37 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   ];
 
   // Dark Hero Dock Variant (Matching Home Screen Floating Dock)
-  if (variant === "hero" && items && (items.length === 3 || items.length === 1)) {
-    const centerItem = items.length === 1 ? items[0] : items[1];
-    const leftItem = items.length === 3 ? items[0] : null;
-    const rightItem = items.length === 3 ? items[2] : null;
+  if (variant === "hero" && items) {
+    if (items.length === 1) {
+      const centerItem = items[0];
+      return (
+        <div className={cn("fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center justify-center", className)}>
+          <button
+            type="button"
+            onClick={() => onTabChange(centerItem.id)}
+            aria-label={centerItem.label}
+            title={centerItem.label}
+            className="tactile-btn relative w-[52px] h-[52px] rounded-full bg-white hover:bg-slate-100 text-slate-950 flex items-center justify-center shadow-lg border-2 border-[#0f172a] transition-all active:scale-95 cursor-pointer"
+          >
+            {centerItem.icon}
+          </button>
+        </div>
+      );
+    }
 
-    return (
-      <div
-        style={{
-          background: "linear-gradient(135deg, #020617 0%, #0f172a 45%, #1e1b4b 100%)",
-        }}
-        className={cn(
-          "fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center justify-between h-[44px] px-2.5 border border-slate-800/80 rounded-[22px] shadow-[0_8px_24px_rgba(15,23,42,0.4)] select-none w-auto",
-          items.length === 3 ? "min-w-[240px]" : "min-w-[100px]",
-          className
-        )}
-      >
-        {/* Left Action - Equal width & symmetrical padding */}
-        {leftItem ? (
+    if (items.length === 3) {
+      const [leftItem, centerItem, rightItem] = items;
+      return (
+        <div
+          style={{
+            background: "linear-gradient(135deg, #020617 0%, #0f172a 45%, #1e1b4b 100%)",
+          }}
+          className={cn(
+            "fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center justify-between h-[44px] px-2.5 border border-slate-800/80 rounded-[22px] shadow-[0_8px_24px_rgba(15,23,42,0.4)] select-none w-auto min-w-[240px]",
+            className
+          )}
+        >
+          {/* Left Action - Equal width & symmetrical padding */}
           <button
             type="button"
             onClick={() => onTabChange(leftItem.id)}
@@ -114,23 +127,19 @@ export const BottomNav: React.FC<BottomNavProps> = ({
               {leftItem.label}
             </span>
           </button>
-        ) : (
-          <div className={items.length === 3 ? "w-[96px]" : "w-1"} />
-        )}
 
-        {/* Center Dominant FAB - Vertically popping 52px solid white circle */}
-        <button
-          type="button"
-          onClick={() => onTabChange(centerItem.id)}
-          aria-label={centerItem.label}
-          title={centerItem.label}
-          className="tactile-btn relative -my-1 w-[52px] h-[52px] rounded-full bg-white hover:bg-slate-100 text-slate-950 flex items-center justify-center shadow-lg border-2 border-[#0f172a] transition-all active:scale-95 shrink-0 mx-1 z-10 cursor-pointer"
-        >
-          {centerItem.icon}
-        </button>
+          {/* Center Dominant FAB - Vertically popping 52px solid white circle */}
+          <button
+            type="button"
+            onClick={() => onTabChange(centerItem.id)}
+            aria-label={centerItem.label}
+            title={centerItem.label}
+            className="tactile-btn relative -my-1 w-[52px] h-[52px] rounded-full bg-white hover:bg-slate-100 text-slate-950 flex items-center justify-center shadow-lg border-2 border-[#0f172a] transition-all active:scale-95 shrink-0 mx-1 z-10 cursor-pointer"
+          >
+            {centerItem.icon}
+          </button>
 
-        {/* Right Action - Equal width & symmetrical padding */}
-        {rightItem ? (
+          {/* Right Action - Equal width & symmetrical padding */}
           <button
             type="button"
             onClick={() => onTabChange(rightItem.id)}
@@ -146,11 +155,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({
               </span>
             )}
           </button>
-        ) : (
-          <div className={items.length === 3 ? "w-[96px]" : "w-1"} />
-        )}
-      </div>
-    );
+        </div>
+      );
+    }
   }
 
   if (items) {
