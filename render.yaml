@@ -3,8 +3,7 @@ services:
     name: expensio-backend
     env: node
     buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm turbo run build --filter expenseflow-backend
-    preDeployCommand: pnpm --filter expenseflow-backend run db:migrate
-    startCommand: pnpm --filter expenseflow-backend start
+    startCommand: pnpm --filter expenseflow-backend run db:migrate && pnpm --filter expenseflow-backend start
     healthCheckPath: /api/v1/health
     envVars:
       - key: NODE_ENV
