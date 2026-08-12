@@ -345,7 +345,7 @@ export const PortfolioPage: React.FC = () => {
   const [debts, setDebts] = useState<DebtItem[]>([
     {
       id: "d1",
-      name: "Sherlock",
+      name: "John",
       amount: 5000,
       type: "lent",
       dueDate: "2026-08-10",
@@ -356,7 +356,7 @@ export const PortfolioPage: React.FC = () => {
     },
     {
       id: "d2",
-      name: "Hanan",
+      name: "Jack",
       amount: 1200,
       type: "borrowed",
       dueDate: "2026-08-05",
@@ -366,7 +366,7 @@ export const PortfolioPage: React.FC = () => {
     },
     {
       id: "d3",
-      name: "Adhil",
+      name: "Alex",
       amount: 3500,
       type: "lent",
       dueDate: "2026-08-15",
@@ -376,7 +376,7 @@ export const PortfolioPage: React.FC = () => {
     },
     {
       id: "d4",
-      name: "Hanan",
+      name: "John",
       amount: 2000,
       type: "lent",
       dueDate: "2026-07-20",
@@ -698,9 +698,14 @@ export const PortfolioPage: React.FC = () => {
           <section className="bg-white border border-slate-200/60 rounded-3xl p-6 flex flex-col gap-5 shadow-sm mt-4">
             {/* Header + Add Debt Button (Rule #13) */}
             <div className="flex items-center justify-between pb-1">
-              <h3 className="text-base font-semibold text-slate-900 tracking-tight">
-                Debt & Loan Tracker
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-semibold text-slate-900 tracking-tight">
+                  Debt & Loan Tracker
+                </h3>
+                <span className="text-[9px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-500 px-2 py-1 rounded-full">
+                  Coming Soon
+                </span>
+              </div>
 
               <button
                 type="button"
