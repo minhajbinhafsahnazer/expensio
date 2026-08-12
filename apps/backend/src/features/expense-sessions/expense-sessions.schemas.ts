@@ -7,6 +7,7 @@ export const TransactionCreateSchema = z.object({
   amount: z.number().positive('Amount must be positive'),
   currency: z.string().length(3).default('INR'),
   category: z.string().min(1, 'Category is required'),
+  superiorCategory: z.string().trim().nullable().optional(),
   note: z.string().optional(),
   spentAt: z.string().datetime({ offset: true }).or(z.string()), // Accept ISO string
   status: z.enum(['pending', 'synced']).default('synced'),
@@ -33,6 +34,7 @@ export const TransactionPublicSchema = z.object({
   amount: z.string(), // numeric from DB usually stringified
   currency: z.string(),
   category: z.string(),
+  superiorCategory: z.string().nullable().optional(),
   note: z.string().nullable(),
   spentAt: z.date(),
   status: z.string(),

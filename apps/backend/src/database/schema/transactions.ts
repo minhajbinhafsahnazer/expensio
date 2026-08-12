@@ -45,8 +45,9 @@ export const transactions = pgTable(
     type: transactionTypeEnum('type').notNull().default('expense'),
 
     // Classification
-    category: text('category').notNull(),  // e.g. "food", "transport", "utilities"
-    note: text('note'),                    // Optional free-text memo
+    category: text('category').notNull(),          // e.g. "food", "transport", "utilities"
+    superiorCategory: text('superior_category'),   // Optional high-level analytical grouping (e.g. "Food & Dining")
+    note: text('note'),                            // Optional free-text memo
 
     // Timing
     spentAt: timestamp('spent_at', { withTimezone: true }).notNull(), // When expense occurred

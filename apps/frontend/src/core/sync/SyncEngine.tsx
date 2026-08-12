@@ -139,12 +139,13 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
           const payload = {
             transactions: creates.map(tx => ({
               clientGeneratedId: tx.clientGeneratedId,
-              amount:    tx.amount,
-              currency:  tx.currency,
-              category:  tx.category,
-              note:      tx.note,
-              spentAt:   tx.spentAt,
-              type:      tx.type,
+              amount:           tx.amount,
+              currency:         tx.currency,
+              category:         tx.category,
+              superiorCategory: tx.superiorCategory,
+              note:             tx.note,
+              spentAt:          tx.spentAt,
+              type:             tx.type,
             })),
           };
           await client.post('/expense-sessions', payload, { signal });
@@ -154,12 +155,13 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         // 2. Process UPDATEs
         for (const tx of updates) {
           await client.put(`/transactions/${tx.clientGeneratedId}`, {
-            amount:   tx.amount,
-            currency: tx.currency,
-            category: tx.category,
-            note:     tx.note,
-            spentAt:  tx.spentAt,
-            type:     tx.type,
+            amount:           tx.amount,
+            currency:         tx.currency,
+            category:         tx.category,
+            superiorCategory: tx.superiorCategory,
+            note:             tx.note,
+            spentAt:          tx.spentAt,
+            type:             tx.type,
           }, { signal });
           await queue.dequeue(tx.clientGeneratedId);
         }

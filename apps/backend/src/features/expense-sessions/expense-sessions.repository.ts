@@ -19,6 +19,7 @@ export type CreateTransactionPayload = {
   amount: string;
   currency: string;
   category: string;
+  superiorCategory?: string | null;
   note?: string;
   spentAt: Date;
   status: string;

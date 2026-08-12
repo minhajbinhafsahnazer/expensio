@@ -25,6 +25,7 @@ export const expenseSessionsService = {
         amount: t.amount.toString(), // Convert numeric to string for postgres NUMERIC
         currency: t.currency,
         category: t.category,
+        superiorCategory: t.superiorCategory ? t.superiorCategory.trim() : null,
         note: t.note,
         spentAt: new Date(t.spentAt),
         status: t.status,

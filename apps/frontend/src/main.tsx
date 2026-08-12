@@ -18,14 +18,20 @@ import { DevUIPage } from './pages/dev-ui';
 import ProfilePage from './pages/profile';
 import AnalyticsPage from './pages/analytics';
 
-// Pages — auth
+// Pages — public & auth
+import WelcomePage from './pages/welcome';
+import TermsPage from './pages/terms';
+import PrivacyPage from './pages/privacy';
 import { LoginPage } from './pages/auth/login';
 import { RegisterPage } from './pages/auth/register';
 
 const App = () => (
   <BrowserRouter>
     <Routes>
-      {/* ── Public auth routes ─────────────────────────────────── */}
+      {/* ── Public auth & legal routes ─────────────────────────── */}
+      <Route path="/welcome"  element={<WelcomePage />} />
+      <Route path="/terms"    element={<TermsPage />} />
+      <Route path="/privacy"  element={<PrivacyPage />} />
       <Route path="/login"    element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 

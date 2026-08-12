@@ -25,7 +25,7 @@ import {
   NotFoundError,
 } from '../../common/errors/index.js';
 import * as repo from './auth.repository.js';
-import type { UserPublic, TokenPair, RegisterBody, LoginBody, RequestMeta } from './auth.types.js';
+import type { UserPublic, TokenPair, RegisterBody, LoginBody, RequestMeta, UpdateMeBody } from './auth.types.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -38,23 +38,25 @@ function toUserPublic(user: {
   theme: string;
   timezone: string;
   locale: string;
+  superiorCategoriesEnabled: boolean;
   isActive: boolean;
   lastLoginAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }): UserPublic {
   return {
-    id:          user.id,
-    email:       user.email,
-    fullName:    user.fullName,
-    currency:    user.currency,
-    theme:       user.theme,
-    timezone:    user.timezone,
-    locale:      user.locale,
-    isActive:    user.isActive,
-    lastLoginAt: user.lastLoginAt,
-    createdAt:   user.createdAt,
-    updatedAt:   user.updatedAt,
+    id:                        user.id,
+    email:                     user.email,
+    fullName:                  user.fullName,
+    currency:                  user.currency,
+    theme:                     user.theme,
+    timezone:                  user.timezone,
+    locale:                    user.locale,
+    superiorCategoriesEnabled: user.superiorCategoriesEnabled,
+    isActive:                  user.isActive,
+    lastLoginAt:               user.lastLoginAt,
+    createdAt:                 user.createdAt,
+    updatedAt:                 user.updatedAt,
   };
 }
 
@@ -252,4 +254,18 @@ export async function getMe(userId: string): Promise<UserPublic> {
     throw new NotFoundError('User not found');
   }
   return toUserPublic(user);
+}
+
+/** Update the current user's preferences/settings. */
+export async function updateMe(
+  userId: string,
+  body: UpdateMeBody,
+): Promise<UserPublic> {
+  const user = await repo.findUserById(userId);
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+
+  const updated = await repo.updateUser(userId, body);
+  return toUserPublic(updated);
 }

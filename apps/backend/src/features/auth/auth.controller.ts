@@ -152,3 +152,15 @@ export async function getMe(
     successResponse({ user }, 'User profile fetched', request.id),
   );
 }
+
+/** PATCH /auth/me */
+export async function updateMe(
+  request: FastifyRequest<{ Body: any }>,
+  reply: FastifyReply,
+) {
+  const user = await authService.updateMe(request.auth.userId, request.body as any);
+
+  return reply.send(
+    successResponse({ user }, 'User profile updated successfully', request.id),
+  );
+}

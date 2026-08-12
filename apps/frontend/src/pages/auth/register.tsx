@@ -1,14 +1,14 @@
-/**
- * pages/auth/register.tsx
- *
- * Minimal, flat registration page.
- * On success: automatically authenticates and redirects to intended destination.
- */
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../core/providers/AuthContext';
 import { ApiError } from '../../core/api/client';
+
+const NUDGES = [
+  "With Expencio, your personal income tracking is made simple",
+  "Your data is protected with RLS-grade security",
+  "Offline-first sync guarantees privacy and fast access"
+];
 
 export function RegisterPage() {
   const { register } = useAuth();
@@ -18,8 +18,18 @@ export function RegisterPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [termsAgreed, setTermsAgreed] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [nudgeIndex, setNudgeIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNudgeIndex((prev) => (prev + 1) % NUDGES.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -104,17 +114,44 @@ export function RegisterPage() {
               Password
               <span style={styles.hint}> (min. 8 characters)</span>
             </label>
+            <div className="relative w-full">
+              <input
+                id="reg-password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                style={styles.input}
+                placeholder="••••••••"
+                disabled={loading}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors p-1 cursor-pointer"
+                title={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+
+          {/* Interactive Terms & Privacy Acknowledgement Checkbox */}
+          <div className="flex items-start gap-2.5 pt-1 select-none cursor-pointer">
             <input
-              id="reg-password"
-              type="password"
-              autoComplete="new-password"
-              required
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              style={styles.input}
-              placeholder="••••••••"
-              disabled={loading}
+              type="checkbox"
+              id="reg-terms"
+              checked={termsAgreed}
+              onChange={(e) => setTermsAgreed(e.target.checked)}
+              className="w-4 h-4 mt-0.5 rounded border-slate-300 text-slate-900 focus:ring-slate-900 cursor-pointer shrink-0"
             />
+            <label htmlFor="reg-terms" className="text-[11px] text-slate-500 cursor-pointer leading-tight">
+              I agree to Expencio's{" "}
+              <Link to="/terms" target="_blank" className="text-slate-800 font-semibold underline hover:text-indigo-600 transition-colors">Terms of Service</Link> &{" "}
+              <Link to="/privacy" target="_blank" className="text-slate-800 font-semibold underline hover:text-indigo-600 transition-colors">Privacy Policy</Link>.
+            </label>
           </div>
 
           {error && (
@@ -123,11 +160,11 @@ export function RegisterPage() {
 
           <button
             type="submit"
-            disabled={loading || !isValid}
+            disabled={loading || !isValid || !termsAgreed}
             style={{
               ...styles.button,
-              opacity: (loading || !isValid) ? 0.5 : 1,
-              cursor: (loading || !isValid) ? 'not-allowed' : 'pointer',
+              opacity: (loading || !isValid || !termsAgreed) ? 0.5 : 1,
+              cursor: (loading || !isValid || !termsAgreed) ? 'not-allowed' : 'pointer',
             }}
           >
             {loading ? 'Creating account…' : 'Create account'}
@@ -140,6 +177,55 @@ export function RegisterPage() {
             Sign in
           </Link>
         </p>
+
+        {/* Notion / Linear Passby App Nudge Banner */}
+        <div style={{
+          marginTop: '24px',
+          padding: '14px 16px',
+          background: 'linear-gradient(to right, rgba(240, 249, 255, 0.8), rgba(238, 242, 255, 0.8))',
+          border: '1px solid #e0f2fe',
+          borderRadius: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
+        }}>
+          <div style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            border: '2px solid #ffffff',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+            background: '#ffffff',
+          }}>
+            <img
+              src="/logo.jpg"
+              alt="Expencio"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.35)' }}
+            />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p
+              key={nudgeIndex}
+              className="animate-in fade-in slide-in-from-bottom-2 duration-300"
+              style={{
+                margin: 0,
+                fontSize: '12.5px',
+                fontWeight: '500',
+                color: '#334155',
+                lineHeight: '1.45',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              "{NUDGES[nudgeIndex]}"
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

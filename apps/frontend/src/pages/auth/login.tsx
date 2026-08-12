@@ -8,10 +8,16 @@
  * - Redirects to the originally requested page after login
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../core/providers/AuthContext';
 import { ApiError } from '../../core/api/client';
+
+const NUDGES = [
+  "With Expencio, your personal income tracking is made simple",
+  "Your data is protected with RLS-grade security",
+  "Zero-trust isolation guarantees privacy for every account"
+];
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -22,6 +28,14 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [nudgeIndex, setNudgeIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNudgeIndex((prev) => (prev + 1) % NUDGES.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -114,6 +128,55 @@ export function LoginPage() {
             Create one
           </Link>
         </p>
+
+        {/* Notion / Linear Passby App Nudge Banner */}
+        <div style={{
+          marginTop: '24px',
+          padding: '14px 16px',
+          background: 'linear-gradient(to right, rgba(240, 249, 255, 0.8), rgba(238, 242, 255, 0.8))',
+          border: '1px solid #e0f2fe',
+          borderRadius: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
+        }}>
+          <div style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            border: '2px solid #ffffff',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+            background: '#ffffff',
+          }}>
+            <img
+              src="/logo.jpg"
+              alt="Expencio"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.35)' }}
+            />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p
+              key={nudgeIndex}
+              className="animate-in fade-in slide-in-from-bottom-2 duration-300"
+              style={{
+                margin: 0,
+                fontSize: '12.5px',
+                fontWeight: '500',
+                color: '#334155',
+                lineHeight: '1.45',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              "{NUDGES[nudgeIndex]}"
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -232,5 +295,41 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#000000',
     fontWeight: '500',
     textDecoration: 'none',
+  },
+  nudgeCard: {
+    marginTop: '24px',
+    padding: '12px 14px',
+    background: '#f8fafc',
+    border: '1px solid #f1f5f9',
+    borderRadius: '14px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  nudgeRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+  },
+  nudgeIconBox: {
+    width: '24px',
+    height: '24px',
+    borderRadius: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  nudgeText: {
+    fontSize: '12px',
+    fontWeight: '500',
+    color: '#475569',
+    lineHeight: '1.35',
+  },
+  nudgeDivider: {
+    height: '1px',
+    background: '#e2e8f0',
+    width: '100%',
+    opacity: 0.6,
   },
 };

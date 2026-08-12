@@ -9,6 +9,13 @@ export const transactionsService = {
     if (payload.spentAt && typeof payload.spentAt === 'string') {
       payload.spentAt = new Date(payload.spentAt);
     }
+    if (payload.superiorCategory !== undefined) {
+      if (typeof payload.superiorCategory === 'string' && payload.superiorCategory.trim()) {
+        payload.superiorCategory = payload.superiorCategory.trim();
+      } else {
+        payload.superiorCategory = null;
+      }
+    }
     return await transactionsRepository.update(id, userId, payload);
   },
 

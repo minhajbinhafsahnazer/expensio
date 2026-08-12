@@ -21,8 +21,8 @@ export function ProtectedRoute() {
   }
 
   if (status === 'unauthenticated') {
-    // Preserve the originally requested path so we can redirect back after login
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    // Preserve the originally requested path so we can redirect back after authentication
+    return <Navigate to="/welcome" state={{ from: location }} replace />;
   }
 
   if (status === 'error') {

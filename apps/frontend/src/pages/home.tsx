@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2, ChevronDown, Keyboard, Wifi, WifiOff, RefreshCw, Wallet, X } from "lucide-react";
+import { Trash2, ChevronDown, Keyboard, Wifi, WifiOff, RefreshCw, Wallet, X, ArrowDown, TrendingUp } from "lucide-react";
 import {
   AppShell,
   Container,
@@ -31,6 +31,7 @@ export interface ExpenseEntry {
   dateGroup: "Today" | "Yesterday" | "Earlier";
   type?: "expense" | "income";
   spentAt?: string;
+  superiorCategory?: string | null;
 }
 
 export const HomePage: React.FC = () => {
@@ -39,6 +40,24 @@ export const HomePage: React.FC = () => {
   const [currencyVal, setCurrencyVal] = useState<number | undefined>(undefined);
   const [entryType, setEntryType] = useState<"expense" | "income">("expense");
   const [editingTransaction, setEditingTransaction] = useState<ExpenseEntry | null>(null);
+
+  const superiorCategoryPresets = [
+    "Food & Dining",
+    "Transportation",
+    "Housing & Bills",
+    "Shopping",
+    "Health & Wellness",
+    "Entertainment",
+    "Travel",
+    "Education",
+    "Personal & Lifestyle",
+    "Financial",
+    "Other",
+  ];
+
+  const [selectedSuperiorCategory, setSelectedSuperiorCategory] = useState<string>("");
+  const [isSuperiorDropdownOpen, setIsSuperiorDropdownOpen] = useState(false);
+  const superiorDropdownRef = useRef<HTMLDivElement>(null);
 
   const [expenseCategories, setExpenseCategories] = useState([
     "Food & Dining",
@@ -85,6 +104,9 @@ export const HomePage: React.FC = () => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setIsCategoryDropdownOpen(false);
       }
+      if (superiorDropdownRef.current && !superiorDropdownRef.current.contains(e.target as Node)) {
+        setIsSuperiorDropdownOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -113,7 +135,7 @@ export const HomePage: React.FC = () => {
       visibleServer = visibleServer.map(t => {
         if (pendingUpdates.has(t.id)) {
           const update = pendingUpdates.get(t.id)!;
-          return { ...t, amount: update.amount.toString(), category: update.category, type: update.type, spentAt: update.spentAt };
+          return { ...t, amount: update.amount.toString(), category: update.category, superiorCategory: update.superiorCategory, type: update.type, spentAt: update.spentAt };
         }
         return t;
       });
@@ -127,6 +149,7 @@ export const HomePage: React.FC = () => {
           sessionId: "pending",
           userId: user.id,
           category: t.category,
+          superiorCategory: t.superiorCategory,
           amount: t.amount.toString(),
           spentAt: t.spentAt,
           type: t.type || "expense",
@@ -197,6 +220,7 @@ export const HomePage: React.FC = () => {
         dateGroup: groups[dateKey].label as any,
         type,
         spentAt: t.spentAt,
+        superiorCategory: t.superiorCategory,
       });
       
       groups[dateKey].total += type === "income" ? -amount : amount;
@@ -315,6 +339,7 @@ export const HomePage: React.FC = () => {
     setCurrencyVal(exp.amount);
     setSelectedCategory(exp.title);
     setNewCategoryName(exp.title);
+    setSelectedSuperiorCategory(exp.superiorCategory || "");
     setEntryType(exp.type || "expense");
     setIsAddingCategory(false);
 
@@ -357,6 +382,7 @@ export const HomePage: React.FC = () => {
       setSelectedCategory(finalCategory);
     }
 
+    const finalSuperiorCategory = selectedSuperiorCategory.trim() ? selectedSuperiorCategory.trim() : null;
     const selectedSpentAtISO = getSpentAtISO(customDate);
 
     // Check if there is an unadded amount in the input field
@@ -372,11 +398,13 @@ export const HomePage: React.FC = () => {
         dateGroup: selectedDateTag === "Yesterday" ? "Yesterday" : selectedDateTag === "Today" ? "Today" : "Earlier",
         type: entryType,
         spentAt: selectedSpentAtISO,
+        superiorCategory: finalSuperiorCategory,
       });
       apiTransactions.push({
         clientGeneratedId: cid,
         amount: currencyVal,
         category: finalCategory,
+        superiorCategory: finalSuperiorCategory,
         spentAt: selectedSpentAtISO,
         currency: 'INR',
         type: entryType
@@ -393,11 +421,13 @@ export const HomePage: React.FC = () => {
         dateGroup: item.date === "Yesterday" ? "Yesterday" : "Today",
         type: item.type || "expense",
         spentAt: selectedSpentAtISO,
+        superiorCategory: finalSuperiorCategory,
       });
       apiTransactions.push({
         clientGeneratedId: cid,
         amount: item.amount,
         category: item.label,
+        superiorCategory: finalSuperiorCategory,
         spentAt: selectedSpentAtISO,
         currency: 'INR',
         type: item.type || "expense"
@@ -413,43 +443,18 @@ export const HomePage: React.FC = () => {
             if (!old) return old;
             return old.map((t: any) => 
               t.id === editingTransaction.id 
-                ? { ...t, category: tx.category, amount: tx.amount.toString(), spentAt: tx.spentAt, type: tx.type } 
+                ? { ...t, category: tx.category, superiorCategory: tx.superiorCategory, amount: tx.amount.toString(), spentAt: tx.spentAt, type: tx.type } 
                 : t
             );
           });
-          
-          // Optimistic analytics update
-          queryClient.setQueriesData({ queryKey: ["analytics"] }, (old: any) => {
-            if (!old) return old;
-            const newAmount = parseFloat(tx.amount.toString());
-            const oldAmount = parseFloat(editingTransaction.amount.toString());
-            const diff = newAmount - oldAmount;
-            
-            // If type changed, we need to handle it differently (subtract from old, add to new)
-            if (editingTransaction.type !== tx.type) {
-              return {
-                ...old,
-                totalSpent: tx.type === "expense" ? old.totalSpent + newAmount : old.totalSpent - oldAmount,
-                totalIncome: tx.type === "income" ? old.totalIncome + newAmount : old.totalIncome - oldAmount,
-                netCashFlow: tx.type === "income" 
-                  ? old.netCashFlow + newAmount + oldAmount 
-                  : old.netCashFlow - newAmount - oldAmount
-              };
-            }
-            
-            return {
-              ...old,
-              totalSpent: tx.type === "expense" ? old.totalSpent + diff : old.totalSpent,
-              totalIncome: tx.type === "income" ? old.totalIncome + diff : old.totalIncome,
-              netCashFlow: tx.type === "income" ? old.netCashFlow + diff : old.netCashFlow - diff
-            };
-          });
-          
+          queryClient.invalidateQueries({ queryKey: ["analytics"] });
+
           await enqueue({
             action: "UPDATE",
             clientGeneratedId: editingTransaction.id,
             amount: tx.amount,
             category: tx.category,
+            superiorCategory: tx.superiorCategory,
             spentAt: tx.spentAt,
             currency: tx.currency || 'INR',
             type: (tx.type as 'expense' | 'income') || "expense",
@@ -461,6 +466,7 @@ export const HomePage: React.FC = () => {
           const optimistic = apiTransactions.map((t, index) => ({
             id: t.clientGeneratedId,
             category: t.category,
+            superiorCategory: t.superiorCategory,
             amount: t.amount.toString(),
             spentAt: t.spentAt,
             type: uiTransactions[index]?.type || "expense",
@@ -468,20 +474,7 @@ export const HomePage: React.FC = () => {
           }));
           return [...optimistic, ...(old || [])];
         });
-
-        // Optimistic analytics update
-        const expenseTotal = uiTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + parseFloat(t.amount.toString()), 0);
-        const incomeTotal = uiTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + parseFloat(t.amount.toString()), 0);
-        
-        queryClient.setQueriesData({ queryKey: ["analytics"] }, (old: any) => {
-          if (!old) return old;
-          return {
-            ...old,
-            totalSpent: old.totalSpent + expenseTotal,
-            totalIncome: old.totalIncome + incomeTotal,
-            netCashFlow: old.netCashFlow + incomeTotal - expenseTotal
-          };
-        });
+        queryClient.invalidateQueries({ queryKey: ["analytics"] });
 
         // Enqueue offline creation atomically
         const pendingTxs = apiTransactions.map((tx, i) => ({
@@ -490,6 +483,7 @@ export const HomePage: React.FC = () => {
           amount: tx.amount,
           currency: tx.currency || 'INR',
           category: tx.category,
+          superiorCategory: tx.superiorCategory,
           spentAt: tx.spentAt,
           type: (uiTransactions[i]?.type as 'expense' | 'income') || "expense",
         }));
@@ -502,6 +496,7 @@ export const HomePage: React.FC = () => {
     setIsSheetOpen(false);
     setReceiptItems([]);
     setCurrencyVal(undefined);
+    setSelectedSuperiorCategory("");
     setEditingTransaction(null);
   };
 
@@ -670,8 +665,8 @@ export const HomePage: React.FC = () => {
         title={editingTransaction ? "Edit Transaction" : "Add Transactions"}
       >
         <Stack gap={2}>
-          {/* 1. Income or Expense Toggle */}
-          <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200/80">
+          {/* 1. Income or Expense Toggle - Modern Pill */}
+          <div className="flex items-center p-0.5 bg-slate-100/80 rounded-full border border-slate-200/60">
             <button
               type="button"
               onClick={() => {
@@ -679,13 +674,21 @@ export const HomePage: React.FC = () => {
                 setSelectedCategory(expenseCategories[0]);
               }}
               className={cn(
-                "flex-1 py-1.5 rounded-lg text-xs font-bold transition-all text-center cursor-pointer",
+                "flex-1 py-2 px-3 rounded-full text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer select-none",
                 entryType === "expense"
-                  ? "bg-slate-900 text-white shadow-2xs"
-                  : "text-slate-500 hover:text-slate-800"
+                  ? "bg-slate-900 text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
               )}
             >
-              Expense
+              <div
+                className={cn(
+                  "w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-colors",
+                  entryType === "expense" ? "bg-white/20 text-white" : "bg-slate-200/70 text-slate-500"
+                )}
+              >
+                <ArrowDown size={13} strokeWidth={2.5} />
+              </div>
+              <span>Expense</span>
             </button>
 
             <button
@@ -695,13 +698,21 @@ export const HomePage: React.FC = () => {
                 setSelectedCategory(incomeCategories[0]);
               }}
               className={cn(
-                "flex-1 py-1.5 rounded-lg text-xs font-bold transition-all text-center cursor-pointer",
+                "flex-1 py-2 px-3 rounded-full text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer select-none",
                 entryType === "income"
-                  ? "bg-emerald-600 text-white shadow-2xs"
-                  : "text-slate-500 hover:text-slate-800"
+                  ? "bg-[#059669] text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
               )}
             >
-              Income
+              <div
+                className={cn(
+                  "w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-colors",
+                  entryType === "income" ? "bg-white/25 text-white" : "bg-slate-200/70 text-slate-500"
+                )}
+              >
+                <TrendingUp size={13} strokeWidth={2.5} />
+              </div>
+              <span>Income</span>
             </button>
           </div>
 
@@ -839,7 +850,96 @@ export const HomePage: React.FC = () => {
             )}
           </div>
 
-          {/* 3. Amount Input */}
+          {/* 2b. Superior Category Combobox (Advanced Feature) */}
+          {(user?.superiorCategoriesEnabled ?? (localStorage.getItem("expencio_superior_category") === "true")) && (
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">
+                  Superior Category <span className="text-[10px] text-slate-400 font-normal opacity-70">(Optional)</span>
+                </label>
+                {selectedSuperiorCategory && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSuperiorCategory("")}
+                    className="text-[11px] font-medium text-slate-400 hover:text-slate-700 cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+
+              <div className="relative w-full" ref={superiorDropdownRef}>
+                <div className="relative flex items-center w-full">
+                  <input
+                    type="text"
+                    placeholder="e.g. Food & Dining, Transportation..."
+                    value={selectedSuperiorCategory}
+                    onChange={(e) => {
+                      setSelectedSuperiorCategory(e.target.value);
+                      setIsSuperiorDropdownOpen(true);
+                    }}
+                    onFocus={() => setIsSuperiorDropdownOpen(true)}
+                    className="w-full h-10 pl-3 pr-16 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                  <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                    {selectedSuperiorCategory && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedSuperiorCategory("")}
+                        className="p-1 hover:bg-slate-200 rounded-md text-slate-400 hover:text-slate-700 transition-colors flex items-center justify-center cursor-pointer"
+                        aria-label="Clear superior category"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setIsSuperiorDropdownOpen(!isSuperiorDropdownOpen)}
+                      className="p-1 hover:bg-slate-200 rounded-md text-slate-400 hover:text-slate-700 transition-colors cursor-pointer flex items-center justify-center"
+                      aria-label="Toggle superior category dropdown"
+                    >
+                      <ChevronDown size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                {isSuperiorDropdownOpen && (
+                  <div className="absolute z-[60] top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-[180px] overflow-y-auto flex flex-col p-1 animate-in fade-in zoom-in-95 duration-100">
+                    {superiorCategoryPresets
+                      .filter((preset) =>
+                        preset.toLowerCase().includes(selectedSuperiorCategory.toLowerCase())
+                      )
+                      .map((preset) => (
+                        <div
+                          key={preset}
+                          className={cn(
+                            "flex items-center justify-between px-3 py-2 rounded-lg hover:bg-slate-100 cursor-pointer text-xs font-semibold",
+                            selectedSuperiorCategory === preset ? "text-indigo-600 bg-indigo-50/70" : "text-slate-700"
+                          )}
+                          onClick={() => {
+                            setSelectedSuperiorCategory(preset);
+                            setIsSuperiorDropdownOpen(false);
+                          }}
+                        >
+                          <span>{preset}</span>
+                        </div>
+                      ))}
+                    {selectedSuperiorCategory.trim() &&
+                      !superiorCategoryPresets.some(
+                        (p) => p.toLowerCase() === selectedSuperiorCategory.trim().toLowerCase()
+                      ) && (
+                        <div
+                          className="px-3 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer border-t border-slate-100 mt-1"
+                          onClick={() => setIsSuperiorDropdownOpen(false)}
+                        >
+                          Use custom: "{selectedSuperiorCategory.trim()}"
+                        </div>
+                      )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           <CurrencyField
             value={currencyVal}
             onChange={(val: number | undefined) => setCurrencyVal(val)}

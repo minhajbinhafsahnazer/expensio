@@ -29,14 +29,14 @@ export default defineConfig({
         start_url: "/",
         icons: [
           {
-            src: "icon-192.png",
+            src: "logo.jpg",
             sizes: "192x192",
-            type: "image/png",
+            type: "image/jpeg",
           },
           {
-            src: "icon-512.png",
+            src: "logo.jpg",
             sizes: "512x512",
-            type: "image/png",
+            type: "image/jpeg",
           },
         ],
       },

@@ -29,6 +29,7 @@ export const users = pgTable(
     locale: varchar('locale', { length: 10 }).notNull().default('en-IN'),
 
     // Status
+    superiorCategoriesEnabled: boolean('superior_categories_enabled').notNull().default(false),
     isActive: boolean('is_active').notNull().default(true),
     lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
 

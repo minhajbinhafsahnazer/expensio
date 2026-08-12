@@ -26,10 +26,20 @@ export interface UserPublic {
   theme: string;
   timezone: string;
   locale: string;
+  superiorCategoriesEnabled: boolean;
   isActive: boolean;
   lastLoginAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface UpdateMeBody {
+  fullName?: string | undefined;
+  currency?: string | undefined;
+  theme?: string | undefined;
+  timezone?: string | undefined;
+  locale?: string | undefined;
+  superiorCategoriesEnabled?: boolean | undefined;
 }
 
 /** Pair of tokens returned on login */

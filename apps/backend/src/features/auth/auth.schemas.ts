@@ -44,17 +44,27 @@ export const LoginBodySchema = z.object({
  * password_hash is explicitly excluded.
  */
 export const UserPublicSchema = z.object({
-  id:          z.string(),
-  email:       z.string().email(),
-  fullName:    z.string().nullable(),
-  currency:    z.string(),
-  theme:       z.string(),
-  timezone:    z.string(),
-  locale:      z.string(),
-  isActive:    z.boolean(),
-  lastLoginAt: z.date().nullable(),
-  createdAt:   z.date(),
-  updatedAt:   z.date(),
+  id:                        z.string(),
+  email:                     z.string().email(),
+  fullName:                  z.string().nullable(),
+  currency:                  z.string(),
+  theme:                     z.string(),
+  timezone:                  z.string(),
+  locale:                    z.string(),
+  superiorCategoriesEnabled: z.boolean(),
+  isActive:                  z.boolean(),
+  lastLoginAt:               z.date().nullable(),
+  createdAt:                 z.date(),
+  updatedAt:                 z.date(),
+});
+
+export const UpdateMeBodySchema = z.object({
+  fullName:                  z.string().trim().optional(),
+  currency:                  z.string().trim().optional(),
+  theme:                     z.string().trim().optional(),
+  timezone:                  z.string().trim().optional(),
+  locale:                    z.string().trim().optional(),
+  superiorCategoriesEnabled: z.boolean().optional(),
 });
 
 // ─── Inferred Types ───────────────────────────────────────────────────────────

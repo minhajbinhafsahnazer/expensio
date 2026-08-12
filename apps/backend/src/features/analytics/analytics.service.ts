@@ -1,9 +1,29 @@
 import { eq, and, isNull, gte, lt } from 'drizzle-orm';
 import { db } from '../../database/client.js';
 import { transactions } from '../../database/schema/transactions.js';
+import { findUserById } from '../auth/auth.repository.js';
+
+/**
+ * Determine category aggregation key based on account feature flag and transaction data.
+ * - Feature ON & valid superiorCategory => use superiorCategory.trim()
+ * - Feature OFF or missing superiorCategory => fallback to transaction.category
+ */
+export function getAnalyticsCategoryKey(
+  transaction: { category: string; superiorCategory?: string | null },
+  isSuperiorCategoriesEnabled: boolean,
+): string {
+  if (isSuperiorCategoriesEnabled && transaction.superiorCategory?.trim()) {
+    return transaction.superiorCategory.trim();
+  }
+  return transaction.category;
+}
 
 export const analyticsService = {
   async getAnalyticsRange(userId: string, fromDateStr: string, toDateStr: string, timezone: string) {
+    // Check account feature flag for superior categories
+    const user = await findUserById(userId);
+    const isSuperiorCategoriesEnabled = user?.superiorCategoriesEnabled ?? false;
+
     // Parse dates (allows ISO strings or falls back to YYYY-MM-DD)
     const startDate = fromDateStr.includes('T') ? new Date(fromDateStr) : new Date(`${fromDateStr}T00:00:00Z`);
     const endDate = toDateStr.includes('T') ? new Date(toDateStr) : new Date(`${toDateStr}T23:59:59.999Z`);
@@ -60,8 +80,9 @@ export const analyticsService = {
       } else {
         totalSpent += amount;
         
-        // Category breakdown
-        categoriesMap[tx.category] = (categoriesMap[tx.category] || 0) + amount;
+        // Category breakdown (using account feature flag + superiorCategory fallback)
+        const catKey = getAnalyticsCategoryKey(tx, isSuperiorCategoriesEnabled);
+        categoriesMap[catKey] = (categoriesMap[catKey] || 0) + amount;
 
         // Daily breakdown - align with the pre-filled keys
         const dayStr = tx.spentAt.toLocaleDateString('en-CA', { timeZone: timezone || 'UTC' });

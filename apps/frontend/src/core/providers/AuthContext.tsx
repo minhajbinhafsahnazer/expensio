@@ -31,6 +31,7 @@ export interface User {
   theme: string;
   timezone: string;
   locale: string;
+  superiorCategoriesEnabled: boolean;
   isActive: boolean;
   lastLoginAt: string | null;
   createdAt: string;
@@ -48,6 +49,7 @@ interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, fullName?: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (data: Partial<User>) => Promise<void>;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -162,11 +164,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setState({ status: 'unauthenticated', user: null });
   }, [state.user?.id]);
 
+  const updateUser = useCallback(async (data: Partial<User>) => {
+    setState((prev) => ({
+      ...prev,
+      user: prev.user ? { ...prev.user, ...data } : null,
+    }));
+    try {
+      const res = await client.patch<{ user: User }>('/auth/me', data);
+      setState((prev) => ({
+        ...prev,
+        user: res.data.user,
+      }));
+    } catch (err) {
+      // Revert if API fails
+      const meRes = await client.get<{ user: User }>('/auth/me');
+      setState((prev) => ({
+        ...prev,
+        user: meRes.data.user,
+      }));
+      throw err;
+    }
+  }, []);
+
   const value: AuthContextValue = {
     ...state,
     login,
     register,
     logout,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

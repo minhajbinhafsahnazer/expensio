@@ -31,6 +31,7 @@ export interface PendingTransaction {
   amount: number;
   currency: string;
   category: string;
+  superiorCategory?: string | null;
   note?: string;
   spentAt: string;   // ISO string
   type: 'expense' | 'income';

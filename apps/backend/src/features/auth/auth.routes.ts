@@ -70,6 +70,16 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     preHandler: [authenticate],
     handler: controller.getMe,
   });
+
+  /**
+   * PATCH /auth/me
+   * Requires valid access token.
+   * Updates user preferences/settings.
+   */
+  fastify.patch('/me', {
+    preHandler: [authenticate],
+    handler: controller.updateMe,
+  });
 };
 
 export default authRoutes;

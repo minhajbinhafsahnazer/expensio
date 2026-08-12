@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, RefreshCw, Download, Palette, CheckCircle2, Database, AlertCircle, WifiOff, ChevronLeft, Terminal, ChevronDown, Sliders, Globe, Layers, Home } from "lucide-react";
+import { LogOut, RefreshCw, Download, Palette, CheckCircle2, Database, AlertCircle, WifiOff, ChevronLeft, ChevronDown, Sliders, Globe, Layers, Landmark, Home, Info, X, ShieldAlert } from "lucide-react";
 import { useAuth } from "../core/providers/AuthContext";
 import { useSyncEngine } from "../core/sync/SyncEngine";
 import { queue } from "../core/sync/db";
@@ -9,19 +9,23 @@ import { AppShell, Container, Stack, BottomNav } from "@expenseflow/ui";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const { pendingCount, syncStatus, isOnline, flush } = useSyncEngine();
   const queryClient = useQueryClient();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isManualSyncing, setIsManualSyncing] = useState(false);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+  const [showSuperiorInfoModal, setShowSuperiorInfoModal] = useState(false);
+  const [showSuperiorConfirmModal, setShowSuperiorConfirmModal] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [isSubmittingToggle, setIsSubmittingToggle] = useState(false);
   const [multiCurrency, setMultiCurrency] = useState(() => {
     return localStorage.getItem("expencio_multi_currency") === "true";
   });
-  const [superiorCategory, setSuperiorCategory] = useState(() => {
-    return localStorage.getItem("expencio_superior_category") !== "false";
+  const superiorCategory = user?.superiorCategoriesEnabled ?? (localStorage.getItem("expencio_superior_category") === "true");
+  const [multiBankAccounts, setMultiBankAccounts] = useState(() => {
+    return localStorage.getItem("expencio_multi_bank_accounts") === "true";
   });
-  const [developerMode, setDeveloperMode] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -37,11 +41,34 @@ export default function ProfilePage() {
     showToast(next ? "Multi-currency mode enabled" : "Multi-currency mode disabled");
   };
 
-  const toggleSuperiorCategory = () => {
+  const toggleSuperiorCategory = async () => {
     const next = !superiorCategory;
-    setSuperiorCategory(next);
     localStorage.setItem("expencio_superior_category", String(next));
-    showToast(next ? "Superior categorization enabled" : "Superior categorization disabled");
+    try {
+      await updateUser({ superiorCategoriesEnabled: next });
+      showToast(next ? "Superior categories enabled" : "Superior categories disabled");
+    } catch {
+      showToast(next ? "Superior categories enabled locally" : "Superior categories disabled locally");
+    }
+  };
+
+  const handleConfirmSuperiorToggle = async () => {
+    if (confirmText.trim().toUpperCase() !== "CONFIRM") return;
+    setIsSubmittingToggle(true);
+    try {
+      await toggleSuperiorCategory();
+      setShowSuperiorConfirmModal(false);
+      setConfirmText("");
+    } finally {
+      setIsSubmittingToggle(false);
+    }
+  };
+
+  const toggleMultiBankAccounts = () => {
+    const next = !multiBankAccounts;
+    setMultiBankAccounts(next);
+    localStorage.setItem("expencio_multi_bank_accounts", String(next));
+    showToast(next ? "Multiple bank accounts enabled" : "Multiple bank accounts disabled");
   };
 
   const handleManualSync = async () => {
@@ -317,13 +344,31 @@ export default function ProfilePage() {
                       <div className="flex items-start gap-3">
                         <Layers size={18} className="text-indigo-500 mt-0.5" />
                         <div>
-                          <div className="text-sm font-semibold text-slate-800">Superior Categorization</div>
-                          <div className="text-xs text-slate-500">Enable smart sub-categories & automated tags</div>
+                          <div className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                            <span>Superior Categories</span>
+                            <button
+                              type="button"
+                              onClick={() => setShowSuperiorInfoModal(true)}
+                              className="text-slate-400 hover:text-indigo-600 transition-colors p-0.5 rounded-full hover:bg-indigo-50 cursor-pointer inline-flex items-center"
+                              title="What are Superior Categories?"
+                            >
+                              <Info size={15} />
+                            </button>
+                          </div>
+                          <div className="text-xs text-slate-500">Group detailed categories into high-level categories for cleaner spending insights.</div>
+                          {superiorCategory && (
+                            <div className="text-[11px] text-indigo-600 font-medium mt-1">
+                              Superior categories will appear in the transaction form and be used for analytics.
+                            </div>
+                          )}
                         </div>
                       </div>
                       <button
                         type="button"
-                        onClick={toggleSuperiorCategory}
+                        onClick={() => {
+                          setConfirmText("");
+                          setShowSuperiorConfirmModal(true);
+                        }}
                         className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                           superiorCategory ? 'bg-indigo-600' : 'bg-slate-200'
                         }`}
@@ -336,7 +381,31 @@ export default function ProfilePage() {
                       </button>
                     </div>
 
-                    {/* Option 3: Force Resync */}
+                    {/* Option 3: Multiple Bank Accounts */}
+                    <div className="flex items-center justify-between p-4 bg-white">
+                      <div className="flex items-start gap-3">
+                        <Landmark size={18} className="text-indigo-500 mt-0.5" />
+                        <div>
+                          <div className="text-sm font-semibold text-slate-800">Multiple Bank Accounts</div>
+                          <div className="text-xs text-slate-500">Add or deduct money from multiple bank balances</div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={toggleMultiBankAccounts}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          multiBankAccounts ? 'bg-indigo-600' : 'bg-slate-200'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            multiBankAccounts ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Option 4: Force Resync */}
                     <div className="flex items-center justify-between p-4 bg-white">
                       <div className="flex items-start gap-3">
                         <RefreshCw size={18} className={`text-slate-500 mt-0.5 ${isManualSyncing ? "animate-spin" : ""}`} />
@@ -354,59 +423,7 @@ export default function ProfilePage() {
                       </button>
                     </div>
 
-                    {/* Option 4: System Diagnostics Toggle */}
-                    <div className="flex flex-col bg-white">
-                      <div className="flex items-center justify-between p-4">
-                        <div className="flex items-start gap-3">
-                          <Terminal size={18} className="text-slate-500 mt-0.5" />
-                          <div>
-                            <div className="text-sm font-semibold text-slate-800">System Diagnostics</div>
-                            <div className="text-xs text-slate-500">Show engine, outbox queue, and telemetry data</div>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setDeveloperMode(!developerMode)}
-                          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                            developerMode ? 'bg-slate-900' : 'bg-slate-200'
-                          }`}
-                        >
-                          <span
-                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                              developerMode ? 'translate-x-5' : 'translate-x-0'
-                            }`}
-                          />
-                        </button>
-                      </div>
 
-                      {/* Developer Mode Diagnostics Panel */}
-                      {developerMode && (
-                        <div className="p-4 bg-slate-900 text-slate-200 text-xs font-mono space-y-2 border-t border-slate-800 animate-in fade-in duration-200">
-                          <div className="flex justify-between items-center pb-2 border-b border-slate-800">
-                            <span className="text-slate-400">Environment</span>
-                            <span className="text-emerald-400 font-bold">Production (Monorepo)</span>
-                          </div>
-                          <div className="flex justify-between items-center pb-2 border-b border-slate-800">
-                            <span className="text-slate-400">Sync Engine Status</span>
-                            <span className="text-sky-400 font-semibold uppercase">{syncStatus}</span>
-                          </div>
-                          <div className="flex justify-between items-center pb-2 border-b border-slate-800">
-                            <span className="text-slate-400">Pending Outbox Queue</span>
-                            <span className="text-amber-400 font-semibold">{pendingCount} item(s)</span>
-                          </div>
-                          <div className="flex justify-between items-center pb-2 border-b border-slate-800">
-                            <span className="text-slate-400">Network Connection</span>
-                            <span className={isOnline ? "text-emerald-400" : "text-rose-400"}>
-                              {isOnline ? "Online" : "Offline"}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center pt-1">
-                            <span className="text-slate-400">Client Engine Version</span>
-                            <span className="text-slate-400">v1.0.0</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
 
                     {/* Option 5: Reset Local Data */}
                     <div className="flex items-center justify-between p-4 bg-white">
@@ -433,6 +450,125 @@ export default function ProfilePage() {
           </div>
         </Stack>
       </Container>
+
+      {/* Superior Category Confirmation Modal */}
+      {showSuperiorConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl p-5 max-w-sm w-full shadow-2xl border border-slate-100 flex flex-col gap-4 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+                <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                  <ShieldAlert size={16} />
+                </div>
+                <span>{superiorCategory ? "Disable Superior Categories?" : "Enable Superior Categories?"}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSuperiorConfirmModal(false)}
+                className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs text-slate-600">
+              <p className="leading-relaxed">
+                {superiorCategory
+                  ? "Disabling this feature will hide high-level category rollups in your forms and use standard categories for analytics. Saved superior categories will remain intact."
+                  : "Enabling this feature will add an optional high-level category field to your forms and group spending in your analytics breakdowns."}
+              </p>
+
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                <label className="text-[11px] font-bold text-slate-700 block">
+                  Type <span className="font-mono text-slate-900 uppercase bg-slate-200 px-1 py-0.5 rounded">CONFIRM</span> to proceed:
+                </label>
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="CONFIRM"
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && confirmText.trim().toUpperCase() === "CONFIRM") {
+                      handleConfirmSuperiorToggle();
+                    }
+                  }}
+                  className="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg text-xs font-mono font-bold tracking-wider text-slate-900 uppercase focus:outline-none focus:ring-2 focus:ring-slate-900"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowSuperiorConfirmModal(false)}
+                className="flex-1 py-2.5 bg-slate-100 text-slate-700 font-semibold text-xs rounded-xl hover:bg-slate-200 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={confirmText.trim().toUpperCase() !== "CONFIRM" || isSubmittingToggle}
+                onClick={handleConfirmSuperiorToggle}
+                className="flex-1 py-2.5 bg-slate-900 text-white font-semibold text-xs rounded-xl hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {isSubmittingToggle ? "Updating..." : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Superior Category Info Modal */}
+      {showSuperiorInfoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl p-5 max-w-sm w-full shadow-2xl border border-slate-100 flex flex-col gap-4 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+                <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <Layers size={16} />
+                </div>
+                <span>What are Superior Categories?</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSuperiorInfoModal(false)}
+                className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs text-slate-600 leading-relaxed">
+              <p>
+                Normally, specific entries like <span className="font-semibold text-slate-800">Burger</span>, <span className="font-semibold text-slate-800">Sandwitch</span>, or <span className="font-semibold text-slate-800">Pizza</span> appear as separate individual items in your breakdown charts.
+              </p>
+
+              <div className="p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl space-y-1.5">
+                <div className="font-bold text-indigo-900 text-[11px] uppercase tracking-wider">With Superior Categories:</div>
+                <p className="text-indigo-800">
+                  You can group them into a single high-level category like <span className="font-bold">Food & Dining</span>.
+                </p>
+                <div className="text-[11px] text-indigo-700 font-medium">
+                  📊 Result: Clean spending pie charts (e.g. <span className="font-bold">Food & Dining 50%</span>, <span className="font-bold">Transportation 20%</span>).
+                </div>
+              </div>
+
+              <p className="text-[11px] text-slate-400">
+                * Turning this feature OFF will not delete your saved superior categories.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowSuperiorInfoModal(false)}
+              className="w-full py-2.5 bg-slate-900 text-white font-semibold text-xs rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              Got it!
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Toast Notification */}
       {toastMessage && (

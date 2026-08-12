@@ -8,6 +8,7 @@ export interface TransactionResponse {
   currency: string;
   type: string;
   category: string;
+  superiorCategory?: string | null;
   note: string | null;
   spentAt: string;
   status: string;

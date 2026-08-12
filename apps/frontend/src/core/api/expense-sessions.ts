@@ -5,6 +5,7 @@ export interface TransactionCreatePayload {
   amount: number;
   currency?: string;
   category: string;
+  superiorCategory?: string | null;
   note?: string;
   spentAt: string; // ISO string
   status?: 'pending' | 'synced';
