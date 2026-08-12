@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {
-    "typecheck": "node ./node_modules/.bin/tsc --noEmit 2>nul || node ../../apps/frontend/node_modules/typescript/bin/tsc --noEmit"
+    "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
@@ -21,6 +21,7 @@
     "@types/react": "^19.0.0-rc",
     "@types/react-dom": "^19.0.0-rc",
     "react": "^18.0.0 || ^19.0.0",
-    "react-dom": "^18.0.0 || ^19.0.0"
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "typescript": "^5.4.5"
   }
 }

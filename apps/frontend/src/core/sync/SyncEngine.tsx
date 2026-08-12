@@ -51,6 +51,8 @@ interface SyncContextValue {
   isOnline: boolean;
   /** Queue a new transaction for sync (instant, never throws) */
   enqueue: (tx: Omit<PendingTransaction, 'queuedAt' | 'attempts' | 'userId'>) => Promise<void>;
+  /** Queue multiple transactions for sync atomically */
+  enqueueMany: (txs: Omit<PendingTransaction, 'queuedAt' | 'attempts' | 'userId'>[]) => Promise<void>;
   /** Manually trigger a flush attempt */
   flush: () => Promise<void>;
 }
@@ -105,8 +107,9 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     // Hard stops: no user, already flushing, offline, or stopped for logout.
     if (!userId || isFlushing.current || !navigator.onLine || isStopped.current) return;
 
-    const pending = await queue.getAll(userId);
-    if (pending.length === 0) {
+    // Fast check if queue is empty before acquiring lock
+    const initialPending = await queue.getAll(userId);
+    if (initialPending.length === 0) {
       setSyncStatus('idle');
       return;
     }
@@ -114,69 +117,76 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     isFlushing.current = true;
     setSyncStatus('syncing');
 
-    // Snapshot the current AbortController signal.
-    // If logout fires mid-flush, abort() is called on this controller,
-    // and the fetch calls below will throw AbortError immediately.
-    const signal = abortController.current.signal;
-
-    // Group by action
-    const creates = pending.filter(tx => tx.action === 'CREATE' || !tx.action);
-    const updates = pending.filter(tx => tx.action === 'UPDATE');
-    const deletes = pending.filter(tx => tx.action === 'DELETE');
-
     try {
-      // 1. Batch CREATEs via /expense-sessions
-      if (creates.length > 0) {
-        const payload = {
-          transactions: creates.map(tx => ({
-            clientGeneratedId: tx.clientGeneratedId,
-            amount:    tx.amount,
-            currency:  tx.currency,
-            category:  tx.category,
-            note:      tx.note,
-            spentAt:   tx.spentAt,
-          })),
-        };
-        await client.post('/expense-sessions', payload, { signal });
-        await queue.dequeueMany(creates.map(tx => tx.clientGeneratedId));
-      }
+      while (true) {
+        if (!navigator.onLine || isStopped.current) break;
 
-      // 2. Process UPDATEs
-      for (const tx of updates) {
-        await client.put(`/transactions/${tx.clientGeneratedId}`, {
-          amount:   tx.amount,
-          currency: tx.currency,
-          category: tx.category,
-          note:     tx.note,
-          spentAt:  tx.spentAt,
-        }, { signal });
-        await queue.dequeue(tx.clientGeneratedId);
-      }
+        const pending = await queue.getAll(userId);
+        if (pending.length === 0) {
+          break;
+        }
 
-      // 3. Process DELETEs
-      for (const tx of deletes) {
-        await client.delete(`/transactions/${tx.clientGeneratedId}`, { signal });
-        await queue.dequeue(tx.clientGeneratedId);
+        // Snapshot the current AbortController signal.
+        const signal = abortController.current.signal;
+
+        // Group by action
+        const creates = pending.filter(tx => tx.action === 'CREATE' || !tx.action);
+        const updates = pending.filter(tx => tx.action === 'UPDATE');
+        const deletes = pending.filter(tx => tx.action === 'DELETE');
+
+        // 1. Batch CREATEs via /expense-sessions
+        if (creates.length > 0) {
+          const payload = {
+            transactions: creates.map(tx => ({
+              clientGeneratedId: tx.clientGeneratedId,
+              amount:    tx.amount,
+              currency:  tx.currency,
+              category:  tx.category,
+              note:      tx.note,
+              spentAt:   tx.spentAt,
+            })),
+          };
+          await client.post('/expense-sessions', payload, { signal });
+          await queue.dequeueMany(creates.map(tx => tx.clientGeneratedId));
+        }
+
+        // 2. Process UPDATEs
+        for (const tx of updates) {
+          await client.put(`/transactions/${tx.clientGeneratedId}`, {
+            amount:   tx.amount,
+            currency: tx.currency,
+            category: tx.category,
+            note:     tx.note,
+            spentAt:  tx.spentAt,
+          }, { signal });
+          await queue.dequeue(tx.clientGeneratedId);
+        }
+
+        // 3. Process DELETEs
+        for (const tx of deletes) {
+          await client.delete(`/transactions/${tx.clientGeneratedId}`, { signal });
+          await queue.dequeue(tx.clientGeneratedId);
+        }
       }
 
       await refreshCount();
 
-      // Invalidate queries so the UI reflects the server state.
+      // Only invalidate when the queue is fully drained.
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['expense_sessions'] });
       queryClient.invalidateQueries({ queryKey: ['analytics'] });
 
       setSyncStatus('idle');
     } catch (err) {
-      // AbortError = logout fired mid-flush. Not a sync failure — don't
-      // mark status as error or increment attempts.
+      // AbortError = logout fired mid-flush. Not a sync failure.
       if (err instanceof DOMException && err.name === 'AbortError') {
         setSyncStatus('idle');
         return;
       }
-      // Network or server error — keep items in queue, will retry.
+      // Network or server error — keep remaining items in queue, will retry.
+      const remaining = await queue.getAll(userId);
       await Promise.all(
-        pending.map(tx => queue.incrementAttempts(tx.clientGeneratedId))
+        remaining.map(tx => queue.incrementAttempts(tx.clientGeneratedId))
       );
       setSyncStatus('error');
     } finally {
@@ -209,6 +219,28 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     await refreshCount();
 
     // Try to sync immediately if online and engine is running.
+    if (!isStopped.current) flush();
+  }, [userId, flush, refreshCount]);
+
+  // ─── Enqueue Many: add multiple transactions in a single atomic transaction ──
+  const enqueueMany = useCallback(async (
+    txs: Omit<PendingTransaction, 'queuedAt' | 'attempts' | 'userId'>[]
+  ) => {
+    if (!userId || txs.length === 0) return;
+
+    const queuedAt = new Date().toISOString();
+    const newPending: PendingTransaction[] = txs.map(tx => ({
+      ...tx,
+      userId,
+      queuedAt,
+      attempts: 0
+    }));
+
+    // For simplicity, enqueueMany assumes mostly CREATEs (like the batch save modal).
+    // If we need UPDATE/DELETE coalescing here, we'd iterate and check existing.
+    await queue.enqueueMany(newPending);
+    await refreshCount();
+
     if (!isStopped.current) flush();
   }, [userId, flush, refreshCount]);
 
@@ -245,9 +277,17 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && navigator.onLine) {
+        flush();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [flush]);
 
@@ -276,6 +316,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     syncStatus,
     isOnline,
     enqueue,
+    enqueueMany,
     flush,
   };
 

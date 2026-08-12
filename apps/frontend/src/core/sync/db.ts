@@ -103,6 +103,15 @@ export const queue = {
     await db.put('pending-transactions', tx);
   },
 
+  /** Add multiple pending transactions to the local queue in a single atomic transaction */
+  async enqueueMany(txs: PendingTransaction[]): Promise<void> {
+    if (txs.length === 0) return;
+    const db = await getDb();
+    const tx = db.transaction('pending-transactions', 'readwrite');
+    await Promise.all(txs.map(t => tx.store.put(t)));
+    await tx.done;
+  },
+
   /**
    * Get all pending transactions for a specific user, ordered by queuedAt
    * (oldest first for FIFO sync).

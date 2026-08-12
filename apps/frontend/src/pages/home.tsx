@@ -21,6 +21,7 @@ import { TransactionsApi } from "../core/api/transactions";
 import { ulid } from "ulid";
 import { useAnalytics } from "../core/api/analytics";
 import { useSyncEngine } from "../core/sync/SyncEngine";
+import { queue } from "../core/sync/db";
 import { useAuth } from "../core/providers/AuthContext";
 
 export interface ExpenseEntry {
@@ -92,14 +93,54 @@ export const HomePage: React.FC = () => {
   const [receiptItems, setReceiptItems] = useState<ReceiptItem[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const { enqueue, enqueueMany, pendingCount, syncStatus, isOnline } = useSyncEngine();
 
   const { data: serverTransactions = [] } = useQuery({
     queryKey: ["transactions"],
-    queryFn: TransactionsApi.getAll
+    queryFn: async () => {
+      const serverData = await TransactionsApi.getAll();
+      if (!user?.id) return serverData;
+      
+      const pending = await queue.getAll(user.id);
+      
+      // 1. Filter out pending deletes
+      const pendingDeletes = new Set(pending.filter(t => t.action === 'DELETE').map(t => t.clientGeneratedId));
+      let visibleServer = serverData.filter(t => !pendingDeletes.has(t.id));
+      
+      // 2. Apply pending updates
+      const pendingUpdates = new Map(pending.filter(t => t.action === 'UPDATE').map(t => [t.clientGeneratedId, t]));
+      visibleServer = visibleServer.map(t => {
+        if (pendingUpdates.has(t.id)) {
+          const update = pendingUpdates.get(t.id)!;
+          return { ...t, amount: update.amount.toString(), category: update.category, type: update.type, spentAt: update.spentAt };
+        }
+        return t;
+      });
+      
+      // 3. Prepend pending creates (ignoring any that are already in the server data)
+      const serverIds = new Set(serverData.map(t => t.id));
+      const pendingCreates = pending
+        .filter(t => (t.action === 'CREATE' || !t.action) && !serverIds.has(t.clientGeneratedId))
+        .map(t => ({
+          id: t.clientGeneratedId,
+          sessionId: "pending",
+          userId: user.id,
+          category: t.category,
+          amount: t.amount.toString(),
+          spentAt: t.spentAt,
+          type: t.type || "expense",
+          status: "pending",
+          currency: t.currency,
+          note: t.note || null,
+          createdAt: t.queuedAt,
+          updatedAt: t.queuedAt,
+          deletedAt: null
+        }));
+        
+      return [...pendingCreates, ...visibleServer].sort((a, b) => new Date(b.spentAt).getTime() - new Date(a.spentAt).getTime());
+    }
   });
-
-  const { enqueue, pendingCount, syncStatus, isOnline } = useSyncEngine();
-  const { user } = useAuth();
 
   const date = new Date();
   const year = date.getFullYear();
@@ -402,11 +443,12 @@ export const HomePage: React.FC = () => {
       } else {
         // Optimistic: update the React Query cache immediately so UI responds instantly
         queryClient.setQueryData(["transactions"], (old: any) => {
-          const optimistic = apiTransactions.map(t => ({
+          const optimistic = apiTransactions.map((t, index) => ({
             id: t.clientGeneratedId,
             category: t.category,
             amount: t.amount.toString(),
             spentAt: t.spentAt,
+            type: uiTransactions[index]?.type || "expense",
             status: "pending"
           }));
           return [...optimistic, ...(old || [])];
@@ -426,20 +468,17 @@ export const HomePage: React.FC = () => {
           };
         });
 
-        // Enqueue offline creation
-        for (let i = 0; i < apiTransactions.length; i++) {
-          const tx = apiTransactions[i];
-          const uiTx = uiTransactions[i];
-          await enqueue({
-            action: "CREATE",
-            clientGeneratedId: tx.clientGeneratedId,
-            amount: tx.amount,
-            currency: tx.currency || 'INR',
-            category: tx.category,
-            spentAt: tx.spentAt,
-            type: uiTx?.type || "expense",
-          });
-        }
+        // Enqueue offline creation atomically
+        const pendingTxs = apiTransactions.map((tx, i) => ({
+          action: "CREATE" as const,
+          clientGeneratedId: tx.clientGeneratedId,
+          amount: tx.amount,
+          currency: tx.currency || 'INR',
+          category: tx.category,
+          spentAt: tx.spentAt,
+          type: uiTransactions[i]?.type || "expense",
+        }));
+        await enqueueMany(pendingTxs);
       }
       
       showToast(editingTransaction ? "Expense updated" : `Saved ${apiTransactions.length} transaction(s)`);
@@ -551,16 +590,14 @@ export const HomePage: React.FC = () => {
             </>
           )}
 
-          {/* 4. Upcoming Features Teasers */}
+          {/* Sync Status Indicator */}
           <div className="flex items-center justify-center mt-4 mb-2">
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors shadow-sm cursor-pointer active:scale-95"
-            >
-              <RefreshCw size={14} className="text-slate-500" />
-              <span>Refresh Page</span>
-            </button>
+            <span className="text-[10px] font-medium text-slate-400">
+              {!isOnline && pendingCount > 0 ? "Offline · Saved locally" : 
+               syncStatus === 'syncing' ? "↻ Syncing…" : 
+               syncStatus === 'error' ? "Couldn't sync · Will retry" : 
+               "✓ Synced"}
+            </span>
           </div>
           <section className="flex flex-col gap-3 pt-2 px-2">
             <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-1">
