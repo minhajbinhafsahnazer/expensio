@@ -251,6 +251,18 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     };
   }, [flush]);
 
+  // ─── Background Polling: Retry pending transactions every 30s ────────────
+  // Crucial for Render's free tier: if the first request fails due to a cold start
+  // timeout (50s wake-up time), this interval will seamlessly retry until it goes through.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (pendingCount > 0 && navigator.onLine && !isFlushing.current && !isStopped.current) {
+        flush();
+      }
+    }, 30000); // 30 seconds
+    return () => clearInterval(interval);
+  }, [pendingCount, flush]);
+
   // ─── Initial load: flush leftover items from a previous session ───────────
   useEffect(() => {
     if (!userId) return;
