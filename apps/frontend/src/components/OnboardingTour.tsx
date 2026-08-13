@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-  Sparkles,
-  Wallet,
-  PieChart,
-  Target,
   Wifi,
   ChevronRight,
   ChevronLeft,
