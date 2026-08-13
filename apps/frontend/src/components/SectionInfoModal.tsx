@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
-import { HelpCircle, Info, X, ShieldCheck, Sparkles } from "lucide-react";
+import { HelpCircle, Info, X, ShieldCheck } from "lucide-react";
 
 export interface SectionInfoContent {
   title: string;
