@@ -71,8 +71,8 @@ export const SectionInfoModal: React.FC<SectionInfoModalProps> = ({
             {/* Header */}
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
-                  <Sparkles size={18} />
+                <div className="w-9 h-9 rounded-2xl bg-white border border-slate-200/60 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
+                  <img src="/logo.jpg" alt="Expencio" className="w-full h-full object-cover scale-[1.35]" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
