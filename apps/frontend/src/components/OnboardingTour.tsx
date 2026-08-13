@@ -23,7 +23,6 @@ interface TourStep {
   title: string;
   subtitle: string;
   badge: string;
-  icon: React.ReactNode;
   color: string;
   content: React.ReactNode;
 }
@@ -54,7 +53,6 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ isOpen, onClose 
       title: "Welcome to Expencio",
       subtitle: "Personal income & expense tracking made simple, secure, and private.",
       badge: "Get Started",
-      icon: <Sparkles className="w-6 h-6 text-amber-500" />,
       color: "from-amber-500/20 to-orange-500/10",
       content: (
         <div className="space-y-3.5 text-xs sm:text-sm text-slate-600">
@@ -85,7 +83,6 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ isOpen, onClose 
       title: "Fast Expense & Income Logging",
       subtitle: "Capture transactions in seconds with flexible categories.",
       badge: "Quick Action",
-      icon: <Wallet className="w-6 h-6 text-indigo-500" />,
       color: "from-indigo-500/20 to-blue-500/10",
       content: (
         <div className="space-y-3.5 text-xs sm:text-sm text-slate-600">
@@ -110,7 +107,6 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ isOpen, onClose 
       title: "Analytics & Superior Categories",
       subtitle: "Deep visual insights into your spending habits.",
       badge: "Smart Reports",
-      icon: <PieChart className="w-6 h-6 text-purple-500" />,
       color: "from-purple-500/20 to-pink-500/10",
       content: (
         <div className="space-y-3.5 text-xs sm:text-sm text-slate-600">
@@ -128,7 +124,6 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ isOpen, onClose 
       title: "Financial Goals & Budgets",
       subtitle: "Track savings targets and enforce budget limits effortlessly.",
       badge: "Target Tracking",
-      icon: <Target className="w-6 h-6 text-emerald-500" />,
       color: "from-emerald-500/20 to-teal-500/10",
       content: (
         <div className="space-y-3.5 text-xs sm:text-sm text-slate-600">
@@ -153,7 +148,6 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ isOpen, onClose 
       title: "Privacy & Zero-Trust Security",
       subtitle: "You own your data. Always.",
       badge: "Zero-Trust",
-      icon: <ShieldCheck className="w-6 h-6 text-slate-800" />,
       color: "from-slate-900/10 to-slate-700/10",
       content: (
         <div className="space-y-3.5 text-xs sm:text-sm text-slate-600">
@@ -210,7 +204,9 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ isOpen, onClose 
         <div className={`p-5 sm:p-6 bg-gradient-to-br ${step.color} border-b border-slate-100 relative shrink-0`}>
           <div className="flex items-center justify-between gap-3 mb-2.5">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/90 backdrop-blur-xs rounded-full border border-slate-200/60 text-[11px] font-semibold text-slate-800 shadow-2xs">
-              {step.icon}
+              <div className="w-4 h-4 rounded-full overflow-hidden flex items-center justify-center shrink-0 border border-slate-200/60 bg-white">
+                <img src="/logo.jpg" alt="Expencio" className="w-full h-full object-cover scale-[1.35]" />
+              </div>
               <span>{step.badge}</span>
             </div>
 
