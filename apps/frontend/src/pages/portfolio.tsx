@@ -39,6 +39,7 @@ import {
   ShieldCheck,
   Download,
 } from "lucide-react";
+import { SectionInfoModal } from "../components/SectionInfoModal";
 
 
 
@@ -521,9 +522,25 @@ export const PortfolioPage: React.FC = () => {
             {/* Top Summary Header Area */}
             <div className="flex flex-col gap-3 pb-5 border-b border-slate-800/60 relative z-10">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-semibold text-white tracking-tight">
-                  Financial Goals
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-semibold text-white tracking-tight">
+                    Financial Goals
+                  </h3>
+                  <SectionInfoModal
+                    content={{
+                      title: "Savings Goals & Milestones",
+                      subtitle: "Target-driven financial discipline",
+                      badge: "Goals",
+                      description: "Set target savings limits (e.g. Emergency Fund, New Bike, Vacation) and log deposit progress.",
+                      highlights: [
+                        { title: "Progress Percentage", desc: "Calculated in real-time as (Current Amount / Target Amount) × 100%." },
+                        { title: "Priority Tagging", desc: "Organize goals by Low, Medium, or High priority." },
+                        { title: "Quick Deposit", desc: "Tap '+ Deposit' on any goal card to add funds toward your target." }
+                      ]
+                    }}
+                    theme="dark"
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={handleOpenNewGoal}
@@ -1004,9 +1021,24 @@ export const PortfolioPage: React.FC = () => {
             className="w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-5 shadow-xl flex flex-col gap-4 animate-in zoom-in-95 duration-150 text-slate-900"
           >
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-              <h3 className="font-bold text-base text-slate-900 tracking-tight">
-                {editingGoalId ? "Edit Goal" : "Create New Goal"}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-base text-slate-900 tracking-tight">
+                  {editingGoalId ? "Edit Goal" : "Create New Goal"}
+                </h3>
+                <SectionInfoModal
+                  content={{
+                    title: "Goal Creation Guide",
+                    subtitle: "Track targets with visual colors & deadlines",
+                    badge: "Goals Guide",
+                    description: "Define a financial milestone like an emergency fund, major purchase, or vacation pool.",
+                    highlights: [
+                      { title: "Target Amount", desc: "The total target savings amount you want to reach." },
+                      { title: "Target Date", desc: "Desired completion deadline for this goal." },
+                      { title: "Priority & Accent", desc: "Assign Low/Medium/High priority and accent colors for clear organization." }
+                    ]
+                  }}
+                />
+              </div>
               <button
                 type="button"
                 onClick={() => setIsGoalModalOpen(false)}

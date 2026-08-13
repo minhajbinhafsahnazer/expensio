@@ -4,6 +4,7 @@ import { ChevronLeft, PieChart, Calendar, CheckCircle2 } from "lucide-react";
 import { AppShell, Container, Stack, cn } from "@expenseflow/ui";
 import { motion } from "framer-motion";
 import { useAnalytics } from "../core/api/analytics";
+import { SectionInfoModal } from "../components/SectionInfoModal";
 
 type Timeframe = "today" | "week" | "month" | "custom";
 
@@ -63,14 +64,30 @@ export default function AnalyticsPage() {
         <Stack gap={6}>
           {/* Header & Nudge */}
           <div className="flex flex-col gap-3 px-2 pb-2">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => navigate("/")}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors -ml-2 text-slate-600 cursor-pointer"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <h1 className="text-xl font-bold tracking-tight text-slate-900">Analytics</h1>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => navigate("/")}
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors -ml-2 text-slate-600 cursor-pointer"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <h1 className="text-xl font-bold tracking-tight text-slate-900">Analytics</h1>
+              </div>
+
+              <SectionInfoModal
+                content={{
+                  title: "Analytics & Category Insights",
+                  subtitle: "Visual spending distribution and period trends",
+                  badge: "Reports",
+                  description: "Analytics processes your logged entries to give you interactive charts, daily spending bars, and category percentage breakdowns.",
+                  highlights: [
+                    { title: "Timeframe Filter", desc: "Toggle between Today, Week, Month, or Custom month offsets." },
+                    { title: "Superior Category Mode", desc: "When Superior Categories are enabled in settings, granular expenses are grouped into top-level categories." },
+                    { title: "Daily Trend Bars", desc: "Hover or tap any vertical bar to view specific daily totals." }
+                  ]
+                }}
+              />
             </div>
             
             {/* The Nudge */}

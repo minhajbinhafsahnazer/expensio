@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2, ChevronDown, Keyboard, Wifi, WifiOff, RefreshCw, Wallet, X, ArrowDown, TrendingUp } from "lucide-react";
+import { Trash2, ChevronDown, Keyboard, Wifi, WifiOff, RefreshCw, Wallet, X, ArrowDown, TrendingUp, HelpCircle } from "lucide-react";
+import { OnboardingTour } from "../components/OnboardingTour";
+import { SectionInfoModal } from "../components/SectionInfoModal";
 import {
   AppShell,
   Container,
@@ -114,9 +116,21 @@ export const HomePage: React.FC = () => {
 
   const [receiptItems, setReceiptItems] = useState<ReceiptItem[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isTourOpen, setIsTourOpen] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { enqueue, enqueueMany, pendingCount, syncStatus, isOnline } = useSyncEngine();
+
+  // Auto-start guided onboarding tour for first-time logged-in users
+  useEffect(() => {
+    if (user?.id) {
+      const tourKey = `expencio_tour_seen_${user.id}`;
+      const tourSeen = localStorage.getItem(tourKey);
+      if (!tourSeen) {
+        setIsTourOpen(true);
+      }
+    }
+  }, [user?.id]);
 
   const { data: serverTransactions = [] } = useQuery({
     queryKey: ["transactions"],
@@ -502,6 +516,9 @@ export const HomePage: React.FC = () => {
 
   return (
     <AppShell className="bg-slate-50 min-h-screen pb-28 selection:bg-slate-900 selection:text-white">
+      {/* Onboarding Guided Tour Modal */}
+      <OnboardingTour isOpen={isTourOpen} onClose={() => setIsTourOpen(false)} />
+
       <Container size="sm" className="pt-12 sm:pt-14">
         <Stack gap={6}>
           {/* Dashboard Header */}
@@ -512,12 +529,24 @@ export const HomePage: React.FC = () => {
               </div>
               <span className="text-lg">Expencio</span>
             </div>
-            <button
-              onClick={() => navigate('/profile')}
-              className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm hover:bg-slate-300 transition-colors cursor-pointer"
-            >
-              {user?.email ? (user.email.split('@')[0].charAt(0) + user.email.split('@')[0].slice(-1)).toUpperCase() : "MJ"}
-            </button>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsTourOpen(true)}
+                className="flex items-center gap-1 px-2 py-1 rounded-full bg-white border border-slate-200/80 hover:bg-slate-100 text-slate-700 text-[11px] font-semibold shadow-2xs transition-all cursor-pointer"
+                title="App Walkthrough & Help"
+              >
+                <HelpCircle size={13} className="text-indigo-600" />
+                <span>Tour</span>
+              </button>
+
+              <button
+                onClick={() => navigate('/profile')}
+                className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm hover:bg-slate-300 transition-colors cursor-pointer"
+              >
+                {user?.email ? (user.email.split('@')[0].charAt(0) + user.email.split('@')[0].slice(-1)).toUpperCase() : "MJ"}
+              </button>
+            </div>
           </div>
 
           {/* Sync status indicator — only shown when relevant */}
@@ -548,7 +577,23 @@ export const HomePage: React.FC = () => {
           )}
 
           {/* 1. Bluish Gradient Month Summary Card */}
-          <div>
+          <div className="relative group">
+            <div className="absolute left-4 bottom-4 z-10">
+              <SectionInfoModal
+                theme="dark"
+                content={{
+                  title: "Monthly Overview & Net Spend",
+                  subtitle: "Real-time summary of your current month",
+                  badge: "Dashboard",
+                  description: "This card shows your total monthly expenditures, today's spending total, and percentage change compared to previous month.",
+                  highlights: [
+                    { title: "Today Amount", desc: "Sum of all expenses logged for today's date." },
+                    { title: "Percentage Change", desc: "Comparison of current month spending against last month's velocity." },
+                    { title: "Daily Sparkline", desc: "Visual trend line of spending days throughout the month." }
+                  ]
+                }}
+              />
+            </div>
             <MonthSummary
               monthName={analyticsData?.period?.from ? new Date(`${analyticsData.period.from}`).toLocaleString('en-US', { month: 'long', year: 'numeric' }) : "Current Month"}
               spentAmount={analyticsData?.totalSpent || 0}
@@ -567,7 +612,21 @@ export const HomePage: React.FC = () => {
             <>
               {/* Transactions Header */}
               <div className="flex items-center justify-between px-2 pt-2 pb-1 mt-2">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Transactions</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Transactions</span>
+                  <SectionInfoModal
+                    content={{
+                      title: "Recent Transactions",
+                      subtitle: "Local-first atomic ledger",
+                      badge: "Activity",
+                      description: "List of your logged expenses and incomes grouped by date.",
+                      highlights: [
+                        { title: "Instant Edit / Delete", desc: "Tap any transaction row to edit details or delete." },
+                        { title: "Offline Storage", desc: "Saved locally in IndexedDB when offline and synced automatically when connected." }
+                      ]
+                    }}
+                  />
+                </div>
                 <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">All amounts in ₹</span>
               </div>
               
@@ -665,6 +724,27 @@ export const HomePage: React.FC = () => {
         title={editingTransaction ? "Edit Transaction" : "Add Transactions"}
       >
         <Stack gap={2}>
+          {/* Quick Entry Guide Info Header */}
+          <div className="flex items-center justify-between pb-1 -mt-1">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+              <span>Quick Entry Guide</span>
+              <SectionInfoModal
+                content={{
+                  title: "Transaction Entry Guide",
+                  subtitle: "Log expenses or incomes instantly",
+                  badge: "Capture Guide",
+                  description: "Capture personal financial transactions with category tagging and optional superior category grouping.",
+                  highlights: [
+                    { title: "Expense vs Income Toggle", desc: "Select Expense to record a spend or Income to record earnings." },
+                    { title: "Category Drilldown", desc: "Pick standard categories or type custom ones using the keyboard icon." },
+                    { title: "Date Tagging", desc: "Assign to Today, Yesterday, or pick a custom date." },
+                    { title: "Superior Category", desc: "Group detailed entries into parent categories for high-level analytics." }
+                  ]
+                }}
+              />
+            </div>
+          </div>
+
           {/* 1. Income or Expense Toggle - Modern Pill */}
           <div className="flex items-center p-0.5 bg-slate-100/80 rounded-full border border-slate-200/60">
             <button
@@ -854,9 +934,23 @@ export const HomePage: React.FC = () => {
           {(user?.superiorCategoriesEnabled ?? (localStorage.getItem("expencio_superior_category") === "true")) && (
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between">
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">
-                  Superior Category <span className="text-[10px] text-slate-400 font-normal opacity-70">(Optional)</span>
-                </label>
+                <div className="flex items-center gap-1.5">
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">
+                    Superior Category <span className="text-[10px] text-slate-400 font-normal opacity-70">(Optional)</span>
+                  </label>
+                  <SectionInfoModal
+                    content={{
+                      title: "Superior Category Grouping",
+                      subtitle: "High-level analytics aggregation",
+                      badge: "Advanced",
+                      description: "Superior Categories allow you to group granular, detailed categories under parent buckets (e.g. grouping 'Coffee', 'Groceries', and 'Restaurants' under 'Food & Dining').",
+                      highlights: [
+                        { title: "Aggregated Reports", desc: "Analytics totals reflect Superior Category groups when enabled." },
+                        { title: "Optional Assignment", desc: "You can leave this blank if you prefer standard category reporting." }
+                      ]
+                    }}
+                  />
+                </div>
                 {selectedSuperiorCategory && (
                   <button
                     type="button"

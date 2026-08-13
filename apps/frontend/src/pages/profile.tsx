@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, RefreshCw, Download, Palette, CheckCircle2, Database, AlertCircle, WifiOff, ChevronLeft, ChevronDown, Sliders, Globe, Layers, Landmark, Home, Info, X, ShieldAlert } from "lucide-react";
+import { LogOut, RefreshCw, Download, Palette, CheckCircle2, Database, AlertCircle, WifiOff, ChevronLeft, ChevronDown, Sliders, Globe, Layers, Landmark, Home, Info, X, ShieldAlert, Sparkles } from "lucide-react";
 import { useAuth } from "../core/providers/AuthContext";
 import { useSyncEngine } from "../core/sync/SyncEngine";
 import { queue } from "../core/sync/db";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell, Container, Stack, BottomNav } from "@expenseflow/ui";
+import { OnboardingTour } from "../components/OnboardingTour";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ export default function ProfilePage() {
   const { pendingCount, syncStatus, isOnline, flush } = useSyncEngine();
   const queryClient = useQueryClient();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isTourOpen, setIsTourOpen] = useState(false);
   const [isManualSyncing, setIsManualSyncing] = useState(false);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [showSuperiorInfoModal, setShowSuperiorInfoModal] = useState(false);
@@ -180,6 +182,9 @@ export default function ProfilePage() {
 
   return (
     <AppShell className="bg-slate-50 min-h-screen pb-28 selection:bg-slate-900 selection:text-white">
+      {/* Onboarding Tour Modal */}
+      <OnboardingTour isOpen={isTourOpen} onClose={() => setIsTourOpen(false)} />
+
       <Container size="sm" className="pt-12 sm:pt-14">
         <Stack gap={6}>
           {/* Header */}
@@ -212,9 +217,22 @@ export default function ProfilePage() {
             {/* PREFERENCES */}
             <section className="flex flex-col gap-1">
               <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2 px-2">
-                Preferences
+                Preferences & Help
               </h3>
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                <button
+                  type="button"
+                  onClick={() => setIsTourOpen(true)}
+                  className="flex items-center justify-between p-4 border-b border-slate-100 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-3 text-slate-700 font-medium">
+                    <Sparkles size={18} className="text-indigo-500" />
+                    Guided App Tour
+                  </div>
+                  <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100">
+                    Replay Tour
+                  </span>
+                </button>
                 <div className="flex items-center justify-between p-4 border-b border-slate-100">
                   <div className="flex items-center gap-3 text-slate-700 font-medium">
                     <span className="w-5 h-5 flex items-center justify-center text-slate-400">

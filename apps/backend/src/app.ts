@@ -24,6 +24,10 @@ export async function buildApp() {
     genReqId: () => ulid(),
     // Disable Fastify's verbose Pino logger — we use our own structured logger below.
     logger: false,
+    // REQUIRED FOR RENDER/PROXIES: Trust the X-Forwarded-For header to get real client IPs.
+    // Without this, the rate limiter treats all global traffic as coming from a single Render proxy IP,
+    // causing immediate 429 Too Many Requests errors.
+    trustProxy: true,
   });
 
   // ─── Request Timing ─────────────────────────────────────────────────────────
