@@ -1,0 +1,44 @@
+# .dockerignore
+# Excludes files from the Docker build context to keep images small and fast.
+
+# Version control
+.git
+.gitignore
+
+# Dev tooling
+.github
+docs
+*.md
+*.txt
+
+# Local env files — secrets must be injected via platform environment variables
+.env
+.env.*
+!.env.example
+
+# Build artifacts that the builder stage will regenerate
+apps/backend/dist
+apps/frontend/dist
+apps/frontend/.vite
+
+# Node modules — installed fresh inside the container
+**/node_modules
+
+# pnpm store
+.pnpm-store
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea
+
+# Test files
+**/*.test.ts
+**/*.spec.ts
+**/tests
+
+# Turbo cache
+.turbo
