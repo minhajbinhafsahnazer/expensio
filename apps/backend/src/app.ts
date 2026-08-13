@@ -114,8 +114,12 @@ export async function buildApp() {
   });
 
   // Log every completed request. Skip OPTIONS (CORS preflight noise).
+  // Skip /api/v1/health — Render's internal health checker fires every ~5 s.
+  // Logging it produces ~720 identical lines/hour with zero diagnostic value.
+  // Render's health monitoring reads the HTTP response code, not our logs.
   app.addHook('onResponse', async (request, reply) => {
     if (request.method === 'OPTIONS') return;
+    if (request.url === '/api/v1/health') return;
     const durationMs = Date.now() - ((request as any)._startMs ?? Date.now());
     logRequest({
       method:     request.method,
