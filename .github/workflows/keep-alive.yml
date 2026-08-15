@@ -11,6 +11,6 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Backend Health Endpoint
-        run: curl -sSf https://expensio-backend-bewr.onrender.com/api/v1/health > /dev/null
+      - name: Ping Backend Ready Endpoint
+        run: curl -sSf https://expensio-backend-bewr.onrender.com/api/v1/ready > /dev/null
         # -sSf means silent, show errors, fail on error
