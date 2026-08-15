@@ -34,7 +34,6 @@ export const debtsService = {
         id: generateId(),
         userId,
         action: 'debt_created',
-        metadata: { debtId: id, amount: data.amount, type: data.type },
         ipAddress: ip || '127.0.0.1',
         userAgent: ua || 'system',
       });
@@ -74,7 +73,6 @@ export const debtsService = {
         id: generateId(),
         userId,
         action,
-        metadata: { debtId: id, changes: Object.keys(data) },
         ipAddress: ip || '127.0.0.1',
         userAgent: ua || 'system',
       });
@@ -98,7 +96,6 @@ export const debtsService = {
         id: generateId(),
         userId,
         action: 'debt_deleted',
-        metadata: { debtId: id },
         ipAddress: ip || '127.0.0.1',
         userAgent: ua || 'system',
       });
