@@ -351,7 +351,7 @@ export const PortfolioPage: React.FC = () => {
   // Analytics moved to dedicated /analytics page
 
   // --- 3. Debt Tracker State ---
-  const { data, error, isLoading } = useDebts();
+  const { data, error } = useDebts();
   
   if (error) {
     console.error("[Portfolio] Error loading debt records:", error);

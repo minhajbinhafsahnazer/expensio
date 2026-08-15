@@ -68,9 +68,9 @@ function getRefreshPromise(): Promise<boolean> {
       return await doRefresh();
     }).catch(() => false).finally(() => {
       _refreshPromise = null;
-    });
+    }) as Promise<boolean>;
   }
-  return _refreshPromise;
+  return _refreshPromise!;
 }
 
 // ─── Core Fetch ───────────────────────────────────────────────────────────────
