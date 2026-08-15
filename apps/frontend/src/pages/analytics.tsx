@@ -32,6 +32,17 @@ function getDatesForTimeframe(tf: Timeframe, customMonthOffset = 0) {
   return { from: "", to: "" };
 }
 
+const formatCompactAmount = (amount: number | string | undefined | null) => {
+  const num = Number(amount || 0);
+  if (Math.abs(num) < 10000) {
+    return Math.round(num).toLocaleString("en-IN");
+  }
+  return Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(num);
+};
+
 export default function AnalyticsPage() {
   const navigate = useNavigate();
   
@@ -186,19 +197,19 @@ export default function AnalyticsPage() {
                   <div className="flex flex-col border-r border-slate-200 px-1">
                     <span className="text-[10px] font-semibold text-slate-400 uppercase">Spent</span>
                     <span className="text-base font-bold text-slate-900 mt-0.5 whitespace-nowrap">
-                      ₹{currentAnalytics.totalSpent.toLocaleString("en-IN")}
+                      ₹{formatCompactAmount(currentAnalytics.totalSpent)}
                     </span>
                   </div>
                   <div className="flex flex-col border-r border-slate-200 px-1">
                     <span className="text-[10px] font-semibold text-slate-400 uppercase">Avg/Day</span>
                     <span className="text-base font-bold text-slate-700 mt-0.5 whitespace-nowrap">
-                      ₹{currentAnalytics.dailyAverage.toLocaleString("en-IN")}
+                      ₹{formatCompactAmount(currentAnalytics.dailyAverage)}
                     </span>
                   </div>
                   <div className="flex flex-col border-r border-slate-200 px-1">
                     <span className="text-[10px] font-semibold text-slate-400 uppercase">Peak</span>
                     <span className="text-base font-bold text-slate-700 mt-0.5 whitespace-nowrap">
-                      ₹{currentAnalytics.peakDay.amount.toLocaleString("en-IN")}
+                      ₹{formatCompactAmount(currentAnalytics.peakDay.amount)}
                     </span>
                   </div>
                   <div className="flex flex-col px-1">
@@ -220,7 +231,7 @@ export default function AnalyticsPage() {
                       {activeHoverDay ? activeHoverDay.dateStr : `Trend (${currentAnalytics.daysCount} Days)`}
                     </span>
                     <span className="text-purple-600 font-bold font-mono">
-                      ₹{(activeHoverDay ? activeHoverDay.amount : currentAnalytics.peakDay.amount).toLocaleString("en-IN")}
+                      ₹{formatCompactAmount(activeHoverDay ? activeHoverDay.amount : currentAnalytics.peakDay.amount)}
                       {!activeHoverDay && <span className="text-[10px] text-slate-400 font-normal ml-1">(Peak)</span>}
                     </span>
                   </div>
@@ -262,7 +273,7 @@ export default function AnalyticsPage() {
                           {isHovered && (
                             <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] font-medium py-1 px-2 rounded-md shadow-xl whitespace-nowrap z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center">
                               <span>{pt.dateStr}</span>
-                              <span className="text-purple-300">₹{pt.amount.toLocaleString("en-IN")}</span>
+                              <span className="text-purple-300">₹{formatCompactAmount(pt.amount)}</span>
                               <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
                             </div>
                           )}
@@ -292,7 +303,7 @@ export default function AnalyticsPage() {
                         </div>
                         <div className="flex items-center gap-4 text-right">
                           <span className="font-mono text-slate-500 text-xs w-10">{cat.percentage}%</span>
-                          <span className="font-bold text-slate-900 w-20">{cat.amount.toLocaleString("en-IN")}</span>
+                          <span className="font-bold text-slate-900 w-20">{formatCompactAmount(cat.amount)}</span>
                         </div>
                       </div>
                     ))}

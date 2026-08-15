@@ -4,6 +4,7 @@ export * from './transactions';
 export * from './audit_logs';
 export * from './financial_goals';
 export * from './refresh_tokens';
+export * from './debts';
 
 // ── Future tables (not yet implemented) ──────────────────────────────────────
 // export * from './categories';             // Custom user-defined categories

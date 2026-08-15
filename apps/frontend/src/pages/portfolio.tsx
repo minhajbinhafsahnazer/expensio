@@ -18,6 +18,13 @@ import {
 } from "../features/financial-goals/hooks/useFinancialGoals";
 import { type FinancialGoal } from "../features/financial-goals/api/financial-goals.api";
 import { useQueryClient } from "@tanstack/react-query";
+import { 
+  useDebts, 
+  useCreateDebt, 
+  useUpdateDebt, 
+  useDeleteDebt,
+  type DebtItem
+} from "../features/debts/hooks/useDebts";
 import { useSyncEngine } from "../core/sync/SyncEngine";
 import { ulid } from "ulid";
 import {
@@ -43,19 +50,20 @@ import { SectionInfoModal } from "../components/SectionInfoModal";
 
 
 
-export interface DebtItem {
-  id: string;
-  name: string;
-  amount: number;
-  type: "lent" | "borrowed"; // lent = money owed to me; borrowed = money I owe
-  dueDate: string;
-  note?: string;
-  isSettled: boolean;
-  hasReminder: boolean;
-  reminderDate?: string;
-}
 
 
+
+
+const formatCompactAmount = (amount: number | string | undefined | null) => {
+  const num = Number(amount || 0);
+  if (Math.abs(num) < 10000) {
+    return Math.round(num).toLocaleString("en-IN");
+  }
+  return Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(num);
+};
 
 export const PortfolioPage: React.FC = () => {
   const navigate = useNavigate();
@@ -342,50 +350,17 @@ export const PortfolioPage: React.FC = () => {
 
   // Analytics moved to dedicated /analytics page
 
-  // --- 3. Debt & Loan Tracker State ---
-  const [debts, setDebts] = useState<DebtItem[]>([
-    {
-      id: "d1",
-      name: "John",
-      amount: 5000,
-      type: "lent",
-      dueDate: "2026-08-10",
-      note: "Goa trip hotel splitting",
-      isSettled: false,
-      hasReminder: true,
-      reminderDate: "2026-08-08",
-    },
-    {
-      id: "d2",
-      name: "Jack",
-      amount: 1200,
-      type: "borrowed",
-      dueDate: "2026-08-05",
-      note: "Dinner bill split",
-      isSettled: false,
-      hasReminder: false,
-    },
-    {
-      id: "d3",
-      name: "Alex",
-      amount: 3500,
-      type: "lent",
-      dueDate: "2026-08-15",
-      note: "Concert tickets",
-      isSettled: false,
-      hasReminder: false,
-    },
-    {
-      id: "d4",
-      name: "John",
-      amount: 2000,
-      type: "lent",
-      dueDate: "2026-07-20",
-      note: "Gadgets purchase",
-      isSettled: true,
-      hasReminder: false,
-    },
-  ]);
+  // --- 3. Debt Tracker State ---
+  const { data, error, isLoading } = useDebts();
+  
+  if (error) {
+    console.error("[Portfolio] Error loading debt records:", error);
+  }
+  
+  const debts = (data || []) as DebtItem[];
+  const createDebtMutation = useCreateDebt();
+  const updateDebtMutation = useUpdateDebt();
+  const deleteDebtMutation = useDeleteDebt();
 
   const [debtFilter, setDebtFilter] = useState<"all" | "lent" | "borrowed">("all");
   const [isAddDebtOpen, setIsAddDebtOpen] = useState<boolean>(false);
@@ -404,11 +379,11 @@ export const PortfolioPage: React.FC = () => {
   // Computed Debt Totals
   const totalLent = debts
     .filter((d) => d.type === "lent" && !d.isSettled)
-    .reduce((acc, d) => acc + d.amount, 0);
+    .reduce((acc, d) => acc + Number(d.amount), 0);
 
   const totalBorrowed = debts
     .filter((d) => d.type === "borrowed" && !d.isSettled)
-    .reduce((acc, d) => acc + d.amount, 0);
+    .reduce((acc, d) => acc + Number(d.amount), 0);
 
   const netDebtPosition = totalLent - totalBorrowed;
 
@@ -419,52 +394,39 @@ export const PortfolioPage: React.FC = () => {
   });
 
   const toggleReminder = (id: string) => {
-    setDebts((prev) =>
-      prev.map((d) => {
-        if (d.id === id) {
-          const nextState = !d.hasReminder;
-          if (nextState) {
-            showToast(`🔔 Reminder set for ${d.name} (${d.type === "lent" ? "Collect" : "Pay"} ₹${d.amount.toLocaleString("en-IN")})`);
-          } else {
-            showToast(`Notifications turned off for ${d.name}`);
-          }
-          return { ...d, hasReminder: nextState };
-        }
-        return d;
-      })
-    );
+    const d = debts.find((d) => d.id === id);
+    if (!d) return;
+    const nextState = !d.hasReminder;
+    updateDebtMutation.mutate({ id, hasReminder: nextState });
+    if (nextState) {
+      showToast(`🔔 Reminder set for ${d.name} (${d.type === "lent" ? "Collect" : "Pay"} ₹${Number(d.amount).toLocaleString("en-IN")})`);
+    } else {
+      showToast(`Notifications turned off for ${d.name}`);
+    }
   };
 
   const toggleSettled = (id: string) => {
-    setDebts((prev) =>
-      prev.map((d) => {
-        if (d.id === id) {
-          const nextState = !d.isSettled;
-          showToast(nextState ? `Marked debt with ${d.name} as Settled!` : `Reopened debt with ${d.name}`);
-          return { ...d, isSettled: nextState };
-        }
-        return d;
-      })
-    );
+    const d = debts.find((d) => d.id === id);
+    if (!d) return;
+    const nextState = !d.isSettled;
+    updateDebtMutation.mutate({ id, isSettled: nextState });
+    showToast(nextState ? `Marked debt with ${d.name} as Settled!` : `Reopened debt with ${d.name}`);
   };
 
   const handleAddDebt = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newDebtName.trim() || !newDebtAmount || Number(newDebtAmount) <= 0) return;
 
-    const created: DebtItem = {
-      id: Math.random().toString(36).substring(2, 9),
+    createDebtMutation.mutate({
       name: newDebtName.trim(),
       amount: Number(newDebtAmount),
       type: newDebtType,
-      dueDate: newDebtDueDate,
-      note: newDebtNote.trim(),
+      dueDate: newDebtDueDate ? new Date(newDebtDueDate).toISOString() : null,
+      note: newDebtNote.trim() || null,
       isSettled: false,
       hasReminder: newDebtEnableReminder,
-      reminderDate: newDebtDueDate,
-    };
+    });
 
-    setDebts((prev) => [created, ...prev]);
     setIsAddDebtOpen(false);
 
     // Reset Form
@@ -473,7 +435,7 @@ export const PortfolioPage: React.FC = () => {
     setNewDebtNote("");
     setNewDebtType("lent");
 
-    showToast(`Added ${created.type === "lent" ? "Lent" : "Borrowed"} record for ${created.name}`);
+    showToast(`Added ${newDebtType === "lent" ? "Lent" : "Borrowed"} record for ${newDebtName}`);
   };
 
   return (
@@ -716,12 +678,9 @@ export const PortfolioPage: React.FC = () => {
             {/* Header + Add Debt Button (Rule #13) */}
             <div className="flex items-center justify-between pb-1">
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-semibold text-slate-900 tracking-tight">
-                  Debt & Loan Tracker
+                <h3 className="text-base font-semibold text-slate-900 tracking-tight whitespace-nowrap">
+                  Debt Tracker
                 </h3>
-                <span className="text-[9px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-500 px-2 py-1 rounded-full">
-                  Coming Soon
-                </span>
               </div>
 
               <button
@@ -737,25 +696,25 @@ export const PortfolioPage: React.FC = () => {
             {/* Summary Metrics - No Inner Card, No Vertical Borders, Pure Typography & Spacing (Rule #6 & #13) */}
             <div className="border-b border-slate-100 pb-5">
               <div className="grid grid-cols-3 gap-4 pt-1">
-                <div className="flex flex-col gap-0.5">
+                <div className="flex flex-col items-center text-center gap-0.5">
                   <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider truncate">
                     To Collect
                   </span>
                   <span className="text-lg font-bold text-emerald-600 tracking-tight tabular-nums truncate">
-                    {totalLent.toLocaleString("en-IN")}
+                    {formatCompactAmount(totalLent)}
                   </span>
                 </div>
 
-                <div className="flex flex-col gap-0.5">
+                <div className="flex flex-col items-center text-center gap-0.5">
                   <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider truncate">
                     To Pay
                   </span>
                   <span className="text-lg font-bold text-rose-600 tracking-tight tabular-nums truncate">
-                    {totalBorrowed.toLocaleString("en-IN")}
+                    {formatCompactAmount(totalBorrowed)}
                   </span>
                 </div>
 
-                <div className="flex flex-col gap-0.5">
+                <div className="flex flex-col items-center text-center gap-0.5">
                   <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider truncate">
                     Balance
                   </span>
@@ -765,7 +724,7 @@ export const PortfolioPage: React.FC = () => {
                       netDebtPosition >= 0 ? "text-slate-900" : "text-rose-600"
                     )}
                   >
-                    {netDebtPosition >= 0 ? "+" : ""}{netDebtPosition.toLocaleString("en-IN")}
+                    {netDebtPosition >= 0 ? "+" : ""}{formatCompactAmount(netDebtPosition)}
                   </span>
                 </div>
               </div>
@@ -855,7 +814,7 @@ export const PortfolioPage: React.FC = () => {
                           {/* Tabular Amount */}
                           <div className="text-right">
                             <span className="font-semibold text-[14px] sm:text-[15px] tabular-nums text-slate-400 line-through">
-                              {d.type === "lent" ? "+" : "-"}{d.amount.toLocaleString("en-IN")}
+                              {d.type === "lent" ? "+" : "-"}{formatCompactAmount(d.amount)}
                             </span>
                           </div>
 
@@ -917,7 +876,7 @@ export const PortfolioPage: React.FC = () => {
                           </div>
 
                           <span className="text-[12px] text-slate-500 font-normal truncate">
-                            {d.note ? `${d.note} • ` : ""}{formatNaturalDueDate(d.dueDate)}
+                            {d.note ? `${d.note} • ` : ""}{formatNaturalDueDate(d.dueDate ?? "")}
                           </span>
                         </div>
 
@@ -929,7 +888,7 @@ export const PortfolioPage: React.FC = () => {
                               d.type === "lent" ? "text-emerald-600" : "text-slate-900"
                             )}
                           >
-                            {d.type === "lent" ? "+" : "-"}{d.amount.toLocaleString("en-IN")}
+                            {d.type === "lent" ? "+" : "-"}{formatCompactAmount(d.amount)}
                           </span>
                         </div>
 
@@ -989,7 +948,7 @@ export const PortfolioPage: React.FC = () => {
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    setDebts((prev) => prev.filter((item) => item.id !== d.id));
+                                    deleteDebtMutation.mutate(d.id);
                                     setActiveDebtMenuId(null);
                                     showToast(`Deleted debt record for "${d.name}"`);
                                   }}
