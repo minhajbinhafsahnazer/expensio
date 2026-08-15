@@ -120,6 +120,7 @@ export async function buildApp() {
   app.addHook('onResponse', async (request, reply) => {
     if (request.method === 'OPTIONS') return;
     if (request.url === '/api/v1/health') return;
+    if (request.url === '/api/v1/ready') return;
     const durationMs = Date.now() - ((request as any)._startMs ?? Date.now());
     logRequest({
       method:     request.method,
@@ -228,29 +229,16 @@ export async function buildApp() {
 
     /**
      * GET /api/v1/ready
-     * Readiness probe — verifies the database connection is live.
-     * Used by container orchestrators to gate traffic.
-     * Returns 503 if the database is unreachable.
+     * Ultra-lightweight keep-alive / readiness probe.
+     * Hits no databases and performs no I/O.
      */
     api.get('/ready', {
       config: { rateLimit: { max: 60, timeWindow: '1 minute' } },
     }, async (_request, reply) => {
-      try {
-        await db.execute(sql`SELECT 1`);
-        return reply.send({
-          status:    'ready',
-          database:  'connected',
-          timestamp: new Date().toISOString(),
-        });
-      } catch (err) {
-        logger.error('Readiness check failed — database unreachable', err instanceof Error ? err : undefined);
-        return reply.status(503).send({
-          success:   false,
-          status:    'not_ready',
-          database:  'unreachable',
-          timestamp: new Date().toISOString(),
-        });
-      }
+      return reply.send({
+        status:    'ready',
+        timestamp: new Date().toISOString(),
+      });
     });
 
     // Feature routes
