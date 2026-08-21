@@ -1,6 +1,7 @@
 import React from "react";
 import { cn } from "../utils";
 import { TrendingUp, TrendingDown } from "lucide-react";
+import { motion } from "framer-motion";
 
 export interface MonthSummaryProps {
   monthName?: string;
@@ -127,6 +128,66 @@ const DailyStripChart = ({
   );
 };
 
+const AnimatedIncomeNumber: React.FC<{ value: number; currencySymbol: string; formatVal: (n: number) => string }> = ({
+  value,
+  currencySymbol,
+  formatVal,
+}) => {
+  const [displayValue, setDisplayValue] = React.useState<number>(0);
+  const [isDone, setIsDone] = React.useState(false);
+
+  React.useEffect(() => {
+    if (value === 0) {
+      setDisplayValue(0);
+      setIsDone(true);
+      return;
+    }
+
+    setIsDone(false);
+    let startTime: number | null = null;
+    const duration = 1000;
+
+    const animate = (currentTime: number) => {
+      if (!startTime) startTime = currentTime;
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Smooth ease-out cubic curve
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      const currentVal = Math.floor(value * easedProgress);
+
+      setDisplayValue(currentVal);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setDisplayValue(value);
+        setIsDone(true);
+      }
+    };
+
+    const frameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frameId);
+  }, [value]);
+
+  return (
+    <div className="relative h-5 overflow-hidden inline-flex items-center mt-0.5">
+      <motion.span
+        key={displayValue}
+        initial={{ y: -8, opacity: 0.5 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: isDone ? 0.25 : 0.05, ease: "easeOut" }}
+        className={cn(
+          "text-[11px] sm:text-xs font-black text-emerald-400 font-mono text-left block transition-all duration-300",
+          isDone && "drop-shadow-[0_0_10px_rgba(52,211,153,0.7)] text-emerald-300 scale-105"
+        )}
+      >
+        +{currencySymbol}{formatVal(displayValue)}
+      </motion.span>
+    </div>
+  );
+};
+
 export const MonthSummary: React.FC<MonthSummaryProps> = ({
   monthName = "July 27",
   spentAmount,
@@ -207,9 +268,7 @@ export const MonthSummary: React.FC<MonthSummaryProps> = ({
             <span className="text-[8.5px] font-semibold text-slate-400 uppercase leading-tight block text-left">
               Total Income
             </span>
-            <span className="text-[11px] sm:text-xs font-black text-emerald-400 font-mono text-left mt-0.5">
-              +{currencySymbol}{formatVal(totalIncome)}
-            </span>
+            <AnimatedIncomeNumber value={totalIncome} currencySymbol={currencySymbol} formatVal={formatVal} />
           </div>
 
           {/* Right Side: Spent Today */}
