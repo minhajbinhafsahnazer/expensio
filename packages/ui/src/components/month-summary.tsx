@@ -1,7 +1,7 @@
 import React from "react";
 import { cn } from "../utils";
 import { TrendingUp, TrendingDown } from "lucide-react";
-import { motion } from "framer-motion";
+
 
 export interface MonthSummaryProps {
   monthName?: string;
