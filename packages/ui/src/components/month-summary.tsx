@@ -75,7 +75,7 @@ const DailyStripChart = ({
         <span className="font-mono font-bold text-sky-400">
           {currencySymbol}
           {(activeDay ? activeDay.amount : peakPoint.amount).toLocaleString("en-IN")}
-          {!activeDay && <span className="text-[10px] text-slate-400 font-normal ml-1">(Peak)</span>}
+          {!activeDay && <span className="text-[10px] text-slate-400 font-normal ml-1">(Peak Spend)</span>}
         </span>
       </div>
 

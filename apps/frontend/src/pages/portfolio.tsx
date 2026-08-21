@@ -526,9 +526,10 @@ export const PortfolioPage: React.FC = () => {
 
               {/* Summary Amount & Subtitle */}
               <div className="flex flex-col gap-1 mt-1">
-                <span className="text-3xl font-bold text-white tracking-tight">
-                  {formatCurrency(totalSavedAcrossGoals, userCurrency)}
-                </span>
+                <div className="text-3xl font-bold text-white tracking-tight flex items-baseline gap-1.5">
+                  <span className="text-lg font-semibold text-slate-400">{userCurrencySymbol}</span>
+                  <span>{totalSavedAcrossGoals.toLocaleString("en-IN")}</span>
+                </div>
                 <span className="text-sm text-slate-400 font-normal">
                   {overallGoalProgressPct.toFixed(0)}% of {formatCurrency(totalTargetAcrossGoals, userCurrency)} saved
                 </span>

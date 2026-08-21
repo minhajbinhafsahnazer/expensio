@@ -256,26 +256,30 @@ export default function AnalyticsPage() {
                 <div className="grid grid-cols-2 gap-y-4 gap-x-2 bg-slate-50/80 border border-slate-200/70 p-3.5 rounded-xl text-center">
                   <div className="flex flex-col border-r border-b border-slate-200 px-1 pb-2">
                     <span className="text-[10px] font-semibold text-slate-400 uppercase">Spent</span>
-                    <div className="text-xl font-bold text-slate-900 tracking-tight">
-                      {userCurrencySymbol}{formatCompactAmount(currentAnalytics.totalSpent)}
+                    <div className="text-xl font-bold text-slate-900 tracking-tight flex items-baseline justify-center gap-0.5">
+                      <span className="text-xs font-semibold text-slate-400">{userCurrencySymbol}</span>
+                      <span>{formatCompactAmount(currentAnalytics.totalSpent)}</span>
                     </div>
                   </div>
                   <div className="flex flex-col border-b border-slate-200 px-1 pb-2">
                     <span className="text-[10px] font-semibold text-slate-400 uppercase">Avg/Day</span>
-                    <div className="text-xl font-bold text-slate-900 tracking-tight">
-                      {userCurrencySymbol}{formatCompactAmount(currentAnalytics.dailyAverage)}
+                    <div className="text-xl font-bold text-slate-900 tracking-tight flex items-baseline justify-center gap-0.5">
+                      <span className="text-xs font-semibold text-slate-400">{userCurrencySymbol}</span>
+                      <span>{formatCompactAmount(currentAnalytics.dailyAverage)}</span>
                     </div>
                   </div>
                   <div className="flex flex-col border-r border-slate-200 px-1 pt-2">
                     <span className="text-[10px] font-semibold text-slate-400 uppercase">Peak</span>
-                    <div className="text-xl font-bold text-slate-900 tracking-tight">
-                      {userCurrencySymbol}{formatCompactAmount(currentAnalytics.peakDay.amount)}
+                    <div className="text-xl font-bold text-slate-900 tracking-tight flex items-baseline justify-center gap-0.5">
+                      <span className="text-xs font-semibold text-slate-400">{userCurrencySymbol}</span>
+                      <span>{formatCompactAmount(currentAnalytics.peakDay.amount)}</span>
                     </div>
                   </div>
                   <div className="flex flex-col px-1 pt-2">
                     <span className="text-[10px] font-semibold text-slate-400 uppercase">Income</span>
-                    <div className="text-xl font-bold text-emerald-600 tracking-tight">
-                      {userCurrencySymbol}{formatCompactAmount(currentAnalytics.totalIncome)}
+                    <div className="text-xl font-bold text-emerald-600 tracking-tight flex items-baseline justify-center gap-0.5">
+                      <span className="text-xs font-semibold text-emerald-600/70">{userCurrencySymbol}</span>
+                      <span>{formatCompactAmount(currentAnalytics.totalIncome)}</span>
                     </div>
                   </div>
                 </div>
@@ -287,8 +291,9 @@ export default function AnalyticsPage() {
                     <span className="text-slate-500">
                       {activeHoverDay ? activeHoverDay.dateStr : `Trend (${currentAnalytics.daysCount} Days)`}
                     </span>
-                    <div className="text-3xl font-black text-slate-900 tracking-tight">
-                      {userCurrencySymbol}{formatCompactAmount(activeHoverDay ? activeHoverDay.amount : currentAnalytics.peakDay.amount)}
+                    <div className="text-3xl font-black text-slate-900 tracking-tight flex items-baseline gap-0.5">
+                      <span className="text-base font-semibold text-slate-400">{userCurrencySymbol}</span>
+                      <span>{formatCompactAmount(activeHoverDay ? activeHoverDay.amount : currentAnalytics.peakDay.amount)}</span>
                       {!activeHoverDay && <span className="text-[10px] text-slate-400 font-normal ml-1">(Peak)</span>}
                     </div>
                   </div>
