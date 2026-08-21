@@ -27,6 +27,7 @@ export interface User {
   id: string;
   email: string;
   fullName: string | null;
+  phoneNumber?: string | null;
   currency: string;
   theme: string;
   timezone: string;

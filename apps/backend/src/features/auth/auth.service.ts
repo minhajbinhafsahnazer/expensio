@@ -34,6 +34,7 @@ function toUserPublic(user: {
   id: string;
   email: string;
   fullName: string | null;
+  phoneNumber?: string | null;
   currency: string;
   theme: string;
   timezone: string;
@@ -48,6 +49,7 @@ function toUserPublic(user: {
     id:                        user.id,
     email:                     user.email,
     fullName:                  user.fullName,
+    phoneNumber:               user.phoneNumber ?? null,
     currency:                  user.currency,
     theme:                     user.theme,
     timezone:                  user.timezone,

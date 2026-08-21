@@ -23,6 +23,7 @@ export const users = pgTable(
 
     // Profile
     fullName: varchar('full_name', { length: 255 }),
+    phoneNumber: varchar('phone_number', { length: 30 }),
     currency: varchar('currency', { length: 3 }).notNull().default('INR'), // ISO 4217
     theme: varchar('theme', { length: 10 }).notNull().default('system'),   // light | dark | system
     timezone: varchar('timezone', { length: 100 }).notNull().default('Asia/Kolkata'),

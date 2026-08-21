@@ -23,6 +23,7 @@ export interface UserPublic {
   id: string;
   email: string;
   fullName: string | null;
+  phoneNumber?: string | null;
   currency: string;
   theme: string;
   timezone: string;
@@ -36,6 +37,7 @@ export interface UserPublic {
 
 export interface UpdateMeBody {
   fullName?: string | undefined;
+  phoneNumber?: string | null | undefined;
   currency?: string | undefined;
   theme?: string | undefined;
   timezone?: string | undefined;

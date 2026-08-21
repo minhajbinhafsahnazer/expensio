@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Sparkles, ChevronDown, Plus, Loader2 } from "lucide-react";
+import { SectionInfoModal } from "./SectionInfoModal";
 import { useAuth } from "../core/providers/AuthContext";
 import { formatCurrency } from "../utils/currency";
 import { useCreateBulkMappings } from "../core/api/transactions";
@@ -117,7 +118,18 @@ export const ReviewTransactionsModal: React.FC<ReviewTransactionsModalProps> = (
               <Sparkles size={18} className="text-indigo-600" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900 tracking-tight">Teach Expensio</h3>
+              <div className="flex items-center gap-1.5">
+                <h3 className="text-base font-bold text-slate-900 tracking-tight">Teach Expensio</h3>
+                <SectionInfoModal
+                  content={{
+                    title: "Teach Expensio",
+                    subtitle: "Smart Categorization Engine",
+                    description: "Review and map unrecognized transactions to categories. Expensio learns from your choices to auto-categorize future spending automatically.",
+                  }}
+                  theme="auto"
+                  align="center"
+                />
+              </div>
               <p className="text-xs text-slate-500 font-medium">{items.length} categories need your help</p>
             </div>
           </div>

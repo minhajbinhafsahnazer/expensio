@@ -60,6 +60,7 @@ export const UserPublicSchema = z.object({
   id:                        z.string(),
   email:                     z.string().email(),
   fullName:                  z.string().nullable(),
+  phoneNumber:               z.string().nullable().optional(),
   currency:                  z.string(),
   theme:                     z.string(),
   timezone:                  z.string(),
@@ -72,7 +73,8 @@ export const UserPublicSchema = z.object({
 });
 
 export const UpdateMeBodySchema = z.object({
-  fullName:                  z.string().trim().optional(),
+  fullName:                  z.string().trim().min(1, 'Name cannot be blank').max(255).optional(),
+  phoneNumber:               z.string().trim().max(30, 'Phone number is too long').nullable().optional(),
   currency:                  CurrencyEnum.optional(),
   theme:                     z.string().trim().optional(),
   timezone:                  z.string().trim().optional(),

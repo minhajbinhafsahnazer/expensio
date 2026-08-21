@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, RefreshCw, Download, Palette, CheckCircle2, Database, AlertCircle, WifiOff, ChevronLeft, ChevronDown, Sliders, Globe, Layers, Landmark, Home, Info, X, ShieldAlert, Sparkles } from "lucide-react";
+import { LogOut, RefreshCw, Download, Palette, CheckCircle2, Database, AlertCircle, WifiOff, ChevronLeft, ChevronDown, Sliders, Globe, Layers, Landmark, Home, Info, X, ShieldAlert, Sparkles, User, Mail, Phone, Edit2 } from "lucide-react";
 import { useAuth } from "../core/providers/AuthContext";
 import { useSyncEngine } from "../core/sync/SyncEngine";
 import { queue } from "../core/sync/db";
@@ -32,6 +32,48 @@ export default function ProfilePage() {
   const [multiBankAccounts, setMultiBankAccounts] = useState(() => {
     return localStorage.getItem("expencio_multi_bank_accounts") === "true";
   });
+
+  const [isEditDetailsOpen, setIsEditDetailsOpen] = useState(false);
+  const [editFullName, setEditFullName] = useState("");
+  const [editPhoneNumber, setEditPhoneNumber] = useState("");
+  const [isSavingDetails, setIsSavingDetails] = useState(false);
+  const [detailsError, setDetailsError] = useState<string | null>(null);
+
+  const handleOpenEditDetails = () => {
+    setEditFullName(user?.fullName || "");
+    setEditPhoneNumber(user?.phoneNumber || "");
+    setDetailsError(null);
+    setIsEditDetailsOpen(true);
+  };
+
+  const handleSaveDetails = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedName = editFullName.trim();
+    if (!trimmedName) {
+      setDetailsError("Full name is required");
+      return;
+    }
+
+    const trimmedPhone = editPhoneNumber.trim();
+    const phonePayload = trimmedPhone ? trimmedPhone : null;
+
+    setIsSavingDetails(true);
+    setDetailsError(null);
+
+    try {
+      await updateUser({
+        fullName: trimmedName,
+        phoneNumber: phonePayload,
+      });
+      showToast("Personal details updated successfully");
+      setIsEditDetailsOpen(false);
+    } catch (err: any) {
+      console.error(err);
+      setDetailsError(err?.message || "Failed to update details. Please try again.");
+    } finally {
+      setIsSavingDetails(false);
+    }
+  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -204,11 +246,11 @@ export default function ProfilePage() {
 
           {/* Profile Hero */}
           <div className="flex flex-col items-center justify-center pt-2 pb-8">
-            <div className="w-20 h-20 bg-slate-900 text-white rounded-full flex items-center justify-center text-3xl font-bold shadow-md mb-4">
-              {user?.email ? (user.email.split('@')[0].charAt(0) + user.email.split('@')[0].slice(-1)).toUpperCase() : "MJ"}
+            <div className="w-20 h-20 bg-slate-900 text-white rounded-full flex items-center justify-center text-3xl font-bold shadow-md mb-4 uppercase">
+              {user?.fullName ? (user.fullName.split(' ').map(n => n[0]).join('').slice(0, 2)) : (user?.email ? (user.email.split('@')[0].charAt(0) + user.email.split('@')[0].slice(-1)).toUpperCase() : "MJ")}
             </div>
             <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-              {user?.email ? user.email.split("@")[0] : "Minhaj"}
+              {user?.fullName || (user?.email ? user.email.split("@")[0] : "User")}
             </h2>
             <p className="text-sm text-slate-500 font-medium">
               {user?.email || "minhaj@example.com"}
@@ -218,6 +260,58 @@ export default function ProfilePage() {
           {/* Sections */}
           <div className="flex flex-col gap-6 px-2">
             
+            {/* PERSONAL INFORMATION */}
+            <section className="flex flex-col gap-1">
+              <div className="flex items-center justify-between px-2 mb-2">
+                <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase">
+                  Personal Information
+                </h3>
+                <button
+                  type="button"
+                  onClick={handleOpenEditDetails}
+                  className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer"
+                >
+                  <Edit2 size={13} />
+                  Edit Details
+                </button>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col divide-y divide-slate-100">
+                {/* Full Name */}
+                <div className="flex items-center justify-between p-4">
+                  <div className="flex items-center gap-3 text-slate-700 font-medium text-sm">
+                    <User size={18} className="text-slate-400" />
+                    Full Name
+                  </div>
+                  <span className={cn("text-sm font-semibold", user?.fullName ? "text-slate-900" : "text-slate-400 font-normal")}>
+                    {user?.fullName || "Not added"}
+                  </span>
+                </div>
+
+                {/* Email */}
+                <div className="flex items-center justify-between p-4">
+                  <div className="flex items-center gap-3 text-slate-700 font-medium text-sm">
+                    <Mail size={18} className="text-slate-400" />
+                    Email
+                  </div>
+                  <span className="text-sm font-semibold text-slate-900 truncate max-w-[200px] sm:max-w-none">
+                    {user?.email || "Not added"}
+                  </span>
+                </div>
+
+                {/* Phone Number */}
+                <div className="flex items-center justify-between p-4">
+                  <div className="flex items-center gap-3 text-slate-700 font-medium text-sm">
+                    <Phone size={18} className="text-slate-400" />
+                    Phone Number
+                  </div>
+                  <span className={cn("text-sm font-semibold", user?.phoneNumber ? "text-slate-900" : "text-slate-400 font-normal")}>
+                    {user?.phoneNumber || "Not added"}
+                  </span>
+                </div>
+              </div>
+            </section>
+
             {/* PREFERENCES */}
             <section className="flex flex-col gap-1">
               <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2 px-2">
@@ -746,9 +840,112 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* EDIT USER DETAILS MODAL */}
+      {isEditDetailsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">Edit User Details</h3>
+              <button
+                type="button"
+                onClick={() => !isSavingDetails && setIsEditDetailsOpen(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSaveDetails} className="p-6 flex flex-col gap-4">
+              {detailsError && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-medium text-rose-600 flex items-center gap-2">
+                  <AlertCircle size={14} className="shrink-0" />
+                  <span>{detailsError}</span>
+                </div>
+              )}
+
+              {/* Full Name Input */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Full Name <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editFullName}
+                  onChange={(e) => setEditFullName(e.target.value)}
+                  placeholder="Enter your full name"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
+                />
+              </div>
+
+              {/* Email (Readonly) */}
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Email Address
+                  </label>
+                  <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                    Read-only
+                  </span>
+                </div>
+                <input
+                  type="email"
+                  disabled
+                  readOnly
+                  value={user?.email || ""}
+                  className="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-medium text-slate-500 cursor-not-allowed select-none"
+                />
+              </div>
+
+              {/* Phone Number Input */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Phone Number <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                </label>
+                <input
+                  type="tel"
+                  value={editPhoneNumber}
+                  onChange={(e) => setEditPhoneNumber(e.target.value)}
+                  placeholder="e.g. +1 234 567 8900"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 pt-2 mt-2">
+                <button
+                  type="button"
+                  disabled={isSavingDetails}
+                  onClick={() => setIsEditDetailsOpen(false)}
+                  className="flex-1 py-2.5 bg-slate-100 text-slate-700 font-semibold text-xs rounded-xl hover:bg-slate-200 transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingDetails}
+                  className="flex-1 py-2.5 bg-indigo-600 text-white font-semibold text-xs rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                >
+                  {isSavingDetails ? (
+                    <>
+                      <RefreshCw size={14} className="animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-4 py-2 rounded-full shadow-lg text-sm font-medium animate-in fade-in slide-in-from-top-4">
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-4 py-2 rounded-full shadow-lg text-sm font-medium animate-in slide-in-from-bottom-5">
           {toastMessage}
         </div>
       )}
