@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2, ChevronDown, Keyboard, Wifi, WifiOff, RefreshCw, Wallet, X, ArrowDown, TrendingUp, HelpCircle } from "lucide-react";
+import { Trash2, ChevronDown, Keyboard, Wifi, WifiOff, RefreshCw, X, ArrowDown, TrendingUp, HelpCircle } from "lucide-react";
 import { OnboardingTour } from "../components/OnboardingTour";
 import { SectionInfoModal } from "../components/SectionInfoModal";
 import {
@@ -230,13 +230,13 @@ export const HomePage: React.FC = () => {
       // Determine if transaction is an income based on category keywords
       // since the backend doesn't explicitly store a 'type' column yet.
       const incomeKeywords = ["salary", "paycheck", "freelance", "client", "investment", "dividend", "gift", "bonus", "refund", "cashback", "income"];
-      const categoryStr = t.description || t.category || "";
+      const categoryStr = t.note || t.category || "";
       const isIncome = incomeKeywords.some(kw => categoryStr.toLowerCase().includes(kw));
       const type = (t as any).type || (isIncome ? "income" : "expense");
       
       groups[dateKey].expenses.push({
         id: t.id,
-        title: t.description || t.category,
+        title: t.note || t.category,
         amount,
         dateGroup: groups[dateKey].label as any,
         type,

@@ -80,7 +80,6 @@ export const PortfolioPage: React.FC = () => {
   const [enableNotifications, setEnableNotifications] = useState(true);
 
   // Toast Notification state
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const [goalToConfirmDelete, setGoalToConfirmDelete] = useState<{ id: string; title: string } | null>(null);
   const [goalDeleteConfirmText, setGoalDeleteConfirmText] = useState("");

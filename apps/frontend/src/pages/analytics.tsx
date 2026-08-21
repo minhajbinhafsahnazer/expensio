@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import { useAnalytics } from "../core/api/analytics";
 import { useAuth } from "../core/providers/AuthContext";
 import { CURRENCIES } from "../constants/currencies";
-import { formatCurrency } from "../utils/currency";
 import { useNeedsReviewTransactions } from "../core/api/transactions";
 import { SectionInfoModal } from "../components/SectionInfoModal";
 import { ReviewTransactionsModal } from "../components/ReviewTransactionsModal";

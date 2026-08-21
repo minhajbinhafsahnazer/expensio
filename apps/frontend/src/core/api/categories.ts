@@ -9,13 +9,13 @@ export interface Category {
 
 export const CategoriesApi = {
   async getCategories(): Promise<Category[]> {
-    const data = await client.get<{ data: Category[] }>('/categories');
-    return data.data;
+    const response = await client.get<{ data: Category[] }>('/categories');
+    return response.data.data;
   },
 
   async createCategory(name: string): Promise<Category> {
-    const data = await client.post<{ data: Category }>('/categories', { name });
-    return data.data;
+    const response = await client.post<{ data: Category }>('/categories', { name });
+    return response.data.data;
   }
 };
 

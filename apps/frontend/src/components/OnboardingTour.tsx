@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, ChevronRight, ArrowRight } from "lucide-react";
+import { X, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../core/providers/AuthContext";
 import { useTour } from "../core/providers/TourProvider";
