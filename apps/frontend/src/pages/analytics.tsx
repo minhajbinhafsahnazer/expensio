@@ -1,9 +1,10 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, PieChart, Calendar, CheckCircle2, ChevronDown } from "lucide-react";
+import { ChevronLeft, PieChart, Calendar, CheckCircle2, ChevronDown, Plus, X } from "lucide-react";
 import { AppShell, Container, Stack, cn } from "@expenseflow/ui";
 import { motion } from "framer-motion";
 import { useAnalytics } from "../core/api/analytics";
+import { useCreateCustomCategory } from "../core/api/categories";
 import { useAuth } from "../core/providers/AuthContext";
 import { CURRENCIES } from "../constants/currencies";
 import { useNeedsReviewTransactions } from "../core/api/transactions";
@@ -62,6 +63,18 @@ export default function AnalyticsPage() {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [editingTx, setEditingTx] = useState<{ id: string; description: string; amount: number; currentCategory: string } | null>(null);
+
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const { mutate: createCategory, isPending: isCreatingCategory } = useCreateCustomCategory();
 
   const { from, to } = useMemo(
     () => getDatesForTimeframe(activeTimeframe, customMonthOffset),
@@ -384,6 +397,15 @@ export default function AnalyticsPage() {
                     {currentAnalytics.categories.length === 0 && (
                       <div className="text-center py-6 text-sm text-slate-400">No expenses recorded for this period</div>
                     )}
+                    
+                    <button
+                      type="button"
+                      onClick={() => setIsAddCategoryOpen(true)}
+                      className="w-full py-3 mt-2 flex items-center justify-center gap-2 text-sm font-semibold text-indigo-600 bg-indigo-50/50 hover:bg-indigo-50 border border-indigo-100 border-dashed rounded-xl transition-colors cursor-pointer"
+                    >
+                      <Plus size={16} />
+                      Add Custom Category
+                    </button>
                   </div>
                 </div>
               </>
@@ -405,6 +427,97 @@ export default function AnalyticsPage() {
         onClose={() => setEditingTx(null)}
         transaction={editingTx}
       />
+
+      {/* Add Custom Category Modal */}
+      {isAddCategoryOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl p-5 max-w-sm w-full shadow-2xl border border-slate-100 flex flex-col gap-4 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+                <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <Plus size={16} />
+                </div>
+                <span>New Category</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddCategoryOpen(false)}
+                className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Category Name</label>
+              <input
+                autoFocus
+                type="text"
+                placeholder="e.g. Travel, Subscriptions..."
+                value={newCategoryName}
+                onChange={(e) => {
+                  setNewCategoryName(e.target.value);
+                  setCategoryError(null);
+                }}
+                className={cn(
+                  "w-full px-3 py-2 bg-slate-50 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all font-medium text-slate-900 placeholder-slate-400",
+                  categoryError 
+                    ? "border-red-300 focus:ring-red-500/20 focus:border-red-500" 
+                    : "border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-500"
+                )}
+              />
+              {categoryError && (
+                <div className="text-xs font-medium text-red-500 mt-1">{categoryError}</div>
+              )}
+            </div>
+            
+            <div className="flex gap-2 mt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAddCategoryOpen(false);
+                  setCategoryError(null);
+                }}
+                className="flex-1 py-2.5 bg-slate-100 text-slate-700 font-semibold text-xs rounded-xl hover:bg-slate-200 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!newCategoryName.trim() || isCreatingCategory}
+                onClick={() => {
+                  setCategoryError(null);
+                  createCategory(newCategoryName.trim(), {
+                    onSuccess: () => {
+                      setIsAddCategoryOpen(false);
+                      setNewCategoryName("");
+                      showToast(`Custom category "${newCategoryName.trim()}" created!`);
+                    },
+                    onError: (err: any) => {
+                      if (err?.status === 409 || err?.message?.toLowerCase().includes("exists")) {
+                        showToast(`Category "${newCategoryName.trim()}" already exists, it will show when you add expense to that category`);
+                        setCategoryError(`Category "${newCategoryName.trim()}" already exists, in your analytics.`);
+                      } else {
+                        setCategoryError(err?.message || "Failed to create category");
+                      }
+                    }
+                  });
+                }}
+                className="flex-1 py-2.5 bg-indigo-600 text-white font-semibold text-xs rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {isCreatingCategory ? "Creating..." : "Create Category"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[100] bg-slate-900/95 backdrop-blur text-white px-5 py-3 rounded-2xl shadow-xl text-sm font-medium animate-in slide-in-from-bottom-5 duration-300 max-w-[90vw] sm:max-w-sm w-max text-center leading-relaxed">
+          {toastMessage}
+        </div>
+      )}
     </AppShell>
   );
 }
