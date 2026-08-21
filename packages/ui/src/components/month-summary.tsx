@@ -6,6 +6,7 @@ export interface MonthSummaryProps {
   monthName?: string;
   spentAmount: number;
   todayAmount?: number;
+  totalIncome?: number;
   percentageChange?: number;
   currencySymbol?: string;
   dailyData?: Array<{ day: number; amount: number; dateStr?: string; isPeak?: boolean }>;
@@ -130,6 +131,7 @@ export const MonthSummary: React.FC<MonthSummaryProps> = ({
   monthName = "July 27",
   spentAmount,
   todayAmount = 670,
+  totalIncome = 0,
   percentageChange = 4.73,
   currencySymbol = "",
   dailyData,
@@ -198,9 +200,20 @@ export const MonthSummary: React.FC<MonthSummaryProps> = ({
         {/* Sub-Stats Footer Row (Explicit Left & Right Alignment) */}
         <div
           className="relative z-10 pt-2 border-t border-slate-800/80"
-          style={{ display: "flex", flexDirection: "row", justifyContent: "flex-end", alignItems: "center", width: "100%" }}
+          style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}
         >
-          <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end", marginLeft: "auto" }}>
+          {/* Left Side: Total Income */}
+          <div style={{ textAlign: "left", display: "flex", flexDirection: "column", alignItems: "flex-start", paddingLeft: "32px" }}>
+            <span className="text-[8.5px] font-semibold text-slate-400 uppercase leading-tight block text-left">
+              Total Income
+            </span>
+            <span className="text-[11px] sm:text-xs font-black text-emerald-400 font-mono text-left mt-0.5">
+              +{currencySymbol}{formatVal(totalIncome)}
+            </span>
+          </div>
+
+          {/* Right Side: Spent Today */}
+          <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
             <span className="text-[8.5px] font-semibold text-slate-400 uppercase leading-tight block text-right" style={{ textAlign: "right" }}>
               Spent Today
             </span>

@@ -635,6 +635,7 @@ export const HomePage: React.FC = () => {
               monthName={analyticsData?.period?.from ? new Date(`${analyticsData.period.from}`).toLocaleString('en-US', { month: 'long', year: 'numeric' }) : "Current Month"}
               spentAmount={analyticsData?.totalSpent || 0}
               todayAmount={todayTotal}
+              totalIncome={analyticsData?.totalIncome || 0}
               percentageChange={analyticsData?.percentageChange || 0}
               dailyData={filteredDailyData}
               currencySymbol={userCurrencySymbol}

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, PieChart, Calendar, CheckCircle2, ChevronDown, Plus, X } from "lucide-react";
 import { AppShell, Container, Stack, cn } from "@expenseflow/ui";
@@ -68,6 +68,22 @@ export default function AnalyticsPage() {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsCustomMonthOpen(false);
+      }
+    }
+    if (isCustomMonthOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isCustomMonthOpen]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -158,10 +174,10 @@ export default function AnalyticsPage() {
 
           <section className="bg-white border border-slate-200/80 rounded-2xl p-6 flex flex-col gap-5 shadow-xs">
             {/* Header + Timeframe / Custom Filter Pills */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-2 py-0.5">
-                <div className="flex items-center bg-slate-100/90 border border-slate-200/80 rounded-full p-1 shadow-xs">
-                  {(["today", "week", "month"] as const).map((tf) => {
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+              <div className="flex gap-2 items-center flex-wrap relative">
+                <div className="bg-slate-50 p-1 rounded-full flex border border-slate-100 shadow-xs">
+                  {(['today', 'week', 'month'] as const).map((tf) => {
                     const isSelected = activeTimeframe === tf;
                     return (
                       <button
@@ -186,7 +202,7 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* Separate CUSTOM Button with Calendar Icon */}
-                <div className="relative">
+                <div ref={dropdownRef}>
                   <button
                     type="button"
                     onClick={() => setIsCustomMonthOpen((prev) => !prev)}
@@ -196,12 +212,12 @@ export default function AnalyticsPage() {
                     )}
                   >
                     <Calendar size={13} className="text-slate-500" />
-                    <span>{activeTimeframe === 'custom' ? 'CUSTOM' : 'PREVIOUS'}</span>
+                    <span>{activeTimeframe === 'custom' ? 'CUSTOM' : 'PREV'}</span>
                   </button>
 
                   {/* Custom Month Dropdown Menu */}
                   {isCustomMonthOpen && (
-                    <div className="absolute right-0 top-9 z-30 w-44 bg-white border border-slate-200 rounded-xl p-1.5 shadow-lg animate-in fade-in zoom-in-95 duration-100 flex flex-col gap-0.5">
+                    <div className="absolute left-0 top-[110%] mt-1 z-30 w-44 bg-white border border-slate-200 rounded-xl p-1.5 shadow-lg animate-in fade-in zoom-in-95 duration-100 flex flex-col gap-0.5">
                       <span className="px-2 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
                         Select Month
                       </span>
@@ -257,13 +273,10 @@ export default function AnalyticsPage() {
                     </div>
                   </div>
                   <div className="flex flex-col px-1 pt-2">
-                    <span className="text-[10px] font-semibold text-slate-400 uppercase">Trend</span>
-                    <span className={cn(
-                      "text-sm font-bold mt-0.5 whitespace-nowrap",
-                      currentAnalytics.percentageChange > 0 ? "text-rose-600" : currentAnalytics.percentageChange < 0 ? "text-emerald-600" : "text-slate-500"
-                    )}>
-                      {currentAnalytics.percentageChange > 0 ? "+" : ""}{currentAnalytics.percentageChange}%
-                    </span>
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase">Income</span>
+                    <div className="text-xl font-bold text-emerald-600 tracking-tight">
+                      {userCurrencySymbol}{formatCompactAmount(currentAnalytics.totalIncome)}
+                    </div>
                   </div>
                 </div>
 
