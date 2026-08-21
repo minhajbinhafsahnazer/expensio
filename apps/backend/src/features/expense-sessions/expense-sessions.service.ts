@@ -1,6 +1,7 @@
 import { ulid } from 'ulid';
 import { expenseSessionsRepository } from './expense-sessions.repository.js';
 import type { ExpenseSessionCreateInput } from './expense-sessions.schemas.js';
+import { TransactionClassifier } from '../transactions/classification.service.js';
 
 export const expenseSessionsService = {
   async createSession(
@@ -12,28 +13,29 @@ export const expenseSessionsService = {
     const sessionId = ulid();
     
     let totalAmount = 0;
-    const transactionsData = data.transactions.map((t) => {
+    const transactionsData = await Promise.all(data.transactions.map(async (t) => {
       totalAmount += t.amount;
       
+      const description = t.description || t.category || '';
+      const classification = await TransactionClassifier.classify(description, userId);
+      
       return {
-        // Use client generated ID directly if it's a ULID, otherwise generate a new one
-        // Wait, for strict idempotency, we should just use the client ID.
-        // Assuming the client uses ULID generation. If not, it will just insert as string.
         id: t.clientGeneratedId,
         sessionId,
         userId,
-        amount: t.amount.toString(), // Convert numeric to string for postgres NUMERIC
+        amount: t.amount.toString(),
         currency: t.currency,
-        category: t.category,
+        description: description,
+        category: classification.category,
+        categorySource: classification.categorySource,
+        categoryConfidence: classification.categoryConfidence,
         superiorCategory: t.superiorCategory ? t.superiorCategory.trim() : null,
         note: t.note,
         spentAt: new Date(t.spentAt),
         status: t.status,
-        // Pass type explicitly — 'expense' | 'income'.
-        // Zod schema defaults to 'expense' so existing clients without this field are safe.
         type: t.type as 'expense' | 'income',
       };
-    });
+    }));
 
     const sessionData = {
       id: sessionId,

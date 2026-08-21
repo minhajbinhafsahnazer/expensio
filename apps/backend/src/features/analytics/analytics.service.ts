@@ -61,7 +61,7 @@ export const analyticsService = {
 
     let totalSpent = 0;
     let totalIncome = 0;
-    const categoriesMap: Record<string, number> = {};
+    const categoriesMap: Record<string, { amount: number; transactions: { id: string; description: string; amount: number; spentAt: string }[] }> = {};
     const dailyMap: Record<string, number> = {}; // key: YYYY-MM-DD
 
     // Pre-fill dailyMap with 0 for every day in the range
@@ -82,7 +82,16 @@ export const analyticsService = {
         
         // Category breakdown (using account feature flag + superiorCategory fallback)
         const catKey = getAnalyticsCategoryKey(tx, isSuperiorCategoriesEnabled);
-        categoriesMap[catKey] = (categoriesMap[catKey] || 0) + amount;
+        if (!categoriesMap[catKey]) {
+          categoriesMap[catKey] = { amount: 0, transactions: [] };
+        }
+        categoriesMap[catKey].amount += amount;
+        categoriesMap[catKey].transactions.push({
+          id: tx.id,
+          description: tx.description,
+          amount,
+          spentAt: tx.spentAt.toISOString()
+        });
 
         // Daily breakdown - align with the pre-filled keys
         const dayStr = tx.spentAt.toLocaleDateString('en-CA', { timeZone: timezone || 'UTC' });
@@ -95,13 +104,14 @@ export const analyticsService = {
       }
     });
 
-    const categories = Object.entries(categoriesMap).map(([name, amount], index) => {
+    const categories = Object.entries(categoriesMap).map(([name, data], index) => {
       const colors = ["#0284c7", "#2563eb", "#9333ea", "#059669", "#f59e0b", "#dc2626", "#4b5563"];
       return {
         name,
-        amount,
+        amount: data.amount,
+        transactions: data.transactions,
         color: colors[index % colors.length],
-        percentage: totalSpent > 0 ? Number(((amount / totalSpent) * 100).toFixed(1)) : 0
+        percentage: totalSpent > 0 ? Number(((data.amount / totalSpent) * 100).toFixed(1)) : 0
       };
     }).sort((a, b) => b.amount - a.amount);
 

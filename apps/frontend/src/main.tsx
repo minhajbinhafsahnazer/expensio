@@ -7,6 +7,7 @@ import './core/theme/variables.css';
 import { QueryProvider } from './core/providers/QueryProvider';
 import { AuthProvider } from './core/providers/AuthContext';
 import { SyncProvider } from './core/sync/SyncEngine';
+import { TourProvider } from './core/providers/TourProvider';
 
 // Layout
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
@@ -27,26 +28,28 @@ import { RegisterPage } from './pages/auth/register';
 
 const App = () => (
   <BrowserRouter>
-    <Routes>
-      {/* ── Public auth & legal routes ─────────────────────────── */}
-      <Route path="/welcome"  element={<WelcomePage />} />
-      <Route path="/terms"    element={<TermsPage />} />
-      <Route path="/privacy"  element={<PrivacyPage />} />
-      <Route path="/login"    element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+    <TourProvider>
+      <Routes>
+        {/* ── Public auth & legal routes ─────────────────────────── */}
+        <Route path="/welcome"  element={<WelcomePage />} />
+        <Route path="/terms"    element={<TermsPage />} />
+        <Route path="/privacy"  element={<PrivacyPage />} />
+        <Route path="/login"    element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-      {/* ── Protected routes ───────────────────────────────────── */}
-      <Route element={<ProtectedRoute />}>
-        <Route path="/"          element={<HomePage />} />
-        <Route path="/portfolio" element={<PortfolioPage />} />
-        <Route path="/profile"   element={<ProfilePage />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
-        <Route path="/dev/ui"    element={<DevUIPage />} />
-      </Route>
+        {/* ── Protected routes ───────────────────────────────────── */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/"          element={<HomePage />} />
+          <Route path="/portfolio" element={<PortfolioPage />} />
+          <Route path="/profile"   element={<ProfilePage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/dev/ui"    element={<DevUIPage />} />
+        </Route>
 
-      {/* ── Fallback ───────────────────────────────────────────── */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* ── Fallback ───────────────────────────────────────────── */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </TourProvider>
   </BrowserRouter>
 );
 

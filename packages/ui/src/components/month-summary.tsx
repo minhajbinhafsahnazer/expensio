@@ -21,7 +21,7 @@ interface DailyPoint {
 
 const DailyStripChart = ({
   data,
-  currencySymbol = "₹",
+  currencySymbol = "",
 }: {
   data?: DailyPoint[];
   currencySymbol?: string;
@@ -131,7 +131,7 @@ export const MonthSummary: React.FC<MonthSummaryProps> = ({
   spentAmount,
   todayAmount = 670,
   percentageChange = 4.73,
-  currencySymbol = "₹",
+  currencySymbol = "",
   dailyData,
   className,
 }) => {

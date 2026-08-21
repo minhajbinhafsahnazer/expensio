@@ -18,6 +18,14 @@ export interface TransactionResponse {
 }
 
 export const TransactionsApi = {
+  getNeedsReview: async () => {
+    const response = await client.get<{ items: { term: string; transactionCount: number; totalAmount: number }[]; total: number }>('/transactions/needs-review');
+    return response.data;
+  },
+  createBulkMappings: async (payload: { mappings: { normalizedTerm: string; category: string; ignored?: boolean }[] }) => {
+    const response = await client.post('/transactions/mappings/bulk', payload);
+    return response.data;
+  },
   getAll: async () => {
     const response = await client.get<{ transactions: TransactionResponse[] }>('/transactions');
     return response.data.transactions;
@@ -31,3 +39,25 @@ export const TransactionsApi = {
     return response.data;
   },
 };
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+export function useNeedsReviewTransactions() {
+  return useQuery({
+    queryKey: ['transactions', 'needs-review'],
+    queryFn: TransactionsApi.getNeedsReview,
+  });
+}
+
+export function useCreateBulkMappings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: TransactionsApi.createBulkMappings,
+    onSuccess: () => {
+      // Invalidate all three so banner, analytics, and transaction list all update
+      queryClient.invalidateQueries({ queryKey: ['transactions', 'needs-review'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['analytics'] });
+    }
+  });
+}

@@ -1,0 +1,1 @@
+ALTER TABLE "user_category_mappings" ADD COLUMN "ignored" boolean DEFAULT false NOT NULL;

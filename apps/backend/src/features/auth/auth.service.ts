@@ -85,7 +85,7 @@ export async function register(
     email:        body.email,
     passwordHash,
     fullName:     body.fullName ?? null,
-    currency:     'INR',
+    currency:     body.currency ?? 'INR',
     theme:        'system',
     timezone:     'Asia/Kolkata',
     locale:       'en-IN',

@@ -141,6 +141,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
               clientGeneratedId: tx.clientGeneratedId,
               amount:           tx.amount,
               currency:         tx.currency,
+              description:      tx.description || tx.category || 'Expense',
               category:         tx.category,
               superiorCategory: tx.superiorCategory,
               note:             tx.note,
@@ -157,6 +158,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
           await client.put(`/transactions/${tx.clientGeneratedId}`, {
             amount:           tx.amount,
             currency:         tx.currency,
+            description:      tx.description || tx.category || 'Expense',
             category:         tx.category,
             superiorCategory: tx.superiorCategory,
             note:             tx.note,

@@ -51,7 +51,7 @@ export const DevUIPage: React.FC = () => {
     };
     setReceiptItems((prev) => [...prev, newItem]);
     setCurrencyVal(undefined);
-    showToast(`Added ${choice.label} ₹${currencyVal}`);
+    showToast(`Added ${choice.label} ${currencyVal}`);
   };
 
   const handleDone = () => {
@@ -165,7 +165,7 @@ export const DevUIPage: React.FC = () => {
                 value={currencyVal}
                 onChange={(val: number | undefined) => setCurrencyVal(val)}
                 placeholder="0"
-                currencySymbol="₹"
+                currencySymbol=""
               />
 
               <Label>B. Quick Choice Chips (One-Tap Selection)</Label>
@@ -223,7 +223,7 @@ export const DevUIPage: React.FC = () => {
             value={currencyVal}
             onChange={(val: number | undefined) => setCurrencyVal(val)}
             placeholder="0"
-            currencySymbol="₹"
+            currencySymbol=""
           />
 
           {/* Quick Choice Pills */}

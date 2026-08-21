@@ -16,7 +16,7 @@ export const CurrencyField = React.forwardRef<HTMLInputElement, CurrencyFieldPro
       className,
       value = "",
       onChange,
-      currencySymbol = "₹",
+      currencySymbol = "",
       autoFocus = false,
       label,
       error,
@@ -28,6 +28,7 @@ export const CurrencyField = React.forwardRef<HTMLInputElement, CurrencyFieldPro
     ref
   ) => {
     const [displayValue, setDisplayValue] = useState<string>("");
+    const [isFocused, setIsFocused] = useState(false);
     const internalRef = useRef<HTMLInputElement | null>(null);
 
     // Combine forwarded ref and internal ref
@@ -135,9 +136,17 @@ export const CurrencyField = React.forwardRef<HTMLInputElement, CurrencyFieldPro
               value={displayValue}
               onChange={handleInputChange}
               onPaste={handlePaste}
-              placeholder={placeholder}
+              placeholder={isFocused ? "" : placeholder}
               disabled={disabled}
               onKeyDown={onKeyDown}
+              onFocus={(e) => {
+                setIsFocused(true);
+                props.onFocus?.(e);
+              }}
+              onBlur={(e) => {
+                setIsFocused(false);
+                props.onBlur?.(e);
+              }}
               className="w-full text-center bg-transparent text-4xl sm:text-5xl font-black tracking-tight text-slate-900 focus:outline-none placeholder:text-slate-200 font-mono border-none p-0"
               {...props}
             />

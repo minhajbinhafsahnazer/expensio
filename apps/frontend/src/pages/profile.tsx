@@ -5,8 +5,9 @@ import { useAuth } from "../core/providers/AuthContext";
 import { useSyncEngine } from "../core/sync/SyncEngine";
 import { queue } from "../core/sync/db";
 import { useQueryClient } from "@tanstack/react-query";
-import { AppShell, Container, Stack, BottomNav } from "@expenseflow/ui";
+import { AppShell, Container, Stack, BottomNav, cn } from "@expenseflow/ui";
 import { OnboardingTour } from "../components/OnboardingTour";
+import { CURRENCIES, CurrencyCode } from "../constants/currencies";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -15,10 +16,13 @@ export default function ProfilePage() {
   const queryClient = useQueryClient();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isTourOpen, setIsTourOpen] = useState(false);
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [isManualSyncing, setIsManualSyncing] = useState(false);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [showSuperiorInfoModal, setShowSuperiorInfoModal] = useState(false);
   const [showSuperiorConfirmModal, setShowSuperiorConfirmModal] = useState(false);
+  const [currencyToConfirm, setCurrencyToConfirm] = useState<CurrencyCode | null>(null);
+  const [currencyConfirmText, setCurrencyConfirmText] = useState("");
   const [confirmText, setConfirmText] = useState("");
   const [isSubmittingToggle, setIsSubmittingToggle] = useState(false);
   const [multiCurrency, setMultiCurrency] = useState(() => {
@@ -233,17 +237,22 @@ export default function ProfilePage() {
                     Replay Tour
                   </span>
                 </button>
-                <div className="flex items-center justify-between p-4 border-b border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowCurrencyModal(true)}
+                  className="w-full flex items-center justify-between p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer"
+                >
                   <div className="flex items-center gap-3 text-slate-700 font-medium">
                     <span className="w-5 h-5 flex items-center justify-center text-slate-400">
-                      ₹
+                      {CURRENCIES.find(c => c.code === user?.currency)?.symbol || "₹"}
                     </span>
                     Currency
                   </div>
-                  <span className="text-sm font-semibold text-slate-900">
-                    ₹ INR
-                  </span>
-                </div>
+                  <div className="flex items-center gap-1.5 text-slate-900 font-semibold text-sm">
+                    {CURRENCIES.find(c => c.code === user?.currency)?.name || "Indian Rupee"}
+                    <ChevronDown size={16} className="text-slate-400" />
+                  </div>
+                </button>
                 <div className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-3 text-slate-700 font-medium">
                     <Palette size={18} className="text-slate-400" />
@@ -531,6 +540,155 @@ export default function ProfilePage() {
                 className="flex-1 py-2.5 bg-slate-900 text-white font-semibold text-xs rounded-xl hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {isSubmittingToggle ? "Updating..." : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Currency Selection Modal */}
+      {showCurrencyModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-0 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl sm:rounded-2xl p-5 max-w-sm w-full shadow-2xl flex flex-col gap-4 animate-in slide-in-from-bottom-8 sm:zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2 font-bold text-slate-900">
+                <span className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-black">
+                  ₹
+                </span>
+                <span>Select Base Currency</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCurrencyModal(false)}
+                className="p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer -mr-2"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-1 max-h-[60vh] overflow-y-auto no-scrollbar pb-2">
+              {CURRENCIES.map((c) => {
+                const isSelected = user?.currency === c.code;
+                return (
+                  <button
+                    key={c.code}
+                    type="button"
+                    onClick={async () => {
+                      if (isSelected) return;
+                      setShowCurrencyModal(false);
+                      setCurrencyToConfirm(c.code as CurrencyCode);
+                      setCurrencyConfirmText("");
+                    }}
+                    className={cn(
+                      "flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer",
+                      isSelected 
+                        ? "bg-indigo-50 border border-indigo-100" 
+                        : "hover:bg-slate-50 border border-transparent"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "w-10 h-10 rounded-full flex items-center justify-center shadow-sm border",
+                        c.symbol.length > 2 ? "text-[11px] font-black tracking-tighter" : "text-lg font-bold",
+                        isSelected 
+                          ? "bg-indigo-600 text-white border-indigo-700" 
+                          : "bg-white text-slate-700 border-slate-200"
+                      )}>
+                        {c.symbol}
+                      </div>
+                      <div className="flex flex-col items-start">
+                        <span className={cn(
+                          "font-bold text-sm",
+                          isSelected ? "text-indigo-900" : "text-slate-700"
+                        )}>
+                          {c.code}
+                        </span>
+                        <span className={cn(
+                          "text-xs font-medium",
+                          isSelected ? "text-indigo-600" : "text-slate-500"
+                        )}>
+                          {c.name}
+                        </span>
+                      </div>
+                    </div>
+                    {isSelected && (
+                      <CheckCircle2 size={20} className="text-indigo-600" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Currency Confirmation Modal */}
+      {currencyToConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl p-5 max-w-sm w-full shadow-2xl border border-slate-100 flex flex-col gap-4 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+                <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <Globe size={16} />
+                </div>
+                <span>Confirm Currency Change</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCurrencyToConfirm(null)}
+                className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs text-slate-600 leading-relaxed">
+              <p>
+                Are you sure you want to change your base currency to <span className="font-bold text-slate-900">{currencyToConfirm}</span>? 
+                This will only update how amounts are displayed. It will <span className="font-bold text-red-600">not</span> convert any historical transaction values.
+              </p>
+              
+              <div className="mt-4">
+                <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                  Type "confirm" to proceed
+                </label>
+                <input
+                  type="text"
+                  value={currencyConfirmText}
+                  onChange={(e) => setCurrencyConfirmText(e.target.value)}
+                  placeholder="confirm"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-2">
+              <button
+                type="button"
+                onClick={() => setCurrencyToConfirm(null)}
+                className="flex-1 py-2.5 bg-slate-100 text-slate-700 font-semibold text-xs rounded-xl hover:bg-slate-200 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={currencyConfirmText.trim().toLowerCase() !== "confirm" || isSubmittingToggle}
+                onClick={async () => {
+                  if (currencyConfirmText.trim().toLowerCase() !== "confirm") return;
+                  setIsSubmittingToggle(true);
+                  try {
+                    await updateUser({ currency: currencyToConfirm });
+                    showToast(`Currency updated to ${currencyToConfirm}`);
+                    setCurrencyToConfirm(null);
+                  } catch (err) {
+                    showToast("Failed to update currency");
+                  } finally {
+                    setIsSubmittingToggle(false);
+                  }
+                }}
+                className="flex-1 py-2.5 bg-indigo-600 text-white font-semibold text-xs rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {isSubmittingToggle ? "Updating..." : "Change Currency"}
               </button>
             </div>
           </div>

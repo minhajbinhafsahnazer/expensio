@@ -9,6 +9,7 @@ export interface RegisterBody {
   email: string;
   password: string;
   fullName?: string | undefined;
+  currency?: string | undefined;
 }
 
 /** Validated body for POST /auth/login */

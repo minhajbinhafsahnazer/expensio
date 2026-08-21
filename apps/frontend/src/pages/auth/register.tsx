@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../core/providers/AuthContext';
 import { ApiError } from '../../core/api/client';
+import { CURRENCIES, CurrencyCode } from '../../constants/currencies';
 
 const NUDGES = [
   "With Expencio, your personal income tracking is made simple",
@@ -19,6 +20,7 @@ export function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [currency, setCurrency] = useState<CurrencyCode>('INR');
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -48,6 +50,7 @@ export function RegisterPage() {
         email.trim().toLowerCase(),
         password,
         fullName.trim() || undefined,
+        currency
       );
       // Automatically authenticated — redirect to intended destination
       navigate('/', { replace: true });
@@ -136,6 +139,23 @@ export function RegisterPage() {
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
+          </div>
+
+          <div style={styles.field}>
+            <label style={styles.label} htmlFor="reg-currency">Currency</label>
+            <select
+              id="reg-currency"
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+              style={styles.input}
+              disabled={loading}
+            >
+              {CURRENCIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name} ({c.symbol})
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Interactive Terms & Privacy Acknowledgement Checkbox */}

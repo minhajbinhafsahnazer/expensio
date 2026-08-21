@@ -15,5 +15,13 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": ["src/**/*"],
-  "exclude": ["src/database/migrate.ts", "src/database/reset.ts"]
+  "exclude": [
+    "src/database/migrate.ts",
+    "src/database/reset.ts",
+    "src/database/test-seed.ts",
+    "src/database/query-results.ts",
+    "src/database/reset-categories.ts",
+    "src/features/transactions/test-phase2.ts",
+    "src/features/transactions/verify-phase2.ts"
+  ]
 }

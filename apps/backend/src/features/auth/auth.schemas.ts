@@ -8,6 +8,18 @@ import { z } from 'zod';
 
 // ─── Request Schemas ──────────────────────────────────────────────────────────
 
+export const CurrencyEnum = z.enum([
+  "INR",
+  "USD",
+  "AED",
+  "SAR",
+  "QAR",
+  "EUR",
+  "GBP",
+  "CAD",
+  "AUD"
+]);
+
 export const RegisterBodySchema = z.object({
   email: z
     .string({ required_error: 'Email is required' })
@@ -24,6 +36,7 @@ export const RegisterBodySchema = z.object({
     .min(1, 'Name cannot be blank')
     .max(255, 'Name is too long')
     .optional(),
+  currency: CurrencyEnum.optional(),
 });
 
 export const LoginBodySchema = z.object({
@@ -60,7 +73,7 @@ export const UserPublicSchema = z.object({
 
 export const UpdateMeBodySchema = z.object({
   fullName:                  z.string().trim().optional(),
-  currency:                  z.string().trim().optional(),
+  currency:                  CurrencyEnum.optional(),
   theme:                     z.string().trim().optional(),
   timezone:                  z.string().trim().optional(),
   locale:                    z.string().trim().optional(),

@@ -20,7 +20,13 @@ export interface AnalyticsData {
   percentageChange: number;
   peakDay: { date: string; amount: number };
   dailyData: DailySpendingPoint[];
-  categories: { name: string; amount: number; color: string; percentage: number }[];
+  categories: { 
+    name: string; 
+    amount: number; 
+    color: string; 
+    percentage: number;
+    transactions: { id: string; description: string; amount: number; spentAt: string }[];
+  }[];
 }
 
 export const AnalyticsApi = {

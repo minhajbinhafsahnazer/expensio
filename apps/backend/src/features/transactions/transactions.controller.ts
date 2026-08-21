@@ -1,5 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { transactionsService } from './transactions.service.js';
+import { NotFoundError } from '../../common/errors/index.js';
 
 export async function getTransactions(
   request: FastifyRequest,
@@ -26,6 +27,10 @@ export async function updateTransaction(
 
   const result = await transactionsService.updateTransaction(id, userId, data);
 
+  if (!result) {
+    throw new NotFoundError('Transaction not found');
+  }
+
   return reply.status(200).send({
     success: true,
     message: 'Transaction updated successfully',
@@ -45,5 +50,37 @@ export async function deleteTransaction(
   return reply.status(200).send({
     success: true,
     message: 'Transaction deleted successfully',
+  });
+}
+export async function getNeedsReviewTransactions(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const userId = request.auth.userId;
+  const result = await transactionsService.getNeedsReviewTransactions(userId);
+
+  return reply.status(200).send({
+    success: true,
+    data: { items: result, total: result.length },
+  });
+}
+
+export async function createBulkMappings(
+  request: FastifyRequest<{ Body: { mappings: { normalizedTerm: string; category: string; ignored?: boolean }[] } }>,
+  reply: FastifyReply
+) {
+  const userId = request.auth.userId;
+  const { mappings } = request.body;
+
+  if (!mappings || !Array.isArray(mappings)) {
+    return reply.status(400).send({ success: false, message: 'Invalid mappings format' });
+  }
+
+  const result = await transactionsService.createBulkMappings(userId, mappings);
+
+  return reply.status(200).send({
+    success: true,
+    message: 'Mappings updated successfully',
+    data: result,
   });
 }

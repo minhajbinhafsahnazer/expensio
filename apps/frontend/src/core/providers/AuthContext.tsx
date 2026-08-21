@@ -47,7 +47,7 @@ interface AuthState {
 
 interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, fullName?: string) => Promise<void>;
+  register: (email: string, password: string, fullName?: string, currency?: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (data: Partial<User>) => Promise<void>;
 }
@@ -126,9 +126,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // ─── Register ──────────────────────────────────────────────────────────────
   // Automatically authenticates on success — no separate login step required.
-  const register = useCallback(async (email: string, password: string, fullName?: string) => {
+  const register = useCallback(async (email: string, password: string, fullName?: string, currency?: string) => {
     // 1. Register the account
-    await client.post('/auth/register', { email, password, fullName });
+    await client.post('/auth/register', { email, password, fullName, currency });
 
     // 2. Immediately login to get tokens
     const { data } = await client.post<{ accessToken: string; user: User }>(

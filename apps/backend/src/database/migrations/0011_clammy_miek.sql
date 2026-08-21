@@ -1,0 +1,2 @@
+DROP INDEX IF EXISTS "user_category_mappings_user_term_idx";--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "user_category_mappings_user_term_idx" ON "user_category_mappings" ("user_id","normalized_term");

@@ -4,6 +4,7 @@ export interface TransactionCreatePayload {
   clientGeneratedId: string;
   amount: number;
   currency?: string;
+  description?: string;
   category: string;
   superiorCategory?: string | null;
   note?: string;
@@ -31,7 +32,10 @@ export interface ExpenseSessionResponse {
     userId: string;
     amount: string;
     currency: string;
+    description: string;
     category: string;
+    categorySource: string;
+    categoryConfidence: number;
     note: string | null;
     spentAt: string;
     status: string;

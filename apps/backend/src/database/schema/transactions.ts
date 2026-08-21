@@ -1,4 +1,4 @@
-import { pgTable, text, numeric, varchar, timestamp, index, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, text, numeric, varchar, timestamp, index, pgEnum, integer } from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { expenseSessions } from './expense_sessions';
 
@@ -45,7 +45,10 @@ export const transactions = pgTable(
     type: transactionTypeEnum('type').notNull().default('expense'),
 
     // Classification
-    category: text('category').notNull(),          // e.g. "food", "transport", "utilities"
+    description: text('description').notNull().default(''), // Original user input exactly as entered
+    category: text('category').notNull().default('Uncategorized'), // e.g. "Food", "Transport", "Uncategorized"
+    categorySource: varchar('category_source', { length: 20 }).notNull().default('unknown'), // user, rule, fuzzy, unknown
+    categoryConfidence: integer('category_confidence').notNull().default(0), // 0-100 score
     superiorCategory: text('superior_category'),   // Optional high-level analytical grouping (e.g. "Food & Dining")
     note: text('note'),                            // Optional free-text memo
 

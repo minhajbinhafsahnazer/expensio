@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../core/providers/AuthContext";
+import { CURRENCIES } from "../constants/currencies";
+import { formatCurrency } from "../utils/currency";
 
 import {
   AppShell,
@@ -67,13 +70,21 @@ const formatCompactAmount = (amount: number | string | undefined | null) => {
 
 export const PortfolioPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  const userCurrency = user?.currency || "INR";
+  const userCurrencySymbol = CURRENCIES.find(c => c.code === userCurrency)?.symbol || "₹";
 
   // Settings modal state & pill navigation state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [currencyPref, setCurrencyPref] = useState("₹ (INR)");
   const [enableNotifications, setEnableNotifications] = useState(true);
 
   // Toast Notification state
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const [goalToConfirmDelete, setGoalToConfirmDelete] = useState<{ id: string; title: string } | null>(null);
+  const [goalDeleteConfirmText, setGoalDeleteConfirmText] = useState("");
+
   const [toast, setToast] = useState<string | null>(null);
   const showToast = (msg: string) => {
     setToast(msg);
@@ -197,10 +208,8 @@ export const PortfolioPage: React.FC = () => {
       showToast('Internet connection required. Goal changes cannot be made offline.');
       return;
     }
-    deleteGoalMutation.mutate(id, {
-      onError: () => showToast(`Failed to delete "${title}". Changes rolled back.`)
-    });
-    showToast(`Deleted goal "${title}"`);
+    setGoalToConfirmDelete({ id, title });
+    setGoalDeleteConfirmText("");
   };
 
   const handleSaveGoal = (e: React.FormEvent) => {
@@ -290,6 +299,7 @@ export const PortfolioPage: React.FC = () => {
         queryClient.setQueryData(["transactions"], (old: any) => {
           const optimisticTx = {
             id: cid,
+            description: txCategory,
             category: txCategory,
             amount: numAmt.toString(),
             spentAt: spentAtIso,
@@ -304,12 +314,13 @@ export const PortfolioPage: React.FC = () => {
           clientGeneratedId: cid,
           amount: numAmt,
           currency: "INR",
+          description: txCategory,
           category: txCategory,
           spentAt: spentAtIso,
           type: "income",
         });
 
-        showToast(`Deducted ₹${numAmt.toLocaleString("en-IN")} — added to your balance.`);
+        showToast(`Deducted ${formatCurrency(numAmt, userCurrency)} — added to your balance.`);
       } else {
         // addToBalance = FALSE (default):
         //   Goal decreases by X.
@@ -320,6 +331,7 @@ export const PortfolioPage: React.FC = () => {
         queryClient.setQueryData(["transactions"], (old: any) => {
           const optimisticTx = {
             id: cid,
+            description: txCategory,
             category: txCategory,
             amount: numAmt.toString(),
             spentAt: spentAtIso,
@@ -334,15 +346,16 @@ export const PortfolioPage: React.FC = () => {
           clientGeneratedId: cid,
           amount: numAmt,
           currency: "INR",
+          description: txCategory,
           category: txCategory,
           spentAt: spentAtIso,
           type: "expense",
         });
 
-        showToast(`Deducted ₹${numAmt.toLocaleString("en-IN")} — recorded as an expense.`);
+        showToast(`Deducted ${formatCurrency(numAmt, userCurrency)} — recorded as an expense.`);
       }
     } else {
-      showToast(`Added ₹${numAmt.toLocaleString("en-IN")} to "${depositGoalTitle}"!`);
+      showToast(`Added ${formatCurrency(numAmt, userCurrency)} to "${depositGoalTitle}"!`);
     }
 
     setIsDepositModalOpen(false);
@@ -399,7 +412,7 @@ export const PortfolioPage: React.FC = () => {
     const nextState = !d.hasReminder;
     updateDebtMutation.mutate({ id, hasReminder: nextState });
     if (nextState) {
-      showToast(`🔔 Reminder set for ${d.name} (${d.type === "lent" ? "Collect" : "Pay"} ₹${Number(d.amount).toLocaleString("en-IN")})`);
+      showToast(`🔔 Reminder set for ${d.name} (${d.type === "lent" ? "Collect" : "Pay"} ${formatCurrency(Number(d.amount), userCurrency)})`);
     } else {
       showToast(`Notifications turned off for ${d.name}`);
     }
@@ -476,13 +489,15 @@ export const PortfolioPage: React.FC = () => {
         <Stack gap={6}>
           
           {/* ==================== 1. FINANCIAL GOALS (Linear + Notion Light Design) ==================== */}
-          <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-6 flex flex-col gap-6 shadow-2xl">
+          <section className="relative bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-6 flex flex-col gap-6 shadow-2xl">
             {/* Ambient glow effects */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3 pointer-events-none" />
+            <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none z-0">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3 pointer-events-none" />
+            </div>
 
             {/* Top Summary Header Area */}
-            <div className="flex flex-col gap-3 pb-5 border-b border-slate-800/60 relative z-10">
+            <div className="flex flex-col gap-3 pb-5 border-b border-slate-800/60 relative z-30">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <h3 className="text-base font-semibold text-white tracking-tight">
@@ -493,14 +508,11 @@ export const PortfolioPage: React.FC = () => {
                       title: "Savings Goals & Milestones",
                       subtitle: "Target-driven financial discipline",
                       badge: "Goals",
-                      description: "Set target savings limits (e.g. Emergency Fund, New Bike, Vacation) and log deposit progress.",
-                      highlights: [
-                        { title: "Progress Percentage", desc: "Calculated in real-time as (Current Amount / Target Amount) × 100%." },
-                        { title: "Priority Tagging", desc: "Organize goals by Low, Medium, or High priority." },
-                        { title: "Quick Deposit", desc: "Tap '+ Deposit' on any goal card to add funds toward your target." }
-                      ]
+                      description: "Set target savings limits (e.g. Emergency Fund, Vacation) and log deposit progress in real time.",
                     }}
                     theme="dark"
+                    tourStepId="portfolio-goals"
+                    align="left"
                   />
                 </div>
                 <button
@@ -516,10 +528,10 @@ export const PortfolioPage: React.FC = () => {
               {/* Summary Amount & Subtitle */}
               <div className="flex flex-col gap-1 mt-1">
                 <span className="text-3xl font-bold text-white tracking-tight">
-                  ₹{totalSavedAcrossGoals.toLocaleString("en-IN")}
+                  {formatCurrency(totalSavedAcrossGoals, userCurrency)}
                 </span>
                 <span className="text-sm text-slate-400 font-normal">
-                  {overallGoalProgressPct.toFixed(0)}% of ₹{totalTargetAcrossGoals.toLocaleString("en-IN")} saved
+                  {overallGoalProgressPct.toFixed(0)}% of {formatCurrency(totalTargetAcrossGoals, userCurrency)} saved
                 </span>
               </div>
 
@@ -624,9 +636,9 @@ export const PortfolioPage: React.FC = () => {
 
                       {/* Amount & Percentage Row */}
                       <div className="flex items-baseline justify-between text-sm">
-                        <span className="font-medium text-white">
-                          ₹{currentAmount.toLocaleString("en-IN")}{" "}
-                          <span className="text-slate-400 font-normal">/ ₹{targetAmount.toLocaleString("en-IN")}</span>
+                        <span className="font-semibold text-white tracking-tight">
+                          {formatCurrency(currentAmount, userCurrency)}{" "}
+                          <span className="text-slate-400 font-normal">/ {formatCurrency(targetAmount, userCurrency)}</span>
                         </span>
                         <span className="font-semibold text-slate-300">{progressPct.toFixed(0)}%</span>
                       </div>
@@ -659,7 +671,7 @@ export const PortfolioPage: React.FC = () => {
 
                       {/* Muted Caption Row with Remaining & Target Ending Date */}
                       <div className="flex items-center justify-between text-xs text-slate-400 font-normal">
-                        <span>₹{remaining.toLocaleString("en-IN")} remaining</span>
+                        <span>{formatCurrency(remaining, userCurrency)} remaining</span>
                         {g.targetDate && (
                           <span className="text-slate-400">Target: {formatGoalDate(g.targetDate)}</span>
                         )}
@@ -681,6 +693,15 @@ export const PortfolioPage: React.FC = () => {
                 <h3 className="text-base font-semibold text-slate-900 tracking-tight whitespace-nowrap">
                   Debt Tracker
                 </h3>
+                <SectionInfoModal
+                  content={{
+                    title: "Debt & IOU Tracker",
+                    subtitle: "Manage money lent and borrowed",
+                    badge: "Debts",
+                    description: "Keep track of personal loans, shared expenses, and IOUs. Log incoming repayments or settled balances easily.",
+                  }}
+                  align="left"
+                />
               </div>
 
               <button
@@ -752,8 +773,8 @@ export const PortfolioPage: React.FC = () => {
                   </button>
                 ))}
               </div>
-              <span className="text-[10px] font-semibold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">
-                Amounts in ₹
+              <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+                Amounts in {userCurrencySymbol}
               </span>
             </div>
 
@@ -1090,7 +1111,7 @@ export const PortfolioPage: React.FC = () => {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                  Target Amount (₹)
+                  Target Amount ({userCurrencySymbol})
                 </label>
                 <input
                   required
@@ -1104,7 +1125,7 @@ export const PortfolioPage: React.FC = () => {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                  Already Saved (₹)
+                  Already Saved ({userCurrencySymbol})
                 </label>
                 <input
                   type="number"
@@ -1199,7 +1220,7 @@ export const PortfolioPage: React.FC = () => {
               {/* Amount Input */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                  {depositMode === "deduct" ? "Deduction Amount (₹)" : "Amount to Add (₹)"}
+                  {depositMode === "deduct" ? `Deduction Amount (${userCurrencySymbol})` : `Amount to Add (${userCurrencySymbol})`}
                 </label>
                 <input
                   required
@@ -1315,7 +1336,7 @@ export const PortfolioPage: React.FC = () => {
 
               <div className="flex flex-col gap-1">
                 <label className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">
-                  Amount (₹)
+                  Amount ({userCurrencySymbol})
                 </label>
                 <input
                   required
@@ -1392,27 +1413,7 @@ export const PortfolioPage: React.FC = () => {
             </div>
 
             <div className="flex flex-col gap-3.5 text-xs">
-              {/* Currency Preference */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                  Default Currency
-                </label>
-                <select
-                  value={currencyPref}
-                  onChange={(e) => {
-                    setCurrencyPref(e.target.value);
-                    showToast(`Updated currency to ${e.target.value}`);
-                  }}
-                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-400 cursor-pointer"
-                >
-                  <option value="₹ (INR)">₹ - Indian Rupee (INR)</option>
-                  <option value="$ (USD)">$ - US Dollar (USD)</option>
-                  <option value="€ (EUR)">€ - Euro (EUR)</option>
-                  <option value="£ (GBP)">£ - British Pound (GBP)</option>
-                </select>
-              </div>
-
-              {/* Push Notifications Switch */}
+              {/* Currency preference moved to Profile > Preferences */}              {/* Push Notifications Switch */}
               <div className="flex items-center justify-between py-2 border-y border-slate-100">
                 <div className="flex flex-col gap-0.5">
                   <span className="font-medium text-slate-800">Reminders & Notifications</span>
@@ -1470,6 +1471,74 @@ export const PortfolioPage: React.FC = () => {
             >
               Done
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Goal Delete Confirmation Modal */}
+      {goalToConfirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl p-5 max-w-sm w-full shadow-2xl border border-slate-100 flex flex-col gap-4 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+                <div className="w-7 h-7 rounded-lg bg-red-50 text-red-600 flex items-center justify-center">
+                  <Trash2 size={16} />
+                </div>
+                <span>Delete Goal</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setGoalToConfirmDelete(null)}
+                className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs text-slate-600 leading-relaxed">
+              <p>
+                Are you sure you want to delete the financial goal <span className="font-bold text-slate-900">"{goalToConfirmDelete.title}"</span>? 
+                This action <span className="font-bold text-red-600">cannot</span> be undone.
+              </p>
+              
+              <div className="mt-4">
+                <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                  Type "confirm" to proceed
+                </label>
+                <input
+                  type="text"
+                  value={goalDeleteConfirmText}
+                  onChange={(e) => setGoalDeleteConfirmText(e.target.value)}
+                  placeholder="confirm"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-2">
+              <button
+                type="button"
+                onClick={() => setGoalToConfirmDelete(null)}
+                className="flex-1 py-2.5 bg-slate-100 text-slate-700 font-semibold text-xs rounded-xl hover:bg-slate-200 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={goalDeleteConfirmText.trim().toLowerCase() !== "confirm"}
+                onClick={() => {
+                  if (goalDeleteConfirmText.trim().toLowerCase() !== "confirm") return;
+                  deleteGoalMutation.mutate(goalToConfirmDelete.id, {
+                    onError: () => showToast(`Failed to delete "${goalToConfirmDelete.title}". Changes rolled back.`)
+                  });
+                  showToast(`Deleted goal "${goalToConfirmDelete.title}"`);
+                  setGoalToConfirmDelete(null);
+                }}
+                className="flex-1 py-2.5 bg-red-600 text-white font-semibold text-xs rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                Delete Goal
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -11,6 +11,22 @@ const transactionsRoutes: FastifyPluginAsync = async (fastify) => {
     handler: controller.getTransactions,
   });
 
+  fastify.get('/needs-review', {
+    config: {
+      rateLimit: { max: 100, timeWindow: '1 minute' },
+    },
+    preHandler: [authenticate],
+    handler: controller.getNeedsReviewTransactions,
+  });
+
+  fastify.post('/mappings/bulk', {
+    config: {
+      rateLimit: { max: 20, timeWindow: '1 minute' },
+    },
+    preHandler: [authenticate],
+    handler: controller.createBulkMappings,
+  });
+
   fastify.put('/:id', {
     config: {
       rateLimit: { max: 100, timeWindow: '1 minute' },

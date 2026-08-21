@@ -25,6 +25,8 @@ import { useAnalytics } from "../core/api/analytics";
 import { useSyncEngine } from "../core/sync/SyncEngine";
 import { queue } from "../core/sync/db";
 import { useAuth } from "../core/providers/AuthContext";
+import { CURRENCIES } from "../constants/currencies";
+import { formatCurrency } from "../utils/currency";
 
 export interface ExpenseEntry {
   id: string;
@@ -92,6 +94,7 @@ export const HomePage: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const categoryBtnRef = useRef<HTMLButtonElement>(null);
   const categoryInputRef = useRef<HTMLInputElement>(null);
+  const currencyInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isSheetOpen) {
@@ -121,6 +124,9 @@ export const HomePage: React.FC = () => {
   const { user } = useAuth();
   const { enqueue, enqueueMany, pendingCount, syncStatus, isOnline } = useSyncEngine();
 
+  const userCurrency = user?.currency || "INR";
+  const userCurrencySymbol = CURRENCIES.find(c => c.code === userCurrency)?.symbol || "₹";
+
   // Auto-start guided onboarding tour for first-time logged-in users
   useEffect(() => {
     if (user?.id) {
@@ -149,7 +155,7 @@ export const HomePage: React.FC = () => {
       visibleServer = visibleServer.map(t => {
         if (pendingUpdates.has(t.id)) {
           const update = pendingUpdates.get(t.id)!;
-          return { ...t, amount: update.amount.toString(), category: update.category, superiorCategory: update.superiorCategory, type: update.type, spentAt: update.spentAt };
+          return { ...t, amount: update.amount.toString(), description: update.description, category: update.category, superiorCategory: update.superiorCategory, type: update.type, spentAt: update.spentAt };
         }
         return t;
       });
@@ -162,6 +168,7 @@ export const HomePage: React.FC = () => {
           id: t.clientGeneratedId,
           sessionId: "pending",
           userId: user.id,
+          description: t.description || t.category,
           category: t.category,
           superiorCategory: t.superiorCategory,
           amount: t.amount.toString(),
@@ -223,13 +230,13 @@ export const HomePage: React.FC = () => {
       // Determine if transaction is an income based on category keywords
       // since the backend doesn't explicitly store a 'type' column yet.
       const incomeKeywords = ["salary", "paycheck", "freelance", "client", "investment", "dividend", "gift", "bonus", "refund", "cashback", "income"];
-      const categoryStr = t.category || "";
+      const categoryStr = t.description || t.category || "";
       const isIncome = incomeKeywords.some(kw => categoryStr.toLowerCase().includes(kw));
       const type = (t as any).type || (isIncome ? "income" : "expense");
       
       groups[dateKey].expenses.push({
         id: t.id,
-        title: t.category,
+        title: t.description || t.category,
         amount,
         dateGroup: groups[dateKey].label as any,
         type,
@@ -262,18 +269,31 @@ export const HomePage: React.FC = () => {
   };
 
   const handleAddAnother = () => {
-    if (!currencyVal) return;
+    if (!currencyVal) {
+      showToast("Please enter an amount.");
+      return;
+    }
     
     let finalCategory = selectedCategory;
     const wasAdding = isAddingCategory;
-    if (isAddingCategory && newCategoryName.trim()) {
-      finalCategory = newCategoryName.trim();
-      if (entryType === "expense") {
-        setExpenseCategories((prev) => [...prev, finalCategory]);
+    if (isAddingCategory) {
+      if (newCategoryName.trim()) {
+        finalCategory = newCategoryName.trim();
+        if (entryType === "expense") {
+          setExpenseCategories((prev) => [...prev, finalCategory]);
+        } else {
+          setIncomeCategories((prev) => [...prev, finalCategory]);
+        }
+        setSelectedCategory(finalCategory);
       } else {
-        setIncomeCategories((prev) => [...prev, finalCategory]);
+        showToast("Please enter a category name.");
+        return;
       }
-      setSelectedCategory(finalCategory);
+    }
+
+    if (!finalCategory) {
+      showToast("Please select a category.");
+      return;
     }
     
     const newItem: ReceiptItem = {
@@ -282,7 +302,7 @@ export const HomePage: React.FC = () => {
       amount: currencyVal,
       type: entryType,
       date: getDateLabel(),
-      currencySymbol: "₹",
+      currencySymbol: userCurrencySymbol,
     };
     setReceiptItems((prev) => [...prev, newItem]);
     setCurrencyVal(undefined);
@@ -292,7 +312,7 @@ export const HomePage: React.FC = () => {
       setIsAddingCategory(false);
     }
     
-    showToast(`Added ${entryType === "income" ? "+" : "-"}₹${currencyVal} (${finalCategory})`);
+    showToast(`Added ${entryType === "income" ? "+" : "-"}${formatCurrency(Number(currencyVal), userCurrency)} (${finalCategory})`);
     
     // Focus back to category section
     setTimeout(() => {
@@ -328,7 +348,8 @@ export const HomePage: React.FC = () => {
       action: "DELETE",
       clientGeneratedId: exp.id,
       amount: exp.amount,
-      currency: "INR",
+      currency: userCurrency,
+      description: exp.title,
       category: exp.title,
       spentAt: new Date().toISOString(),
       type: exp.type || "expense",
@@ -384,16 +405,31 @@ export const HomePage: React.FC = () => {
   };
 
   const handleDone = async () => {
+    if (!currencyVal && receiptItems.length === 0) {
+      showToast("Please enter an amount.");
+      return;
+    }
 
     let finalCategory = selectedCategory;
-    if (isAddingCategory && newCategoryName.trim()) {
-      finalCategory = newCategoryName.trim();
-      if (entryType === "expense") {
-        setExpenseCategories((prev) => [...prev, finalCategory]);
-      } else {
-        setIncomeCategories((prev) => [...prev, finalCategory]);
+    if (currencyVal) {
+      if (isAddingCategory) {
+        if (newCategoryName.trim()) {
+          finalCategory = newCategoryName.trim();
+          if (entryType === "expense") {
+            setExpenseCategories((prev) => [...prev, finalCategory]);
+          } else {
+            setIncomeCategories((prev) => [...prev, finalCategory]);
+          }
+          setSelectedCategory(finalCategory);
+        } else {
+          showToast("Please enter a category name.");
+          return;
+        }
       }
-      setSelectedCategory(finalCategory);
+      if (!finalCategory) {
+        showToast("Please select a category.");
+        return;
+      }
     }
 
     const finalSuperiorCategory = selectedSuperiorCategory.trim() ? selectedSuperiorCategory.trim() : null;
@@ -417,10 +453,11 @@ export const HomePage: React.FC = () => {
       apiTransactions.push({
         clientGeneratedId: cid,
         amount: currencyVal,
-        category: finalCategory,
+        description: finalCategory,
+        category: finalCategory, // Optimistic fallback
         superiorCategory: finalSuperiorCategory,
         spentAt: selectedSpentAtISO,
-        currency: 'INR',
+        currency: userCurrency,
         type: entryType
       });
     }
@@ -440,10 +477,11 @@ export const HomePage: React.FC = () => {
       apiTransactions.push({
         clientGeneratedId: cid,
         amount: item.amount,
+        description: item.label,
         category: item.label,
         superiorCategory: finalSuperiorCategory,
         spentAt: selectedSpentAtISO,
-        currency: 'INR',
+        currency: userCurrency,
         type: item.type || "expense"
       });
     });
@@ -457,7 +495,7 @@ export const HomePage: React.FC = () => {
             if (!old) return old;
             return old.map((t: any) => 
               t.id === editingTransaction.id 
-                ? { ...t, category: tx.category, superiorCategory: tx.superiorCategory, amount: tx.amount.toString(), spentAt: tx.spentAt, type: tx.type } 
+                ? { ...t, description: tx.description, category: tx.category, superiorCategory: tx.superiorCategory, amount: tx.amount.toString(), spentAt: tx.spentAt, type: tx.type } 
                 : t
             );
           });
@@ -467,10 +505,11 @@ export const HomePage: React.FC = () => {
             action: "UPDATE",
             clientGeneratedId: editingTransaction.id,
             amount: tx.amount,
+            description: tx.description,
             category: tx.category,
             superiorCategory: tx.superiorCategory,
             spentAt: tx.spentAt,
-            currency: tx.currency || 'INR',
+            currency: tx.currency || userCurrency,
             type: (tx.type as 'expense' | 'income') || "expense",
           });
         }
@@ -479,6 +518,7 @@ export const HomePage: React.FC = () => {
         queryClient.setQueryData(["transactions"], (old: any) => {
           const optimistic = apiTransactions.map((t, index) => ({
             id: t.clientGeneratedId,
+            description: t.description,
             category: t.category,
             superiorCategory: t.superiorCategory,
             amount: t.amount.toString(),
@@ -495,7 +535,8 @@ export const HomePage: React.FC = () => {
           action: "CREATE" as const,
           clientGeneratedId: tx.clientGeneratedId,
           amount: tx.amount,
-          currency: tx.currency || 'INR',
+          currency: tx.currency || userCurrency,
+          description: tx.description,
           category: tx.category,
           superiorCategory: tx.superiorCategory,
           spentAt: tx.spentAt,
@@ -577,21 +618,17 @@ export const HomePage: React.FC = () => {
           )}
 
           {/* 1. Bluish Gradient Month Summary Card */}
-          <div className="relative group">
-            <div className="absolute left-4 bottom-4 z-10">
+          <div className="relative group z-30">
+            <div className="absolute left-4 bottom-4 z-40">
               <SectionInfoModal
                 theme="dark"
                 content={{
                   title: "Monthly Overview & Net Spend",
                   subtitle: "Real-time summary of your current month",
                   badge: "Dashboard",
-                  description: "This card shows your total monthly expenditures, today's spending total, and percentage change compared to previous month.",
-                  highlights: [
-                    { title: "Today Amount", desc: "Sum of all expenses logged for today's date." },
-                    { title: "Percentage Change", desc: "Comparison of current month spending against last month's velocity." },
-                    { title: "Daily Sparkline", desc: "Visual trend line of spending days throughout the month." }
-                  ]
+                  description: "Shows your total monthly expenditures, today's spending total, and percentage change vs last month.",
                 }}
+                tourStepId="monthly-overview"
               />
             </div>
             <MonthSummary
@@ -600,7 +637,7 @@ export const HomePage: React.FC = () => {
               todayAmount={todayTotal}
               percentageChange={analyticsData?.percentageChange || 0}
               dailyData={filteredDailyData}
-              currencySymbol="₹"
+              currencySymbol={userCurrencySymbol}
             />
           </div>
 
@@ -625,9 +662,10 @@ export const HomePage: React.FC = () => {
                         { title: "Offline Storage", desc: "Saved locally in IndexedDB when offline and synced automatically when connected." }
                       ]
                     }}
+                    tourStepId="recent-transactions"
                   />
                 </div>
-                <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">All amounts in ₹</span>
+                <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">All amounts in {userCurrencySymbol}</span>
               </div>
               
               <div className="flex flex-col bg-white border border-slate-200/60 rounded-2xl p-2 shadow-sm">
@@ -668,31 +706,7 @@ export const HomePage: React.FC = () => {
                "✓ Synced"}
             </span>
           </div>
-          <section className="flex flex-col gap-3 pt-2 px-2">
-            <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-1">
-              Coming Soon
-            </h3>
-            
-            <div className="flex flex-col sm:flex-row gap-3">
-              {/* Debt & Loans Teaser */}
-              <div className="flex-1 bg-white border border-slate-200/60 rounded-2xl p-4 shadow-sm flex items-center gap-4 relative overflow-hidden group hover:border-slate-300 transition-colors cursor-default">
-                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-indigo-50 to-transparent opacity-50 rounded-bl-3xl" />
-                <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center shrink-0">
-                  <Wallet size={20} />
-                </div>
-                <div className="flex flex-col z-10">
-                  <span className="text-sm font-bold text-slate-900 tracking-tight">Debt & Loans</span>
-                  <span className="text-[11px] font-medium text-slate-500">Track who owes you</span>
-                </div>
-                <div className="ml-auto z-10">
-                  <span className="text-[9px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 px-2 py-1 rounded-full">
-                    Soon
-                  </span>
-                </div>
-              </div>
 
-            </div>
-          </section>
 
         </Stack>
       </Container>
@@ -865,7 +879,7 @@ export const HomePage: React.FC = () => {
                     <div
                       onClick={(e) => {
                         e.stopPropagation();
-                        setNewCategoryName(selectedCategory);
+                        setNewCategoryName("");
                         setIsAddingCategory(true);
                         setIsCategoryDropdownOpen(false);
                       }}
@@ -1035,10 +1049,11 @@ export const HomePage: React.FC = () => {
             </div>
           )}
           <CurrencyField
+            ref={currencyInputRef}
+            currencySymbol={userCurrencySymbol}
             value={currencyVal}
             onChange={(val: number | undefined) => setCurrencyVal(val)}
             placeholder="0"
-            currencySymbol="₹"
             onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
               if (e.key === "Enter" && currencyVal && currencyVal > 0) {
                 e.preventDefault();
@@ -1095,7 +1110,7 @@ export const HomePage: React.FC = () => {
           {/* 5. Live Multi-Entry Session Receipt List */}
           <ReceiptSessionList
             items={receiptItems}
-            currencySymbol="₹"
+            currencySymbol={userCurrencySymbol}
             onAddAnother={handleAddAnother}
             onDone={handleDone}
             onRemoveItem={(id: string) => {

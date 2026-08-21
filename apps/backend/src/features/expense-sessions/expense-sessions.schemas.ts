@@ -6,7 +6,8 @@ export const TransactionCreateSchema = z.object({
   clientGeneratedId: z.string().min(1, 'ID is required'),
   amount: z.number().positive('Amount must be positive'),
   currency: z.string().length(3).default('INR'),
-  category: z.string().min(1, 'Category is required'),
+  description: z.string().min(1, 'Description is required'),
+  category: z.string().optional(), // Allowed for backward compatibility
   superiorCategory: z.string().trim().nullable().optional(),
   note: z.string().optional(),
   spentAt: z.string().datetime({ offset: true }).or(z.string()), // Accept ISO string
@@ -33,7 +34,10 @@ export const TransactionPublicSchema = z.object({
   userId: z.string(),
   amount: z.string(), // numeric from DB usually stringified
   currency: z.string(),
+  description: z.string(),
   category: z.string(),
+  categorySource: z.string(),
+  categoryConfidence: z.number(),
   superiorCategory: z.string().nullable().optional(),
   note: z.string().nullable(),
   spentAt: z.date(),

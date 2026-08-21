@@ -30,6 +30,7 @@ export interface PendingTransaction {
   action: 'CREATE' | 'UPDATE' | 'DELETE';
   amount: number;
   currency: string;
+  description?: string;
   category: string;
   superiorCategory?: string | null;
   note?: string;

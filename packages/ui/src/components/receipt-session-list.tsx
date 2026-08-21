@@ -27,7 +27,7 @@ export const ReceiptSessionList: React.FC<ReceiptSessionListProps> = ({
   onAddAnother,
   onDone,
   onRemoveItem,
-  currencySymbol = "₹",
+  currencySymbol = "",
   title = "Receipt Session",
   ...props
 }) => {
