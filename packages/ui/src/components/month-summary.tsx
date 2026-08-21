@@ -145,7 +145,8 @@ const AnimatedIncomeNumber: React.FC<{ value: number; currencySymbol: string; fo
 
     setIsDone(false);
     let startTime: number | null = null;
-    const duration = 1000;
+    // Dynamic duration based on magnitude (700ms up to max 1800ms / 1.8s)
+    const duration = Math.min(700 + Math.log10(Math.max(value, 10)) * 220, 1800);
 
     const animate = (currentTime: number) => {
       if (!startTime) startTime = currentTime;
