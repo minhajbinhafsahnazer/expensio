@@ -171,20 +171,14 @@ const AnimatedIncomeNumber: React.FC<{ value: number; currencySymbol: string; fo
   }, [value]);
 
   return (
-    <div className="relative h-5 overflow-hidden inline-flex items-center mt-0.5">
-      <motion.span
-        key={displayValue}
-        initial={{ y: -8, opacity: 0.5 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: isDone ? 0.25 : 0.05, ease: "easeOut" }}
-        className={cn(
-          "text-[11px] sm:text-xs font-black text-emerald-400 font-mono text-left block transition-all duration-300",
-          isDone && "drop-shadow-[0_0_10px_rgba(52,211,153,0.7)] text-emerald-300 scale-105"
-        )}
-      >
-        +{currencySymbol}{formatVal(displayValue)}
-      </motion.span>
-    </div>
+    <span
+      className={cn(
+        "text-[11px] sm:text-xs font-black text-emerald-400 font-mono text-left inline-block mt-0.5 transition-all duration-300",
+        isDone && "drop-shadow-[0_0_10px_rgba(52,211,153,0.7)] text-emerald-300 scale-105"
+      )}
+    >
+      +{currencySymbol}{formatVal(displayValue)}
+    </span>
   );
 };
 
