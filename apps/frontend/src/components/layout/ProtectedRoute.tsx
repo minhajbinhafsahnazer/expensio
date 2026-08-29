@@ -10,11 +10,23 @@ import { useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../core/providers/AuthContext';
 
+const NUDGES = [
+  "Track your goals from Expensio",
+  "Add multiple transactions from a single screen",
+  "Smart analysis waiting for you, map once and forget",
+  "Track and manage your debts, add reminders",
+  "Take your tour",
+  "Expensio is made for the one who's lazy enough to track things one by one",
+  "Our simple UI makes it easy for anyone to handle your expenses",
+  "Expenses at your fingertips"
+];
+
 export function ProtectedRoute() {
   const { status } = useAuth();
   const location = useLocation();
   const [progress, setProgress] = useState(0);
   const [timeLeft, setTimeLeft] = useState(50);
+  const [nudgeIndex, setNudgeIndex] = useState(0);
 
   useEffect(() => {
     // Only run the timer if we are in the loading state
@@ -31,7 +43,14 @@ export function ProtectedRoute() {
         setTimeLeft(remaining);
       }, 50);
 
-      return () => clearInterval(interval);
+      const nudgeInterval = setInterval(() => {
+        setNudgeIndex((prev) => (prev + 1) % NUDGES.length);
+      }, 5000);
+
+      return () => {
+        clearInterval(interval);
+        clearInterval(nudgeInterval);
+      };
     }
   }, [status]);
 
@@ -50,9 +69,22 @@ export function ProtectedRoute() {
         <h1 className="text-[22px] font-extrabold text-slate-900 tracking-tight mb-2">
           Starting Engine
         </h1>
-        <p className="text-sm font-medium text-slate-500 max-w-[280px] text-center leading-relaxed mb-10">
-          Configuring your secure workspace and setting up analysis...
-        </p>
+        
+        {/* Nudges Container */}
+        <div className="relative h-12 flex items-center justify-center w-full max-w-[320px] mb-8 overflow-hidden">
+          {NUDGES.map((nudge, idx) => (
+            <p 
+              key={idx}
+              className={`absolute w-full text-sm font-medium text-slate-500 text-center leading-relaxed px-2 transition-all duration-700 ease-in-out ${
+                idx === nudgeIndex 
+                  ? 'opacity-100 translate-y-0' 
+                  : 'opacity-0 translate-y-3 pointer-events-none'
+              }`}
+            >
+              {nudge}
+            </p>
+          ))}
+        </div>
 
         {/* Horizontal Progress Bar */}
         <div className="w-full max-w-xs flex flex-col items-center">
