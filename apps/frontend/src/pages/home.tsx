@@ -88,6 +88,7 @@ export const HomePage: React.FC = () => {
   const [selectedDateTag, setSelectedDateTag] = useState<"Today" | "Yesterday" | "Custom">("Today");
   const [customDate, setCustomDate] = useState<string>(new Date().toISOString().split("T")[0]);
 
+  const [expenseName, setExpenseName] = useState<string>("");
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
@@ -155,7 +156,10 @@ export const HomePage: React.FC = () => {
       visibleServer = visibleServer.map(t => {
         if (pendingUpdates.has(t.id)) {
           const update = pendingUpdates.get(t.id)!;
-          return { ...t, amount: update.amount.toString(), description: update.description, category: update.category, superiorCategory: update.superiorCategory, type: update.type, spentAt: update.spentAt };
+          // BUG FIX: category must never substitute for description.
+          // Use the explicitly updated description if provided; otherwise preserve
+          // the existing server-side description. Never fall back to category.
+          return { ...t, amount: update.amount.toString(), description: update.description ?? t.description, category: update.category, superiorCategory: update.superiorCategory, type: update.type, spentAt: update.spentAt };
         }
         return t;
       });
@@ -168,7 +172,9 @@ export const HomePage: React.FC = () => {
           id: t.clientGeneratedId,
           sessionId: "pending",
           userId: user.id,
-          description: t.description || t.category,
+          // BUG FIX: category must never substitute for description.
+          // Show empty string rather than silently using the category as the title.
+          description: t.description ?? '',
           category: t.category,
           superiorCategory: t.superiorCategory,
           amount: t.amount.toString(),
@@ -236,7 +242,10 @@ export const HomePage: React.FC = () => {
       
       groups[dateKey].expenses.push({
         id: t.id,
-        title: t.note || t.category,
+        // BUG FIX: category is analysis metadata and must never appear as the
+        // main transaction title. Use description (user-entered), then note
+        // (user-entered memo), then empty string. Never fall back to category.
+        title: t.description || t.note || '',
         amount,
         dateGroup: groups[dateKey].label as any,
         type,
@@ -372,8 +381,20 @@ export const HomePage: React.FC = () => {
   const handleEditClick = (exp: ExpenseEntry) => {
     setEditingTransaction(exp);
     setCurrencyVal(exp.amount);
-    setSelectedCategory(exp.title);
-    setNewCategoryName(exp.title);
+    // Restore the expense name and category separately:
+    // exp.title is the stored description (user-typed name).
+    // We try to find if it matches a known category — if not, it's a custom name.
+    const allKnownCats = [...expenseCategories, ...incomeCategories];
+    if (allKnownCats.includes(exp.title)) {
+      // Old-style entry: name === category, blank out separate name field
+      setExpenseName("");
+      setSelectedCategory(exp.title);
+      setNewCategoryName("");
+    } else {
+      setExpenseName(exp.title);
+      setSelectedCategory(expenseCategories[0]);
+      setNewCategoryName("");
+    }
     setSelectedSuperiorCategory(exp.superiorCategory || "");
     setEntryType(exp.type || "expense");
     setIsAddingCategory(false);
@@ -432,6 +453,10 @@ export const HomePage: React.FC = () => {
       }
     }
 
+    // The description (displayed name) is the user-typed name if provided,
+    // otherwise fall back to the selected category name.
+    const finalDescription = expenseName.trim() || finalCategory;
+
     const finalSuperiorCategory = selectedSuperiorCategory.trim() ? selectedSuperiorCategory.trim() : null;
     const selectedSpentAtISO = getSpentAtISO(customDate);
 
@@ -443,7 +468,7 @@ export const HomePage: React.FC = () => {
       const cid = ulid();
       uiTransactions.push({
         id: cid,
-        title: finalCategory,
+        title: finalDescription,
         amount: currencyVal,
         dateGroup: selectedDateTag === "Yesterday" ? "Yesterday" : selectedDateTag === "Today" ? "Today" : "Earlier",
         type: entryType,
@@ -453,8 +478,8 @@ export const HomePage: React.FC = () => {
       apiTransactions.push({
         clientGeneratedId: cid,
         amount: currencyVal,
-        description: finalCategory,
-        category: finalCategory, // Optimistic fallback
+        description: finalDescription,
+        category: finalCategory,
         superiorCategory: finalSuperiorCategory,
         spentAt: selectedSpentAtISO,
         currency: userCurrency,
@@ -551,6 +576,7 @@ export const HomePage: React.FC = () => {
     setIsSheetOpen(false);
     setReceiptItems([]);
     setCurrencyVal(undefined);
+    setExpenseName("");
     setSelectedSuperiorCategory("");
     setEditingTransaction(null);
   };
@@ -720,6 +746,7 @@ export const HomePage: React.FC = () => {
           setReceiptItems([]);
           setEntryType("expense");
           setSelectedCategory(expenseCategories[0]);
+          setExpenseName("");
           const todayStr = new Date().toLocaleDateString('en-CA');
           setCustomDate(todayStr);
           setSelectedDateTag("Today");
@@ -809,6 +836,20 @@ export const HomePage: React.FC = () => {
               </div>
               <span>Income</span>
             </button>
+          </div>
+
+          {/* 1b. Optional Name / Description Field */}
+          <div className="flex flex-col gap-1">
+            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">
+              Name <span className="text-[10px] font-normal text-slate-400 opacity-70">(Optional)</span>
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. chai, petrol, amazon order..."
+              value={expenseName}
+              onChange={(e) => setExpenseName(e.target.value)}
+              className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900"
+            />
           </div>
 
           {/* 2. Category Drilldown Dropdown */}

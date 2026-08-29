@@ -49,6 +49,7 @@ export const transactionsService = {
       .where(
         and(
           eq(transactions.userId, userId),
+          eq(transactions.type, 'expense'),
           eq(transactions.category, 'Uncategorized'),
           ne(transactions.categorySource, 'user'),
           isNull(transactions.deletedAt),

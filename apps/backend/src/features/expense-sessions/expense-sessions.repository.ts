@@ -18,7 +18,14 @@ export type CreateTransactionPayload = {
   userId: string;
   amount: string;
   currency: string;
+  /**
+   * The user's original, unmodified transaction text.
+   * INVARIANT: must never be derived from or substituted by `category`.
+   */
+  description: string;
+  /** Normalized analysis classification — separate from description. */
   category: string;
+  /** Optional broader analysis grouping — separate from description. */
   superiorCategory?: string | null;
   note?: string;
   spentAt: Date;
@@ -26,6 +33,7 @@ export type CreateTransactionPayload = {
   /** 'expense' (default) | 'income' — determines balance effect */
   type: 'expense' | 'income';
 };
+
 
 export const expenseSessionsRepository = {
   /**

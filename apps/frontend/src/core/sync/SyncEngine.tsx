@@ -141,7 +141,14 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
               clientGeneratedId: tx.clientGeneratedId,
               amount:           tx.amount,
               currency:         tx.currency,
-              description:      tx.description || tx.category || 'Expense',
+              // INVARIANT: description is the user's original text.
+              // category must NEVER be used as a substitute.
+              // If tx.description is undefined (legacy IDB entry from before the
+              // description field was added), the backend Zod schema requires min(1)
+              // and will reject the request with a 400. The item stays in the queue
+              // and shows a sync error. This is the correct, honest failure mode —
+              // it is far safer than silently persisting category as description.
+              description:      tx.description,
               category:         tx.category,
               superiorCategory: tx.superiorCategory,
               note:             tx.note,
@@ -158,7 +165,12 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
           await client.put(`/transactions/${tx.clientGeneratedId}`, {
             amount:           tx.amount,
             currency:         tx.currency,
-            description:      tx.description || tx.category || 'Expense',
+            // INVARIANT: description is the user's original text.
+            // category must NEVER be used as a substitute.
+            // If tx.description is undefined (legacy IDB entry), JSON.stringify
+            // omits the key entirely — the backend receives no description field
+            // and the existing DB description is left completely unchanged.
+            description:      tx.description,
             category:         tx.category,
             superiorCategory: tx.superiorCategory,
             note:             tx.note,

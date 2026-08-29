@@ -1,5 +1,6 @@
 import React from "react";
 import { cn } from "../utils";
+import { Skeleton } from "../atoms/skeleton";
 
 export interface WalletCardProps {
   cardName?: string;
@@ -60,6 +61,37 @@ export const WalletCard: React.FC<WalletCardProps> = ({
         <div className="flex flex-col items-end">
           <span className="text-[10px] text-slate-500 uppercase tracking-wider">Exp Date</span>
           <span className="text-slate-300">{expiryDate}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const WalletCardSkeleton: React.FC<{ className?: string }> = ({ className }) => {
+  return (
+    <div
+      className={cn(
+        "relative w-full rounded-[24px] p-6 shadow-xl overflow-hidden flex flex-col justify-between",
+        "bg-slate-900 border border-slate-800",
+        className
+      )}
+      style={{ minHeight: "190px" }}
+    >
+      <div className="flex items-center justify-between z-10">
+        <Skeleton className="h-5 w-24 bg-slate-800" />
+        <Skeleton className="h-4 w-12 bg-slate-800" />
+      </div>
+
+      <div className="my-3 z-10">
+        <Skeleton className="h-3 w-28 mb-3 bg-slate-800" />
+        <Skeleton className="h-9 w-40 bg-slate-800" />
+      </div>
+
+      <div className="flex items-center justify-between z-10 pt-2">
+        <Skeleton className="h-4 w-32 bg-slate-800" />
+        <div className="flex flex-col items-end gap-1">
+          <Skeleton className="h-3 w-14 bg-slate-800" />
+          <Skeleton className="h-4 w-10 bg-slate-800" />
         </div>
       </div>
     </div>

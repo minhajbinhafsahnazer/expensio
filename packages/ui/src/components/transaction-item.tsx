@@ -1,5 +1,6 @@
 import React from "react";
 import { cn } from "../utils";
+import { Skeleton } from "../atoms/skeleton";
 
 export interface TransactionItemProps {
   icon: React.ReactNode;
@@ -54,6 +55,26 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
       <div className="font-bold text-[15px] font-mono text-slate-900 flex-shrink-0 ml-3">
         {currencySymbol}{formattedAmount}
       </div>
+    </div>
+  );
+};
+
+export const TransactionItemSkeleton: React.FC<{ className?: string }> = ({ className }) => {
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-between py-3 px-3 sm:px-4 rounded-2xl",
+        className
+      )}
+    >
+      <div className="flex items-center gap-3.5 min-w-0">
+        <Skeleton className="w-11 h-11 rounded-full flex-shrink-0" />
+        <div className="flex flex-col gap-1.5 min-w-0">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-3 w-24" />
+        </div>
+      </div>
+      <Skeleton className="h-5 w-16 ml-3 flex-shrink-0" />
     </div>
   );
 };

@@ -2,6 +2,7 @@
 export * from "./atoms/button";
 export * from "./atoms/layout";
 export * from "./atoms/typography";
+export * from "./atoms/skeleton";
 
 // Components (The Core Capture Loop & Notes App Timeline)
 export * from "./components/currency-field";

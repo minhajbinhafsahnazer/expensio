@@ -15,8 +15,12 @@ export const expenseSessionsService = {
     let totalAmount = 0;
     const transactionsData = await Promise.all(data.transactions.map(async (t) => {
       totalAmount += t.amount;
-      
-      const description = t.description || t.category || '';
+
+      // INVARIANT: description is the user's original text and must never be
+      // derived from or substituted by category. The Zod schema upstream
+      // already enforces description: z.string().min(1), so t.description is
+      // guaranteed to be a non-empty string at this point.
+      const description = t.description;
       const classification = await TransactionClassifier.classify(description, userId);
       
       return {

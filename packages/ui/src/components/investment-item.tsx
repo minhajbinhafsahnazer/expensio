@@ -1,5 +1,6 @@
 import React from "react";
 import { cn } from "../utils";
+import { Skeleton } from "../atoms/skeleton";
 
 export interface InvestmentItemProps {
   icon: React.ReactNode;
@@ -79,6 +80,34 @@ export const InvestmentItem: React.FC<InvestmentItemProps> = ({
           {currencySymbol}
           {Math.abs(changeAmount).toFixed(2)} ({changePercent}%)
         </span>
+      </div>
+    </div>
+  );
+};
+
+export const InvestmentItemSkeleton: React.FC<{ className?: string }> = ({ className }) => {
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-between py-3 px-3 rounded-2xl",
+        className
+      )}
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <Skeleton className="w-10 h-10 rounded-full flex-shrink-0" />
+        <div className="flex flex-col gap-1.5 min-w-0">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-3 w-16" />
+        </div>
+      </div>
+
+      <div className="hidden sm:flex items-center w-20 h-6 px-1">
+        <Skeleton className="w-full h-2 rounded-full" />
+      </div>
+
+      <div className="flex flex-col items-end gap-1.5 flex-shrink-0 ml-3">
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-3 w-16" />
       </div>
     </div>
   );
