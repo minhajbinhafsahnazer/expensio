@@ -29,29 +29,28 @@ export function ProtectedRoute() {
   const [nudgeIndex, setNudgeIndex] = useState(0);
 
   useEffect(() => {
-    // Only run the timer if we are in the loading state
-    if (status === 'loading') {
-      const startTime = Date.now();
-      const totalDuration = 50000; // 50 seconds
+    if (status !== 'loading') return;
 
-      const interval = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        const newProgress = Math.min((elapsed / totalDuration) * 100, 100);
-        setProgress(newProgress);
-        
-        const remaining = Math.max(Math.ceil((totalDuration - elapsed) / 1000), 0);
-        setTimeLeft(remaining);
-      }, 50);
+    const startTime = Date.now();
+    const totalDuration = 50000; // 50 seconds
 
-      const nudgeInterval = setInterval(() => {
-        setNudgeIndex((prev) => (prev + 1) % NUDGES.length);
-      }, 5000);
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const newProgress = Math.min((elapsed / totalDuration) * 100, 100);
+      setProgress(newProgress);
+      
+      const remaining = Math.max(Math.ceil((totalDuration - elapsed) / 1000), 0);
+      setTimeLeft(remaining);
+    }, 50);
 
-      return () => {
-        clearInterval(interval);
-        clearInterval(nudgeInterval);
-      };
-    }
+    const nudgeInterval = setInterval(() => {
+      setNudgeIndex((prev) => (prev + 1) % NUDGES.length);
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+      clearInterval(nudgeInterval);
+    };
   }, [status]);
 
   // While the startup session check is in-flight, render nothing.
