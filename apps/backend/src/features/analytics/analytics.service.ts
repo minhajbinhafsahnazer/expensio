@@ -2,6 +2,8 @@ import { eq, and, isNull, gte, lt } from 'drizzle-orm';
 import { db } from '../../database/client.js';
 import { transactions } from '../../database/schema/transactions.js';
 import { findUserById } from '../auth/auth.repository.js';
+import { userCategories } from '../../database/schema/user_categories.js';
+import { GLOBAL_CATEGORY_RULES } from '../transactions/classification.service.js';
 
 /**
  * Determine category aggregation key based on account feature flag and transaction data.
@@ -23,6 +25,14 @@ export const analyticsService = {
     // Check account feature flag for superior categories
     const user = await findUserById(userId);
     const isSuperiorCategoriesEnabled = user?.superiorCategoriesEnabled ?? false;
+
+    // Fetch custom categories to validate analytics groupings
+    const customCats = await db.select({ name: userCategories.name }).from(userCategories).where(eq(userCategories.userId, userId));
+    const validCategorySet = new Set([
+      ...Object.keys(GLOBAL_CATEGORY_RULES).map(k => k.toLowerCase()),
+      ...customCats.map(c => c.name.toLowerCase()),
+      'uncategorized'
+    ]);
 
     // Parse dates (allows ISO strings or falls back to YYYY-MM-DD)
     const startDate = fromDateStr.includes('T') ? new Date(fromDateStr) : new Date(`${fromDateStr}T00:00:00Z`);
@@ -81,7 +91,13 @@ export const analyticsService = {
         totalSpent += amount;
         
         // Category breakdown (using account feature flag + superiorCategory fallback)
-        const catKey = getAnalyticsCategoryKey(tx, isSuperiorCategoriesEnabled);
+        let catKey = getAnalyticsCategoryKey(tx, isSuperiorCategoriesEnabled);
+        
+        // Sanitize: If category isn't a preset or custom category, force it to 'Uncategorized'
+        if (!validCategorySet.has(catKey.toLowerCase())) {
+          catKey = 'Uncategorized';
+        }
+
         if (!categoriesMap[catKey]) {
           categoriesMap[catKey] = { amount: 0, transactions: [] };
         }
