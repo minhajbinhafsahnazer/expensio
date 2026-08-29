@@ -118,7 +118,7 @@ export const HomePage: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const [receiptItems, setReceiptItems] = useState<ReceiptItem[]>([]);
+  const [receiptItems, setReceiptItems] = useState<(ReceiptItem & { spentAtISO?: string })[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isTourOpen, setIsTourOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -305,13 +305,14 @@ export const HomePage: React.FC = () => {
       return;
     }
     
-    const newItem: ReceiptItem = {
+    const newItem: ReceiptItem & { spentAtISO?: string } = {
       id: Math.random().toString(36).substring(2, 9),
       label: finalCategory,
       amount: currencyVal,
       type: entryType,
       date: getDateLabel(),
       currencySymbol: userCurrencySymbol,
+      spentAtISO: getSpentAtISO(customDate),
     };
     setReceiptItems((prev) => [...prev, newItem]);
     setCurrencyVal(undefined);
@@ -490,13 +491,14 @@ export const HomePage: React.FC = () => {
     // Add all batched receipt session items
     receiptItems.forEach((item) => {
       const cid = ulid();
+      const itemSpentAtISO = item.spentAtISO || selectedSpentAtISO;
       uiTransactions.push({
         id: cid,
         title: item.label,
         amount: item.amount,
         dateGroup: item.date === "Yesterday" ? "Yesterday" : "Today",
         type: item.type || "expense",
-        spentAt: selectedSpentAtISO,
+        spentAt: itemSpentAtISO,
         superiorCategory: finalSuperiorCategory,
       });
       apiTransactions.push({
@@ -505,7 +507,7 @@ export const HomePage: React.FC = () => {
         description: item.label,
         category: item.label,
         superiorCategory: finalSuperiorCategory,
-        spentAt: selectedSpentAtISO,
+        spentAt: itemSpentAtISO,
         currency: userCurrency,
         type: item.type || "expense"
       });
