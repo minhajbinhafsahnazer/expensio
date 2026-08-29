@@ -6,38 +6,70 @@
  * - Preserves the originally requested URL in `state.from` for post-login redirect
  */
 
+import { useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../core/providers/AuthContext';
 
 export function ProtectedRoute() {
   const { status } = useAuth();
   const location = useLocation();
+  const [progress, setProgress] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(50);
+
+  useEffect(() => {
+    // Only run the timer if we are in the loading state
+    if (status === 'loading') {
+      const startTime = Date.now();
+      const totalDuration = 50000; // 50 seconds
+
+      const interval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const newProgress = Math.min((elapsed / totalDuration) * 100, 100);
+        setProgress(newProgress);
+        
+        const remaining = Math.max(Math.ceil((totalDuration - elapsed) / 1000), 0);
+        setTimeLeft(remaining);
+      }, 50);
+
+      return () => clearInterval(interval);
+    }
+  }, [status]);
 
   // While the startup session check is in-flight, render nothing.
   // This prevents the brief flash of the login page for users who are
   // already authenticated via their refresh cookie.
   if (status === 'loading') {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-50 px-6">
-        <div className="relative flex items-center justify-center w-16 h-16 mb-8">
-          <div className="absolute inset-0 rounded-2xl bg-indigo-500 animate-ping opacity-20" style={{ animationDuration: '3s' }}></div>
-          <div className="w-14 h-14 rounded-2xl bg-slate-900 shadow-[0_8px_30px_rgba(0,0,0,0.12)] flex items-center justify-center relative z-10">
-            <svg className="w-6 h-6 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"></circle>
-              <path className="opacity-100" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </div>
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-50 px-6 font-sans">
+        {/* Logo */}
+        <div className="w-16 h-16 mb-6 overflow-hidden rounded-[18px] shadow-[0_8px_30px_rgba(0,0,0,0.08)] border border-slate-900/5">
+          <img src="/logo.jpg" alt="Expensio Logo" className="w-full h-full object-cover scale-[1.35]" />
         </div>
-        <h1 className="text-xl font-extrabold text-slate-900 tracking-tight mb-2">
+
+        {/* Text */}
+        <h1 className="text-[22px] font-extrabold text-slate-900 tracking-tight mb-2">
           Starting Engine
         </h1>
-        <p className="text-sm font-semibold text-slate-500 max-w-[280px] text-center leading-relaxed">
+        <p className="text-sm font-medium text-slate-500 max-w-[280px] text-center leading-relaxed mb-10">
           Configuring your secure workspace and setting up analysis...
         </p>
-        <p className="text-[11px] font-bold text-slate-400 mt-8 tracking-wider uppercase flex items-center gap-1.5 bg-slate-200/50 px-3 py-1.5 rounded-full">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          Waking server (up to 50s)
-        </p>
+
+        {/* Horizontal Progress Bar */}
+        <div className="w-full max-w-xs flex flex-col items-center">
+          <div className="w-full h-1.5 bg-slate-200/80 rounded-full overflow-hidden mb-3 relative">
+            <div 
+              className="absolute top-0 left-0 h-full bg-indigo-600 rounded-full transition-all duration-75 ease-linear"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className="w-full flex justify-between items-center text-[11px] font-bold text-slate-400 tracking-wider uppercase">
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Waking Server
+            </span>
+            <span className="text-slate-500 tabular-nums">0:{timeLeft.toString().padStart(2, '0')}s</span>
+          </div>
+        </div>
       </div>
     );
   }
