@@ -60,7 +60,13 @@ export function EditTransactionCategoryModal({ isOpen, onClose, transaction }: E
 
     try {
       setIsSaving(true);
-      await TransactionsApi.update(transaction.id, { category: selectedCategory });
+      // Clear superiorCategory when explicitly overriding the category. 
+      // If we don't clear it, Analytics will continue grouping by the old superiorCategory 
+      // instead of this newly selected explicit category.
+      await TransactionsApi.update(transaction.id, { 
+        category: selectedCategory,
+        superiorCategory: null
+      });
       // Invalidate relevant queries
       await queryClient.invalidateQueries({ queryKey: ['analytics'] });
       await queryClient.invalidateQueries({ queryKey: ['transactions'] });

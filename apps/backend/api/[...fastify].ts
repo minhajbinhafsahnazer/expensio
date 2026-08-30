@@ -1,4 +1,4 @@
-import { buildApp } from '../src/app.js';
+import { buildApp } from '../src/app';
 import type { IncomingMessage, ServerResponse } from 'http';
 
 // Cache the Fastify instance so it is reused across warm serverless invocations.
