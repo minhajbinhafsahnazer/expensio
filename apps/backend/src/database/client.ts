@@ -1,4 +1,5 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
+// @ts-ignore - Vercel skips devDependencies, so @types/pg is missing during build
 import pkg from 'pg';
 import { env } from '../config/environment.js';
 import * as schema from './schema/index.js';
@@ -29,7 +30,7 @@ export const pool = new Pool({
 
 // Propagate unexpected pool errors to stderr so they are visible in logs
 // without crashing the process (unhandled rejection).
-pool.on('error', (err) => {
+pool.on('error', (err: Error) => {
   process.stderr.write(`[DB POOL] Unexpected client error: ${err.message}\n`);
 });
 
