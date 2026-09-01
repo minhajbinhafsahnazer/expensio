@@ -225,6 +225,12 @@ export const MonthSummary: React.FC<MonthSummaryProps> = ({
               <span className="text-lg sm:text-xl font-semibold text-slate-400 mr-0.5">{currencySymbol}</span>
               {formatVal(spentAmount)}
             </h2>
+            
+            {new Date().getDate() === 1 && spentAmount === 0 && (
+              <p className="text-[10px] text-blue-300/90 font-medium mt-1 leading-snug w-[150px]">
+                Happy new month! 🌟 Your tracking has reset.
+              </p>
+            )}
           </div>
 
           {/* Right Column: Month Name Badge stacked over Trend Pill */}

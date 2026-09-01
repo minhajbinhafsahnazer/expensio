@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://expensio-backend-bewr.onrender.com/api/$1"
+      "destination": "https://expensio-backend-eight.vercel.app/api/$1"
     }
   ]
 }

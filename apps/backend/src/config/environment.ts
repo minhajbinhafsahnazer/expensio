@@ -35,7 +35,7 @@ function requiredInProd(devDefault: string) {
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
-  // Platform-injected in production (Render, Railway, Fly.io all set PORT).
+  // Platform-injected in production (Render, Railway all set PORT).
   // Falls back to 4000 in local development.
   PORT: z.coerce.number().default(4000),
 
