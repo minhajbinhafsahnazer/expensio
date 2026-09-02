@@ -396,7 +396,7 @@ export default function ProfilePage() {
               </h3>
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col transition-all">
                 <a
-                  href="whatsapp://send?text=Check%20out%20Expensio!%20It's%20an%20amazing%20expense%20tracker%20app.%20https://expensio-flax.vercel.app/welcome"
+                  href="whatsapp://send?text=Check%20out%20Expensio!%0A-%20Track%20your%20expenses%0A-%20Track%20your%20debts%0A-%20Manage%20your%20finance%0A-%20Analyze%20your%20spending%0A%0Ahttps://expensio-flax.vercel.app/welcome"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-between p-4 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left"
