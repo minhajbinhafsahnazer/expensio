@@ -42,7 +42,7 @@ services:
     # Remove or comment out these port bindings before production deployment.
     # In production, the API connects via the internal Docker network (db:5432).
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -58,7 +58,7 @@ services:
     # Remove or comment out before production deployment.
     # In production, the API connects via the internal Docker network (redis:6379).
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis-data:/data
     healthcheck:

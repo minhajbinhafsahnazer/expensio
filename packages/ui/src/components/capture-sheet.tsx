@@ -4,7 +4,7 @@ import { cn } from "../utils";
 export interface CaptureSheetProps {
   isOpen: boolean;
   onClose: () => void;
-  title?: string;
+  title?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
 }
@@ -78,7 +78,7 @@ export const CaptureSheet: React.FC<CaptureSheetProps> = ({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-label={typeof title === "string" ? title : "Capture Sheet"}
         style={{
           borderRadius: "14px",
           margin: "auto",

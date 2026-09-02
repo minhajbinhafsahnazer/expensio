@@ -10,6 +10,8 @@ import {
   Container,
   Stack,
   BottomNav,
+  GoalCardSkeleton,
+  DebtCardSkeleton,
   cn,
 } from "@expenseflow/ui";
 import { 
@@ -141,7 +143,7 @@ export const PortfolioPage: React.FC = () => {
   };
 
   // --- 1. Multiple Goals State ---
-  const { data: serverGoals = [] } = useFinancialGoals();
+  const { data: serverGoals = [], isLoading: isLoadingGoals } = useFinancialGoals();
   const createGoalMutation = useCreateGoal();
   const updateGoalMutation = useUpdateGoal();
   const deleteGoalMutation = useDeleteGoal();
@@ -363,7 +365,7 @@ export const PortfolioPage: React.FC = () => {
   // Analytics moved to dedicated /analytics page
 
   // --- 3. Debt Tracker State ---
-  const { data, error } = useDebts();
+  const { data, error, isLoading: isLoadingDebts } = useDebts();
   
   if (error) {
     console.error("[Portfolio] Error loading debt records:", error);
@@ -548,7 +550,12 @@ export const PortfolioPage: React.FC = () => {
 
             {/* Individual Goal List Items */}
             <div className="flex flex-col gap-5">
-              {goals.length === 0 ? (
+              {isLoadingGoals ? (
+                <div className="flex flex-col gap-3">
+                  <GoalCardSkeleton />
+                  <GoalCardSkeleton />
+                </div>
+              ) : goals.length === 0 ? (
                 <div className="py-8 text-center text-xs text-slate-400 font-normal">
                   No financial goals created yet. Click "+ Add Goal" to start saving.
                 </div>
@@ -561,6 +568,23 @@ export const PortfolioPage: React.FC = () => {
                   const targetAmount = parseFloat(g.targetAmount);
                   const progressPct = Math.min(100, (currentAmount / targetAmount) * 100);
                   const remaining = Math.max(0, targetAmount - currentAmount);
+
+                  const isGoalOnTrack = (() => {
+                    if (!g.targetDate || !g.createdAt) return null;
+                    const start = new Date(g.createdAt).getTime();
+                    const end = new Date(g.targetDate).getTime();
+                    const now = Date.now();
+                    
+                    if (end > start) {
+                      const totalDuration = end - start;
+                      const timeElapsed = now - start;
+                      const clampedElapsed = Math.max(0, Math.min(timeElapsed, totalDuration));
+                      const expectedProgressPct = (clampedElapsed / totalDuration) * 100;
+                      
+                      return progressPct >= expectedProgressPct;
+                    }
+                    return null;
+                  })();
 
                   return (
                     <div
@@ -578,15 +602,29 @@ export const PortfolioPage: React.FC = () => {
                     >
                       {/* Badge + Actions Header */}
                       <div className="flex items-center justify-between">
-                        {/* Subtle Priority Dot Indicator */}
-                        <div className="flex items-center gap-1.5 px-2 py-1 bg-black/20 rounded-md border border-white/5">
-                          <span className={cn(
-                            "w-1.5 h-1.5 rounded-full",
-                            g.priority === 'low' ? 'bg-emerald-400' : g.priority === 'high' ? 'bg-rose-400' : 'bg-amber-400'
-                          )} />
-                          <span className="text-[9px] uppercase font-bold text-slate-300 tracking-wider">
-                            {g.priority || 'Medium'}
-                          </span>
+                        <div className="flex items-center gap-2">
+                          {/* Subtle Priority Dot Indicator */}
+                          <div className="flex items-center gap-1.5 px-2 py-1 bg-black/20 rounded-md border border-white/5">
+                            <span className={cn(
+                              "w-1.5 h-1.5 rounded-full",
+                              g.priority === 'low' ? 'bg-emerald-400' : g.priority === 'high' ? 'bg-rose-400' : 'bg-amber-400'
+                            )} />
+                            <span className="text-[9px] uppercase font-bold text-slate-300 tracking-wider">
+                              {g.priority || 'Medium'}
+                            </span>
+                          </div>
+
+                          {/* Pace Status Badge */}
+                          {isGoalOnTrack !== null && (
+                            <span className={cn(
+                              "text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-md border",
+                              isGoalOnTrack 
+                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
+                                : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                            )}>
+                              {isGoalOnTrack ? "On Track" : "Behind Schedule"}
+                            </span>
+                          )}
                         </div>
 
                         {/* Actions: Deposit (Primary), Edit (Ghost), Delete (Ghost) */}
@@ -670,10 +708,38 @@ export const PortfolioPage: React.FC = () => {
                       </div>
 
                       {/* Muted Caption Row with Remaining & Target Ending Date */}
-                      <div className="flex items-center justify-between text-xs text-slate-400 font-normal">
-                        <span>{formatCurrency(remaining, userCurrency)} remaining</span>
+                      <div className="flex flex-col gap-1.5 pt-1">
+                        <div className="flex items-center justify-between text-xs text-slate-400 font-normal">
+                          <span>{formatCurrency(remaining, userCurrency)} remaining</span>
+                          {g.targetDate && (
+                            <span className="text-slate-400">Target: {formatGoalDate(g.targetDate)}</span>
+                          )}
+                        </div>
                         {g.targetDate && (
-                          <span className="text-slate-400">Target: {formatGoalDate(g.targetDate)}</span>
+                          <div className="flex items-center justify-between text-xs mt-1 pt-2 border-t border-white/5">
+                            <span className="text-slate-400/80 font-medium">Time Left</span>
+                            <span className="text-slate-400 font-medium text-right">
+                              {(() => {
+                                const end = new Date(g.targetDate);
+                                const now = new Date();
+                                if (end <= now) return "Time is up";
+                                
+                                let months = (end.getFullYear() - now.getFullYear()) * 12 + (end.getMonth() - now.getMonth());
+                                let days = end.getDate() - now.getDate();
+                                if (days < 0) {
+                                  months -= 1;
+                                  const prevMonth = new Date(end.getFullYear(), end.getMonth(), 0);
+                                  days += prevMonth.getDate();
+                                }
+                                
+                                const parts = [];
+                                if (months > 0) parts.push(`${months} month${months !== 1 ? 's' : ''}`);
+                                if (days > 0 || months === 0) parts.push(`${days} day${days !== 1 ? 's' : ''}`);
+                                
+                                return parts.join(' ') + " left";
+                              })()}
+                            </span>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -780,7 +846,12 @@ export const PortfolioPage: React.FC = () => {
 
             {/* Debt Rows List (Rules #1, #2, #3, #4, #5, #7, #8, #9, #10, #11, #12) */}
             <div className="pt-1">
-              {filteredDebts.length === 0 ? (
+              {isLoadingDebts ? (
+                <div className="flex flex-col gap-2">
+                  <DebtCardSkeleton />
+                  <DebtCardSkeleton />
+                </div>
+              ) : filteredDebts.length === 0 ? (
                 /* Friendly Empty State (Rule #11) */
                 <div className="py-12 flex flex-col items-center justify-center text-center gap-3 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 p-6">
                   <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">

@@ -27,9 +27,14 @@ export const TransactionsApi = {
     const response = await client.post('/transactions/mappings/bulk', payload);
     return response.data;
   },
-  getAll: async () => {
-    const response = await client.get<{ transactions: TransactionResponse[] }>('/transactions');
+  getAll: async (month?: string) => {
+    const url = month ? `/transactions?month=${month}` : '/transactions';
+    const response = await client.get<{ transactions: TransactionResponse[] }>(url);
     return response.data.transactions;
+  },
+  getMonthlySummary: async () => {
+    const response = await client.get<{ summaries: { monthKey: string; total: number; transactionCount: number }[] }>('/transactions/monthly-summary');
+    return response.data.summaries;
   },
   update: async (id: string, payload: any) => {
     const response = await client.put<{ transaction: TransactionResponse }>(`/transactions/${id}`, payload);

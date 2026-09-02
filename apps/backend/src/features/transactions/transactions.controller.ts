@@ -3,17 +3,33 @@ import { transactionsService } from './transactions.service.js';
 import { NotFoundError } from '../../common/errors/index.js';
 
 export async function getTransactions(
-  request: FastifyRequest,
+  request: FastifyRequest<{ Querystring: { month?: string } }>,
   reply: FastifyReply
 ) {
   const userId = request.auth.userId;
+  const month = request.query.month;
 
-  const result = await transactionsService.getTransactions(userId);
+  const result = await transactionsService.getTransactions(userId, month);
 
   return reply.status(200).send({
     success: true,
     message: 'Transactions fetched successfully',
     data: { transactions: result },
+  });
+}
+
+export async function getMonthlySummary(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const userId = request.auth.userId;
+
+  const result = await transactionsService.getMonthlySummary(userId);
+
+  return reply.status(200).send({
+    success: true,
+    message: 'Monthly summary fetched successfully',
+    data: { summaries: result },
   });
 }
 

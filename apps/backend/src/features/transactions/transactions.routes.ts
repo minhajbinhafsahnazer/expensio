@@ -11,6 +11,14 @@ const transactionsRoutes: FastifyPluginAsync = async (fastify) => {
     handler: controller.getTransactions,
   });
 
+  fastify.get('/monthly-summary', {
+    config: {
+      rateLimit: { max: 100, timeWindow: '1 minute' },
+    },
+    preHandler: [authenticate],
+    handler: controller.getMonthlySummary,
+  });
+
   fastify.get('/needs-review', {
     config: {
       rateLimit: { max: 100, timeWindow: '1 minute' },

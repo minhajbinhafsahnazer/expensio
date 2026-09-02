@@ -11,6 +11,7 @@ import { useNeedsReviewTransactions } from "../core/api/transactions";
 import { SectionInfoModal } from "../components/SectionInfoModal";
 import { ReviewTransactionsModal } from "../components/ReviewTransactionsModal";
 import { EditTransactionCategoryModal } from "../components/EditTransactionCategoryModal";
+import { AnalyticsPageSkeleton } from "../components/AnalyticsSkeleton";
 
 type Timeframe = "today" | "week" | "month" | "custom";
 
@@ -249,7 +250,7 @@ export default function AnalyticsPage() {
             </div>
 
             {isLoading || !currentAnalytics ? (
-              <div className="py-20 text-center text-slate-500 text-sm animate-pulse">Loading analytics...</div>
+              <AnalyticsPageSkeleton />
             ) : (
               <>
                 {/* Spent Summary Stats Banner */}

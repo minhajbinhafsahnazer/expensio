@@ -6,8 +6,12 @@ import { eq, and, ne, isNull, sql } from 'drizzle-orm';
 import { ulid } from 'ulid';
 
 export const transactionsService = {
-  async getTransactions(userId: string) {
-    return await transactionsRepository.getUserTransactions(userId);
+  async getTransactions(userId: string, monthKey?: string) {
+    return await transactionsRepository.getUserTransactions(userId, monthKey);
+  },
+
+  async getMonthlySummary(userId: string) {
+    return await transactionsRepository.getMonthlySummary(userId);
   },
   
   async updateTransaction(id: string, userId: string, payload: any) {

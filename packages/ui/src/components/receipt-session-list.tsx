@@ -75,7 +75,7 @@ export const ReceiptSessionList: React.FC<ReceiptSessionListProps> = ({
             </div>
           </div>
 
-          <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto pr-0.5">
+          <div className="flex flex-col gap-1.5 max-h-28 overflow-y-auto pr-0.5">
             {items.map((item) => {
               const isIncome = item.type === "income";
               return (

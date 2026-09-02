@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, RefreshCw, Download, Palette, CheckCircle2, Database, AlertCircle, WifiOff, ChevronLeft, ChevronDown, Sliders, Globe, Layers, Landmark, Home, Info, X, ShieldAlert, Sparkles, User, Mail, Phone, Edit2 } from "lucide-react";
+import { LogOut, RefreshCw, Download, Palette, CheckCircle2, Database, AlertCircle, WifiOff, ChevronLeft, ChevronDown, Sliders, Globe, Layers, Landmark, Home, Info, X, ShieldAlert, Sparkles, User, Mail, Phone, Edit2, Heart } from "lucide-react";
 import { useAuth } from "../core/providers/AuthContext";
 import { useSyncEngine } from "../core/sync/SyncEngine";
 import { queue } from "../core/sync/db";
@@ -386,6 +386,34 @@ export default function ProfilePage() {
                     {renderSyncStatus()}
                   </span>
                 </div>
+              </div>
+            </section>
+
+            {/* SHARE EXPENSIO */}
+            <section className="flex flex-col gap-1">
+              <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2 px-2">
+                Community
+              </h3>
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col transition-all">
+                <a
+                  href="whatsapp://send?text=Check%20out%20Expensio!%20It's%20an%20amazing%20expense%20tracker%20app.%20https://expenseio.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between p-4 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center shrink-0 shadow-sm border border-slate-200 bg-white">
+                      <img src="/logo.jpg" alt="Expencio Logo" className="w-full h-full object-cover scale-[1.35]" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-slate-900">Love Expensio?</div>
+                      <div className="text-xs font-medium text-slate-500">Share with a friend</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-50 text-emerald-600">
+                    <Heart size={14} className="fill-emerald-500 text-emerald-500" />
+                  </div>
+                </a>
               </div>
             </section>
 

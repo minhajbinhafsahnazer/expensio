@@ -39,6 +39,8 @@ export const NoteTransactionRow: React.FC<NoteTransactionRowProps> = ({
     }
   };
 
+  const isGoalWithdrawal = title.toLowerCase().startsWith("goal withdrawal");
+
   return (
     <div className="relative overflow-hidden rounded-lg group" ref={containerRef}>
       {/* Background Delete Button */}
@@ -75,7 +77,10 @@ export const NoteTransactionRow: React.FC<NoteTransactionRowProps> = ({
       >
         {/* Title */}
         <div className="flex items-center min-w-0 pr-2">
-          <span className="font-normal text-[14px] sm:text-[15px] text-slate-700 truncate tracking-tight">
+          <span className={cn(
+            "font-normal text-[14px] sm:text-[15px] truncate tracking-tight",
+            isGoalWithdrawal ? "text-red-500" : "text-slate-700"
+          )}>
             {title}
           </span>
         </div>
@@ -83,7 +88,7 @@ export const NoteTransactionRow: React.FC<NoteTransactionRowProps> = ({
         {/* Fixed Width Tabular Amount */}
         <div className={cn(
           "text-right text-[14px] sm:text-[15px] font-semibold tabular-nums",
-          type === "income" ? "text-emerald-600" : "text-slate-900"
+          isGoalWithdrawal ? "text-red-500" : (type === "income" ? "text-emerald-600" : "text-slate-900")
         )}>
           {type === "income" ? "+" : ""}{formattedAmount}
         </div>

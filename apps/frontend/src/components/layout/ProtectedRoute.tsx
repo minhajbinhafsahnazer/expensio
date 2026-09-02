@@ -24,33 +24,16 @@ const NUDGES = [
 export function ProtectedRoute() {
   const { status } = useAuth();
   const location = useLocation();
-  const [progress, setProgress] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(50);
   const [nudgeIndex, setNudgeIndex] = useState(0);
 
   useEffect(() => {
     if (status !== 'loading') return;
 
-    const startTime = Date.now();
-    const totalDuration = 50000; // 50 seconds
-
-    const interval = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const newProgress = Math.min((elapsed / totalDuration) * 100, 100);
-      setProgress(newProgress);
-      
-      const remaining = Math.max(Math.ceil((totalDuration - elapsed) / 1000), 0);
-      setTimeLeft(remaining);
-    }, 50);
-
     const nudgeInterval = setInterval(() => {
       setNudgeIndex((prev) => (prev + 1) % NUDGES.length);
     }, 5000);
 
-    return () => {
-      clearInterval(interval);
-      clearInterval(nudgeInterval);
-    };
+    return () => clearInterval(nudgeInterval);
   }, [status]);
 
   // While the startup session check is in-flight, render nothing.
@@ -85,21 +68,12 @@ export function ProtectedRoute() {
           ))}
         </div>
 
-        {/* Horizontal Progress Bar */}
-        <div className="w-full max-w-xs flex flex-col items-center">
-          <div className="w-full h-1.5 bg-slate-200/80 rounded-full overflow-hidden mb-3 relative">
-            <div 
-              className="absolute top-0 left-0 h-full bg-indigo-600 rounded-full transition-all duration-75 ease-linear"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <div className="w-full flex justify-between items-center text-[11px] font-bold text-slate-400 tracking-wider uppercase">
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              Waking Server
-            </span>
-            <span className="text-slate-500 tabular-nums">0:{timeLeft.toString().padStart(2, '0')}s</span>
-          </div>
+        {/* Spinner */}
+        <div className="w-full flex justify-center">
+          <svg className="w-8 h-8 text-indigo-600 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
         </div>
       </div>
     );

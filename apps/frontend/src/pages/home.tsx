@@ -8,6 +8,8 @@ import {
   Container,
   Stack,
   MonthSummary,
+  MonthSummarySkeleton,
+  TransactionListSkeleton,
   NoteTransactionRow,
   HeroActionButton,
   CaptureSheet,
@@ -17,7 +19,7 @@ import {
   type ReceiptItem,
   cn,
 } from "@expenseflow/ui";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueries, useQueryClient } from "@tanstack/react-query";
 import { type TransactionCreatePayload } from "../core/api/expense-sessions";
 import { TransactionsApi } from "../core/api/transactions";
 import { ulid } from "ulid";
@@ -139,58 +141,74 @@ export const HomePage: React.FC = () => {
     }
   }, [user?.id]);
 
-  const { data: serverTransactions = [] } = useQuery({
-    queryKey: ["transactions"],
-    queryFn: async () => {
-      const serverData = await TransactionsApi.getAll();
-      if (!user?.id) return serverData;
-      
-      const pending = await queue.getAll(user.id);
-      
-      // 1. Filter out pending deletes
-      const pendingDeletes = new Set(pending.filter(t => t.action === 'DELETE').map(t => t.clientGeneratedId));
-      let visibleServer = serverData.filter(t => !pendingDeletes.has(t.id));
-      
-      // 2. Apply pending updates
-      const pendingUpdates = new Map(pending.filter(t => t.action === 'UPDATE').map(t => [t.clientGeneratedId, t]));
-      visibleServer = visibleServer.map(t => {
-        if (pendingUpdates.has(t.id)) {
-          const update = pendingUpdates.get(t.id)!;
-          // BUG FIX: category must never substitute for description.
-          // Use the explicitly updated description if provided; otherwise preserve
-          // the existing server-side description. Never fall back to category.
-          return { ...t, amount: update.amount.toString(), description: update.description ?? t.description, category: update.category, superiorCategory: update.superiorCategory, type: update.type, spentAt: update.spentAt };
-        }
-        return t;
-      });
-      
-      // 3. Prepend pending creates (ignoring any that are already in the server data)
-      const serverIds = new Set(serverData.map(t => t.id));
-      const pendingCreates = pending
-        .filter(t => (t.action === 'CREATE' || !t.action) && !serverIds.has(t.clientGeneratedId))
-        .map(t => ({
-          id: t.clientGeneratedId,
-          sessionId: "pending",
-          userId: user.id,
-          // BUG FIX: category must never substitute for description.
-          // Show empty string rather than silently using the category as the title.
-          description: t.description ?? '',
-          category: t.category,
-          superiorCategory: t.superiorCategory,
-          amount: t.amount.toString(),
-          spentAt: t.spentAt,
-          type: t.type || "expense",
-          status: "pending",
-          currency: t.currency,
-          note: t.note || null,
-          createdAt: t.queuedAt,
-          updatedAt: t.queuedAt,
-          deletedAt: null
-        }));
-        
-      return [...pendingCreates, ...visibleServer].sort((a, b) => new Date(b.spentAt).getTime() - new Date(a.spentAt).getTime());
-    }
+  const currentMonthKey = new Date().toISOString().slice(0, 7);
+  const [expandedMonths, setExpandedMonths] = useState<string[]>([currentMonthKey]);
+
+  const { data: monthlySummaries = [], isLoading: isLoadingSummaries } = useQuery({
+    queryKey: ["monthly-summary"],
+    queryFn: () => TransactionsApi.getMonthlySummary(),
+    enabled: !!user?.id,
   });
+
+  const transactionQueries = useQueries({
+    queries: expandedMonths.map(monthKey => ({
+      queryKey: ["transactions", monthKey],
+      queryFn: () => TransactionsApi.getAll(monthKey),
+      enabled: !!user?.id,
+      staleTime: 5 * 60 * 1000,
+    }))
+  });
+
+  const isTransactionsLoading = transactionQueries.some(q => q.isLoading);
+
+  const { data: pendingItems = [] } = useQuery({
+    queryKey: ["pending-transactions", syncStatus],
+    queryFn: () => user?.id ? queue.getAll(user.id) : [],
+    enabled: !!user?.id,
+  });
+
+  const serverTransactions = React.useMemo(() => {
+    const rawServerData = transactionQueries.flatMap(q => q.data || []);
+    if (!user?.id) return rawServerData;
+    
+    // 1. Filter out pending deletes
+    const pendingDeletes = new Set(pendingItems.filter(t => t.action === 'DELETE').map(t => t.clientGeneratedId));
+    let visibleServer = rawServerData.filter(t => !pendingDeletes.has(t.id));
+    
+    // 2. Apply pending updates
+    const pendingUpdates = new Map(pendingItems.filter(t => t.action === 'UPDATE').map(t => [t.clientGeneratedId, t]));
+    visibleServer = visibleServer.map(t => {
+      if (pendingUpdates.has(t.id)) {
+        const update = pendingUpdates.get(t.id)!;
+        return { ...t, amount: update.amount.toString(), description: update.description ?? t.description, category: update.category, superiorCategory: update.superiorCategory, type: update.type, spentAt: update.spentAt };
+      }
+      return t;
+    });
+    
+    // 3. Prepend pending creates
+    const serverIds = new Set(rawServerData.map(t => t.id));
+    const pendingCreates = pendingItems
+      .filter(t => (t.action === 'CREATE' || !t.action) && !serverIds.has(t.clientGeneratedId))
+      .map(t => ({
+        id: t.clientGeneratedId,
+        sessionId: "pending",
+        userId: user.id,
+        description: t.description ?? '',
+        category: t.category,
+        superiorCategory: t.superiorCategory,
+        amount: t.amount.toString(),
+        spentAt: t.spentAt,
+        type: t.type || "expense",
+        status: "pending",
+        currency: t.currency,
+        note: t.note || null,
+        createdAt: t.queuedAt,
+        updatedAt: t.queuedAt,
+        deletedAt: null
+      }));
+      
+    return [...pendingCreates, ...visibleServer].sort((a, b) => new Date(b.spentAt).getTime() - new Date(a.spentAt).getTime());
+  }, [transactionQueries, pendingItems, user?.id]);
 
   const date = new Date();
   const year = date.getFullYear();
@@ -198,7 +216,7 @@ export const HomePage: React.FC = () => {
   const from = new Date(year, month, 1, 0, 0, 0, 0).toISOString();
   const lastDay = new Date(year, month + 1, 0).getDate();
   const to = new Date(year, month, lastDay, 23, 59, 59, 999).toISOString();
-  const { data: analyticsData } = useAnalytics(from, to);
+  const { data: analyticsData, isLoading: isLoadingAnalytics } = useAnalytics(from, to);
 
   const todayStr = new Date().toLocaleDateString('en-CA');
   const filteredDailyData = analyticsData?.dailyData?.filter((d: any) => d.fullDateStr <= todayStr);
@@ -659,18 +677,24 @@ export const HomePage: React.FC = () => {
                 tourStepId="monthly-overview"
               />
             </div>
-            <MonthSummary
-              monthName={analyticsData?.period?.from ? new Date(`${analyticsData.period.from}`).toLocaleString('en-US', { month: 'long', year: 'numeric' }) : "Current Month"}
-              spentAmount={analyticsData?.totalSpent || 0}
-              todayAmount={todayTotal}
-              totalIncome={analyticsData?.totalIncome || 0}
-              percentageChange={analyticsData?.percentageChange || 0}
-              dailyData={filteredDailyData}
-              currencySymbol={userCurrencySymbol}
-            />
+            {isLoadingAnalytics ? (
+              <MonthSummarySkeleton />
+            ) : (
+              <MonthSummary
+                monthName={analyticsData?.period?.from ? new Date(`${analyticsData.period.from}`).toLocaleString('en-US', { month: 'long', year: 'numeric' }) : "Current Month"}
+                spentAmount={analyticsData?.totalSpent || 0}
+                todayAmount={todayTotal}
+                totalIncome={analyticsData?.totalIncome || 0}
+                percentageChange={analyticsData?.percentageChange || 0}
+                dailyData={filteredDailyData}
+                currencySymbol={userCurrencySymbol}
+              />
+            )}
           </div>
 
-          {groupedExpenses.length === 0 ? (
+          {(isTransactionsLoading || isLoadingSummaries) && groupedExpenses.length === 0 ? (
+            <TransactionListSkeleton />
+          ) : groupedExpenses.length === 0 && monthlySummaries.length === 0 ? (
             <div className="py-6 text-center text-xs font-semibold text-slate-400 font-mono mt-4">
               No transactions recorded yet
             </div>
@@ -698,30 +722,100 @@ export const HomePage: React.FC = () => {
               </div>
               
               <div className="flex flex-col bg-white border border-slate-200/60 rounded-2xl p-2 shadow-sm">
-                {groupedExpenses.map((group, index) => (
-                  <section key={group.date.toISOString()} className={cn("flex flex-col gap-0", index === 0 ? "" : "pt-6")}>
-                    {/* Two-Column Date Header */}
-                    <div className="grid grid-cols-[minmax(0,1fr)_88px] items-center pb-2 border-b border-slate-100 px-2">
-                      <span className="font-semibold text-[14px] text-slate-900 tracking-tight">{group.label}</span>
-                      <span className="font-bold text-[14px] text-purple-600 text-right tabular-nums">
-                        {group.total.toLocaleString("en-IN")}
-                      </span>
-                    </div>
+                {/* Render Current Month (which is just the matching groups in groupedExpenses) */}
+                {groupedExpenses
+                  .filter(group => group.date.toISOString().slice(0, 7) === currentMonthKey || group.label === "Today" || group.label === "Yesterday")
+                  .map((group, index) => (
+                    <section key={group.date.toISOString()} className={cn("flex flex-col gap-0", index === 0 ? "" : "pt-6")}>
+                      <div className="grid grid-cols-[minmax(0,1fr)_88px] items-center pb-2 border-b border-slate-100 px-2">
+                        <span className="font-semibold text-[14px] text-slate-900 tracking-tight">{group.label}</span>
+                        <span className="font-bold text-[14px] text-purple-600 text-right tabular-nums">
+                          {group.total.toLocaleString("en-IN")}
+                        </span>
+                      </div>
+                      <div className="flex flex-col pt-0.5">
+                        {group.expenses.map((exp) => (
+                          <NoteTransactionRow
+                            key={exp.id}
+                            title={exp.title}
+                            amount={exp.amount}
+                            type={exp.type}
+                            onClick={() => handleEditClick(exp)}
+                            onDelete={() => handleDeleteClick(exp)}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  ))}
 
-                    <div className="flex flex-col pt-0.5">
-                      {group.expenses.map((exp) => (
-                        <NoteTransactionRow
-                          key={exp.id}
-                          title={exp.title}
-                          amount={exp.amount}
-                          type={exp.type}
-                          onClick={() => handleEditClick(exp)}
-                          onDelete={() => handleDeleteClick(exp)}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                ))}
+                {/* Render Past Months Summaries and their Expanded Content */}
+                {monthlySummaries
+                  .filter(summary => summary.monthKey !== currentMonthKey)
+                  .map((summary) => {
+                    const isExpanded = expandedMonths.includes(summary.monthKey);
+                    const monthDate = new Date(summary.monthKey + '-01');
+                    const monthName = monthDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+                    
+                    const monthGroups = groupedExpenses.filter(group => {
+                       // groups that don't fall into "Today" or "Yesterday" can be matched by YYYY-MM
+                       if (group.label === "Today" || group.label === "Yesterday") return false;
+                       return group.date.toISOString().slice(0, 7) === summary.monthKey;
+                    });
+
+                    return (
+                      <div key={summary.monthKey} className="flex flex-col pt-2 border-t border-slate-100 mt-2 first:border-0 first:mt-0 first:pt-2">
+                        <div 
+                          className="flex items-center justify-between px-2 pb-2 cursor-pointer hover:bg-slate-50 rounded-lg transition-colors group"
+                          onClick={() => {
+                            if (isExpanded) {
+                              setExpandedMonths(prev => prev.filter(m => m !== summary.monthKey));
+                            } else {
+                              setExpandedMonths(prev => [...prev, summary.monthKey]);
+                            }
+                          }}
+                        >
+                          <span className="font-bold text-[15px] text-slate-800 tracking-tight">{monthName}</span>
+                          <div className="flex items-center gap-3">
+                            <span className="font-semibold text-[14px] text-slate-500 tabular-nums">
+                              {formatCurrency(summary.total, userCurrency)}
+                            </span>
+                            <ChevronDown size={18} className={cn("text-slate-400 transition-transform duration-200", isExpanded && "rotate-180")} />
+                          </div>
+                        </div>
+
+                        {isExpanded && (
+                          <div className="flex flex-col pt-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                            {monthGroups.length === 0 ? (
+                              <div className="py-4 text-center text-xs text-slate-400">Loading {monthName}...</div>
+                            ) : (
+                              monthGroups.map((group, index) => (
+                                <section key={group.date.toISOString()} className={cn("flex flex-col gap-0", index === 0 ? "" : "pt-6")}>
+                                  <div className="grid grid-cols-[minmax(0,1fr)_88px] items-center pb-2 border-b border-slate-100 px-2 ml-2">
+                                    <span className="font-semibold text-[13px] text-slate-600 tracking-tight">{group.label}</span>
+                                    <span className="font-bold text-[13px] text-purple-600/80 text-right tabular-nums">
+                                      {group.total.toLocaleString("en-IN")}
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-col pt-0.5 ml-2">
+                                    {group.expenses.map((exp) => (
+                                      <NoteTransactionRow
+                                        key={exp.id}
+                                        title={exp.title}
+                                        amount={exp.amount}
+                                        type={exp.type}
+                                        onClick={() => handleEditClick(exp)}
+                                        onDelete={() => handleDeleteClick(exp)}
+                                      />
+                                    ))}
+                                  </div>
+                                </section>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
               </div>
             </>
           )}
@@ -765,30 +859,27 @@ export const HomePage: React.FC = () => {
           setIsSheetOpen(false);
           setEditingTransaction(null);
         }}
-        title={editingTransaction ? "Edit Transaction" : "Add Transactions"}
+        title={
+          <span className="flex items-center gap-2">
+            {editingTransaction ? "Edit Transaction" : "Add Transactions"}
+            <SectionInfoModal
+              content={{
+                title: "Transaction Entry Guide",
+                subtitle: "Log expenses or incomes instantly",
+                badge: "Capture Guide",
+                description: "Capture personal financial transactions with category tagging and optional superior category grouping.",
+                highlights: [
+                  { title: "Expense vs Income Toggle", desc: "Select Expense to record a spend or Income to record earnings." },
+                  { title: "Category Drilldown", desc: "Pick standard categories or type custom ones using the keyboard icon." },
+                  { title: "Date Tagging", desc: "Assign to Today, Yesterday, or pick a custom date." },
+                  { title: "Superior Category", desc: "Group detailed entries into parent categories for high-level analytics." }
+                ]
+              }}
+            />
+          </span>
+        }
       >
         <Stack gap={2}>
-          {/* Quick Entry Guide Info Header */}
-          <div className="flex items-center justify-between pb-1 -mt-1">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-              <span>Quick Entry Guide</span>
-              <SectionInfoModal
-                content={{
-                  title: "Transaction Entry Guide",
-                  subtitle: "Log expenses or incomes instantly",
-                  badge: "Capture Guide",
-                  description: "Capture personal financial transactions with category tagging and optional superior category grouping.",
-                  highlights: [
-                    { title: "Expense vs Income Toggle", desc: "Select Expense to record a spend or Income to record earnings." },
-                    { title: "Category Drilldown", desc: "Pick standard categories or type custom ones using the keyboard icon." },
-                    { title: "Date Tagging", desc: "Assign to Today, Yesterday, or pick a custom date." },
-                    { title: "Superior Category", desc: "Group detailed entries into parent categories for high-level analytics." }
-                  ]
-                }}
-              />
-            </div>
-          </div>
-
           {/* 1. Income or Expense Toggle - Modern Pill */}
           <div className="flex items-center p-0.5 bg-slate-100/80 rounded-full border border-slate-200/60">
             <button
@@ -838,20 +929,6 @@ export const HomePage: React.FC = () => {
               </div>
               <span>Income</span>
             </button>
-          </div>
-
-          {/* 1b. Optional Name / Description Field */}
-          <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">
-              Name <span className="text-[10px] font-normal text-slate-400 opacity-70">(Optional)</span>
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. chai, petrol, amazon order..."
-              value={expenseName}
-              onChange={(e) => setExpenseName(e.target.value)}
-              className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900"
-            />
           </div>
 
           {/* 2. Category Drilldown Dropdown */}
