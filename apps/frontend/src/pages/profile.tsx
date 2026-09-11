@@ -15,7 +15,7 @@ export default function ProfilePage() {
   const { user, logout, updateUser } = useAuth();
   const { pendingCount, syncStatus, isOnline, flush } = useSyncEngine();
   const queryClient = useQueryClient();
-  const { showToast, toast } = useToast();
+  const { showToast } = useToast();
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [isManualSyncing, setIsManualSyncing] = useState(false);

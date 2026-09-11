@@ -19,10 +19,10 @@ import {
 } from "@expenseflow/ui";
 
 import { useToast } from "../core/providers/ToastProvider";
-import { useNavigate } from "react-router-dom";
+
 
 export const DevUIPage: React.FC = () => {
-  const navigate = useNavigate();
+
   const { toast, showToast } = useToast();
   // Demo States
   const [isSheetOpen, setIsSheetOpen] = useState(false);

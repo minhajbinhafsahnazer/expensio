@@ -122,7 +122,7 @@ export const HomePage: React.FC = () => {
   }, []);
 
   const [receiptItems, setReceiptItems] = useState<(ReceiptItem & { spentAtISO?: string })[]>([]);
-  const { showToast, toast } = useToast();
+  const { showToast } = useToast();
   const [isTourOpen, setIsTourOpen] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();

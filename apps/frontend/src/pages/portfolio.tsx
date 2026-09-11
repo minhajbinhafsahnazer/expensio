@@ -89,7 +89,7 @@ export const PortfolioPage: React.FC = () => {
   const [goalToConfirmDelete, setGoalToConfirmDelete] = useState<{ id: string; title: string } | null>(null);
   const [goalDeleteConfirmText, setGoalDeleteConfirmText] = useState("");
 
-  const { showToast, toast } = useToast();
+  const { showToast } = useToast();
 
   const pillNavItems = [
     {
