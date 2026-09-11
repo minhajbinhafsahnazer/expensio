@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../core/providers/AuthContext";
 import { CURRENCIES } from "../constants/currencies";
 import { formatCurrency } from "../utils/currency";
+import { useToast } from "../core/providers/ToastProvider";
 
 import {
   AppShell,
@@ -34,6 +35,8 @@ import { useSyncEngine } from "../core/sync/SyncEngine";
 import { ulid } from "ulid";
 import {
   ArrowLeft,
+  ArrowDownLeft,
+  ArrowUpRight,
   Pencil,
   Trash2,
   Bell,
@@ -86,11 +89,7 @@ export const PortfolioPage: React.FC = () => {
   const [goalToConfirmDelete, setGoalToConfirmDelete] = useState<{ id: string; title: string } | null>(null);
   const [goalDeleteConfirmText, setGoalDeleteConfirmText] = useState("");
 
-  const [toast, setToast] = useState<string | null>(null);
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3500);
-  };
+  const { showToast, toast } = useToast();
 
   const pillNavItems = [
     {
@@ -454,12 +453,7 @@ export const PortfolioPage: React.FC = () => {
 
   return (
     <AppShell className="min-h-screen pb-32 bg-white text-slate-900 selection:bg-slate-900 selection:text-white">
-      {/* Dynamic Toast Banner */}
-      {toast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-3 bg-white border border-slate-200 text-slate-800 text-sm font-medium rounded-xl shadow-[0_4px_24px_rgba(0,0,0,0.06)] animate-in fade-in slide-in-from-bottom-5 duration-200 flex items-center gap-2">
-          <span>{toast}</span>
-        </div>
-      )}
+
 
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-200/80 pt-8 sm:pt-10">
@@ -489,16 +483,16 @@ export const PortfolioPage: React.FC = () => {
       <Container size="md" className="pt-4 px-4">
         <Stack gap={6}>
           
-          {/* ==================== 1. FINANCIAL GOALS (Linear + Notion Light Design) ==================== */}
-          <section className="relative bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-6 flex flex-col gap-6 shadow-2xl">
+          {/* ==================== 1. FINANCIAL GOALS (Refined Premium Dark Design) ==================== */}
+          <section className="relative bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 border border-slate-800/80 rounded-3xl p-5 sm:p-6 flex flex-col gap-6 shadow-2xl overflow-hidden">
             {/* Ambient glow effects */}
-            <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none z-0">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3 pointer-events-none" />
+            <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none z-0">
+              <div className="absolute top-0 right-0 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-56 h-56 bg-rose-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3 pointer-events-none" />
             </div>
 
             {/* Top Summary Header Area */}
-            <div className="flex flex-col gap-3 pb-5 border-b border-slate-800/60 relative z-30">
+            <div className="flex flex-col gap-3 pb-5 border-b border-slate-800/80 relative z-30">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <h3 className="text-base font-semibold text-white tracking-tight">
@@ -519,37 +513,37 @@ export const PortfolioPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleOpenNewGoal}
-                  className="px-3.5 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 text-xs font-medium transition-all duration-150 active:scale-[0.98] cursor-pointer flex items-center gap-1.5 backdrop-blur-sm"
+                  className="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-semibold transition-all duration-150 active:scale-[0.98] cursor-pointer flex items-center gap-1.5 backdrop-blur-md shadow-xs"
                 >
-                  <Plus size={14} className="text-slate-400" />
+                  <Plus size={14} className="text-slate-300" />
                   <span>Add Goal</span>
                 </button>
               </div>
 
               {/* Summary Amount & Subtitle */}
               <div className="flex flex-col gap-1 mt-1">
-                <div className="text-3xl font-bold text-white tracking-tight flex items-baseline gap-1.5">
-                  <span className="text-lg font-semibold text-slate-400">{userCurrencySymbol}</span>
+                <div className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight flex items-baseline gap-1.5 tabular-nums">
+                  <span className="text-xl sm:text-2xl font-semibold text-slate-400">{userCurrencySymbol}</span>
                   <span>{totalSavedAcrossGoals.toLocaleString("en-IN")}</span>
                 </div>
-                <span className="text-sm text-slate-400 font-normal">
+                <span className="text-xs sm:text-sm text-slate-400 font-medium">
                   {overallGoalProgressPct.toFixed(0)}% of {formatCurrency(totalTargetAcrossGoals, userCurrency)} saved
                 </span>
               </div>
 
-              {/* Slim Progress Bar (5px height) */}
-              <div className="w-full h-[5px] bg-slate-800 rounded-full overflow-hidden mt-1 shadow-inner">
+              {/* Overall Progress Bar */}
+              <div className="w-full h-2 bg-slate-800/80 rounded-full overflow-hidden mt-1.5 p-[1px] shadow-inner border border-white/5">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${overallGoalProgressPct}%` }}
                   transition={{ duration: 1, ease: "easeOut" }}
-                  className="h-full bg-indigo-500 rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)]"
+                  className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full shadow-[0_0_12px_rgba(99,102,241,0.6)]"
                 />
               </div>
             </div>
 
             {/* Individual Goal List Items */}
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-4">
               {isLoadingGoals ? (
                 <div className="flex flex-col gap-3">
                   <GoalCardSkeleton />
@@ -590,135 +584,144 @@ export const PortfolioPage: React.FC = () => {
                     <div
                       key={g.id}
                       className={cn(
-                        "group flex flex-col gap-2.5 p-4 rounded-xl border transition-all duration-150 relative z-10 backdrop-blur-md",
-                        g.color === "blue" ? "bg-blue-500/5 border-blue-500/20 hover:border-blue-500/40 hover:bg-blue-500/10" :
-                        g.color === "teal" ? "bg-teal-500/5 border-teal-500/20 hover:border-teal-500/40 hover:bg-teal-500/10" :
-                        g.color === "green" ? "bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40 hover:bg-emerald-500/10" :
-                        g.color === "purple" ? "bg-purple-500/5 border-purple-500/20 hover:border-purple-500/40 hover:bg-purple-500/10" :
-                        g.color === "pink" ? "bg-pink-500/5 border-pink-500/20 hover:border-pink-500/40 hover:bg-pink-500/10" :
-                        g.color === "orange" ? "bg-orange-500/5 border-orange-500/20 hover:border-orange-500/40 hover:bg-orange-500/10" :
+                        "group flex flex-col gap-3.5 p-4 sm:p-5 rounded-2xl border transition-all duration-200 relative z-10 backdrop-blur-md",
+                        g.color === "blue" ? "bg-gradient-to-b from-blue-500/[0.08] via-blue-500/[0.03] to-transparent border-blue-500/25 hover:border-blue-500/40 shadow-[0_4px_24px_-6px_rgba(59,130,246,0.12)]" :
+                        g.color === "teal" ? "bg-gradient-to-b from-teal-500/[0.08] via-teal-500/[0.03] to-transparent border-teal-500/25 hover:border-teal-500/40 shadow-[0_4px_24px_-6px_rgba(20,184,166,0.12)]" :
+                        g.color === "green" ? "bg-gradient-to-b from-emerald-500/[0.08] via-emerald-500/[0.03] to-transparent border-emerald-500/25 hover:border-emerald-500/40 shadow-[0_4px_24px_-6px_rgba(16,185,129,0.12)]" :
+                        g.color === "purple" ? "bg-gradient-to-b from-purple-500/[0.08] via-purple-500/[0.03] to-transparent border-purple-500/25 hover:border-purple-500/40 shadow-[0_4px_24px_-6px_rgba(168,85,247,0.12)]" :
+                        g.color === "pink" ? "bg-gradient-to-b from-pink-500/[0.08] via-pink-500/[0.03] to-transparent border-pink-500/25 hover:border-pink-500/40 shadow-[0_4px_24px_-6px_rgba(236,72,153,0.12)]" :
+                        g.color === "orange" ? "bg-gradient-to-b from-orange-500/[0.08] via-orange-500/[0.03] to-transparent border-orange-500/25 hover:border-orange-500/40 shadow-[0_4px_24px_-6px_rgba(249,115,22,0.12)]" :
                         "bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
                       )}
                     >
-                      {/* Badge + Actions Header */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {/* Subtle Priority Dot Indicator */}
-                          <div className="flex items-center gap-1.5 px-2 py-1 bg-black/20 rounded-md border border-white/5">
+                      {/* Top Row: Status Badges on Left, Action Controls on Right */}
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        {/* Left: Priority & Pace Badges */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {/* Priority Pill */}
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/35 rounded-full border border-white/10 backdrop-blur-sm">
                             <span className={cn(
-                              "w-1.5 h-1.5 rounded-full",
+                              "w-1.5 h-1.5 rounded-full shadow-xs",
                               g.priority === 'low' ? 'bg-emerald-400' : g.priority === 'high' ? 'bg-rose-400' : 'bg-amber-400'
                             )} />
-                            <span className="text-[9px] uppercase font-bold text-slate-300 tracking-wider">
+                            <span className="text-[10px] uppercase font-bold text-slate-200 tracking-wider">
                               {g.priority || 'Medium'}
                             </span>
                           </div>
 
-                          {/* Pace Status Badge */}
+                          {/* Pace Status Pill */}
                           {isGoalOnTrack !== null && (
                             <span className={cn(
-                              "text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-md border",
+                              "text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border backdrop-blur-sm",
                               isGoalOnTrack 
-                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
-                                : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                                ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" 
+                                : "bg-rose-500/15 text-rose-300 border-rose-500/30"
                             )}>
                               {isGoalOnTrack ? "On Track" : "Behind Schedule"}
                             </span>
                           )}
                         </div>
 
-                        {/* Actions: Deposit (Primary), Edit (Ghost), Delete (Ghost) */}
-                        <div className="flex items-center gap-1">
+                        {/* Actions Row: Manage on Left, Edit & Delete on Far Right */}
+                        <div className="flex items-center justify-between gap-2 w-full sm:w-auto sm:justify-end">
                           <button
                             type="button"
                             onClick={() => handleOpenDeposit(g.id, g.title)}
                             className={cn(
-                              "h-7 px-3 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all duration-150 active:scale-[0.98] cursor-pointer flex items-center gap-1.5 shadow-sm border",
-                              g.color === "blue" ? "bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20" :
-                              g.color === "teal" ? "bg-teal-500/10 text-teal-400 border-teal-500/20 hover:bg-teal-500/20" :
-                              g.color === "green" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20" :
-                              g.color === "purple" ? "bg-purple-500/10 text-purple-400 border-purple-500/20 hover:bg-purple-500/20" :
-                              g.color === "pink" ? "bg-pink-500/10 text-pink-400 border-pink-500/20 hover:bg-pink-500/20" :
-                              g.color === "orange" ? "bg-orange-500/10 text-orange-400 border-orange-500/20 hover:bg-orange-500/20" : 
-                              "bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20"
+                              "h-6 sm:h-7 px-3 rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition-all duration-150 active:scale-[0.98] cursor-pointer flex items-center gap-1.5 shadow-xs border shrink-0",
+                              g.color === "blue" ? "bg-blue-500/15 text-blue-300 border-blue-500/30 hover:bg-blue-500/25" :
+                              g.color === "teal" ? "bg-teal-500/15 text-teal-300 border-teal-500/30 hover:bg-teal-500/25" :
+                              g.color === "green" ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25" :
+                              g.color === "purple" ? "bg-purple-500/15 text-purple-300 border-purple-500/30 hover:bg-purple-500/25" :
+                              g.color === "pink" ? "bg-pink-500/15 text-pink-300 border-pink-500/30 hover:bg-pink-500/25" :
+                              g.color === "orange" ? "bg-orange-500/15 text-orange-300 border-orange-500/30 hover:bg-orange-500/25" : 
+                              "bg-blue-500/15 text-blue-300 border-blue-500/30 hover:bg-blue-500/25"
                             )}
                           >
-                            <ArrowUpDown size={12} className="text-current" />
+                            <ArrowUpDown size={11} className="text-current" />
                             <span>Manage</span>
                           </button>
 
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEditGoal(g)}
-                            aria-label="Edit Goal"
-                            className="w-7 h-7 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-all duration-150 flex items-center justify-center cursor-pointer"
-                          >
-                            <Pencil size={13} />
-                          </button>
+                          {/* Edit & Delete Action Icons pushed to Far Right */}
+                          <div className="flex items-center gap-1 bg-black/30 p-1 rounded-full border border-white/10 backdrop-blur-md ml-auto">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditGoal(g)}
+                              aria-label="Edit Goal"
+                              className="w-6 h-6 sm:w-7 sm:h-7 rounded-full hover:bg-white/15 text-slate-400 hover:text-white transition-colors flex items-center justify-center cursor-pointer"
+                            >
+                              <Pencil size={12} />
+                            </button>
 
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteGoal(g.id, g.title)}
-                            aria-label="Delete Goal"
-                            className="w-7 h-7 rounded-full hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 transition-all duration-150 flex items-center justify-center cursor-pointer"
-                          >
-                            <Trash2 size={13} />
-                          </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteGoal(g.id, g.title)}
+                              aria-label="Delete Goal"
+                              className="w-6 h-6 sm:w-7 sm:h-7 rounded-full hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 transition-colors flex items-center justify-center cursor-pointer"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
                         </div>
                       </div>
 
                       {/* Goal Title */}
-                      <h4 className="text-base font-semibold text-white tracking-tight drop-shadow-sm">
+                      <h4 className="text-base sm:text-lg font-bold text-white tracking-tight leading-snug">
                         {g.title}
                       </h4>
 
                       {/* Amount & Percentage Row */}
-                      <div className="flex items-baseline justify-between text-sm">
-                        <span className="font-semibold text-white tracking-tight">
-                          {formatCurrency(currentAmount, userCurrency)}{" "}
-                          <span className="text-slate-400 font-normal">/ {formatCurrency(targetAmount, userCurrency)}</span>
+                      <div className="flex items-baseline justify-between">
+                        <div className="flex items-baseline gap-1 text-white font-bold text-base sm:text-lg tracking-tight tabular-nums">
+                          <span>{formatCurrency(currentAmount, userCurrency)}</span>
+                          <span className="text-xs font-normal text-slate-400">/ {formatCurrency(targetAmount, userCurrency)}</span>
+                        </div>
+                        <span className="font-extrabold text-sm sm:text-base tabular-nums text-white">
+                          {progressPct.toFixed(0)}%
                         </span>
-                        <span className="font-semibold text-slate-300">{progressPct.toFixed(0)}%</span>
                       </div>
 
-                      {/* Slim Progress Bar (5px height) */}
+                      {/* Progress Bar */}
                       <div className={cn(
-                        "w-full h-[5px] rounded-full overflow-hidden shadow-inner",
-                        g.color === "blue" ? "bg-blue-900/40" :
-                        g.color === "teal" ? "bg-teal-900/40" :
-                        g.color === "green" ? "bg-emerald-900/40" :
-                        g.color === "purple" ? "bg-purple-900/40" :
-                        g.color === "pink" ? "bg-pink-900/40" :
-                        g.color === "orange" ? "bg-orange-900/40" : "bg-blue-900/40"
+                        "w-full h-2 rounded-full overflow-hidden p-[1px] shadow-inner",
+                        g.color === "blue" ? "bg-blue-950/60 border border-blue-500/20" :
+                        g.color === "teal" ? "bg-teal-950/60 border border-teal-500/20" :
+                        g.color === "green" ? "bg-emerald-950/60 border border-emerald-500/20" :
+                        g.color === "purple" ? "bg-purple-950/60 border border-purple-500/20" :
+                        g.color === "pink" ? "bg-pink-950/60 border border-pink-500/20" :
+                        g.color === "orange" ? "bg-orange-950/60 border border-orange-500/20" : "bg-blue-950/60 border border-blue-500/20"
                       )}>
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${progressPct}%` }}
                           transition={{ duration: 1, ease: "easeOut", delay: 0.1 }}
                           className={cn(
-                            "h-full rounded-full shadow-[0_0_8px_rgba(255,255,255,0.4)]",
-                            g.color === "blue" ? "bg-blue-400" :
-                            g.color === "teal" ? "bg-teal-400" :
-                            g.color === "green" ? "bg-emerald-400" :
-                            g.color === "purple" ? "bg-purple-400" :
-                            g.color === "pink" ? "bg-pink-400" :
-                            g.color === "orange" ? "bg-orange-400" : "bg-blue-400"
+                            "h-full rounded-full",
+                            g.color === "blue" ? "bg-gradient-to-r from-blue-500 to-cyan-400 shadow-[0_0_10px_rgba(96,165,250,0.6)]" :
+                            g.color === "teal" ? "bg-gradient-to-r from-teal-500 to-emerald-400 shadow-[0_0_10px_rgba(45,212,191,0.6)]" :
+                            g.color === "green" ? "bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_10px_rgba(52,211,153,0.6)]" :
+                            g.color === "purple" ? "bg-gradient-to-r from-purple-500 to-indigo-400 shadow-[0_0_10px_rgba(192,132,252,0.6)]" :
+                            g.color === "pink" ? "bg-gradient-to-r from-pink-500 to-rose-400 shadow-[0_0_10px_rgba(244,114,182,0.6)]" :
+                            g.color === "orange" ? "bg-gradient-to-r from-orange-500 to-amber-400 shadow-[0_0_10px_rgba(251,146,60,0.6)]" : "bg-gradient-to-r from-blue-500 to-cyan-400 shadow-[0_0_10px_rgba(96,165,250,0.6)]"
                           )}
                         />
                       </div>
 
-                      {/* Muted Caption Row with Remaining & Target Ending Date */}
-                      <div className="flex flex-col gap-1.5 pt-1">
-                        <div className="flex items-center justify-between text-xs text-slate-400 font-normal">
-                          <span>{formatCurrency(remaining, userCurrency)} remaining</span>
+                      {/* Structured Footer: Remaining, Target & Time Left */}
+                      <div className="bg-black/25 rounded-xl p-3 border border-white/5 flex flex-col gap-2 backdrop-blur-xs">
+                        <div className="flex items-center justify-between text-xs text-slate-400 font-medium flex-wrap gap-1">
+                          <span>
+                            <strong className="text-slate-200 font-semibold">{formatCurrency(remaining, userCurrency)}</strong> remaining
+                          </span>
                           {g.targetDate && (
-                            <span className="text-slate-400">Target: {formatGoalDate(g.targetDate)}</span>
+                            <span>Target: <strong className="text-slate-200 font-semibold">{formatGoalDate(g.targetDate)}</strong></span>
                           )}
                         </div>
+
                         {g.targetDate && (
-                          <div className="flex items-center justify-between text-xs mt-1 pt-2 border-t border-white/5">
-                            <span className="text-slate-400/80 font-medium">Time Left</span>
-                            <span className="text-slate-400 font-medium text-right">
+                          <div className="flex items-center justify-between text-xs pt-2 border-t border-white/5">
+                            <span className="text-slate-400 font-medium">Time Left</span>
+                            <span className="text-slate-200 font-semibold text-right tabular-nums">
                               {(() => {
                                 const end = new Date(g.targetDate);
                                 const now = new Date();
@@ -751,10 +754,10 @@ export const PortfolioPage: React.FC = () => {
 
 
 
-          {/* ==================== 3. DEBT & LOAN TRACKER (Simplified Linear Design) ==================== */}
-          <section className="bg-white border border-slate-200/60 rounded-3xl p-6 flex flex-col gap-5 shadow-sm mt-4">
-            {/* Header + Add Debt Button (Rule #13) */}
-            <div className="flex items-center justify-between pb-1">
+          {/* ==================== 3. DEBT & LOAN TRACKER (Refined Modern Design) ==================== */}
+          <section className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 flex flex-col gap-5 shadow-xs hover:shadow-sm transition-shadow mt-4">
+            {/* Header + Add Record Button */}
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-semibold text-slate-900 tracking-tight whitespace-nowrap">
                   Debt Tracker
@@ -773,100 +776,99 @@ export const PortfolioPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsAddDebtOpen(true)}
-                className="px-3.5 py-1.5 rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-xs text-[13px] font-medium transition-all duration-150 active:scale-[0.98] cursor-pointer flex items-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-xs text-xs font-semibold transition-all duration-150 active:scale-[0.98] cursor-pointer flex items-center gap-1.5"
               >
                 <Plus size={14} className="text-white" />
                 <span>Add Record</span>
               </button>
             </div>
 
-            {/* Summary Metrics - No Inner Card, No Vertical Borders, Pure Typography & Spacing (Rule #6 & #13) */}
-            <div className="border-b border-slate-100 pb-5">
-              <div className="grid grid-cols-3 gap-4 pt-1">
-                <div className="flex flex-col items-center text-center gap-0.5">
-                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider truncate">
-                    To Collect
-                  </span>
-                  <span className="text-lg font-bold text-emerald-600 tracking-tight tabular-nums truncate">
-                    {formatCompactAmount(totalLent)}
-                  </span>
-                </div>
+            {/* Summary Metric Tiles */}
+            <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+              {/* To Collect */}
+              <div className="bg-emerald-50/60 hover:bg-emerald-50/90 border border-emerald-100/80 rounded-2xl p-2.5 sm:p-3 flex flex-col items-center text-center transition-colors">
+                <span className="text-[10px] font-bold text-emerald-800/80 uppercase tracking-wider">
+                  To Collect
+                </span>
+                <span className="text-base sm:text-lg font-bold text-emerald-600 tracking-tight tabular-nums mt-0.5">
+                  {formatCompactAmount(totalLent)}
+                </span>
+              </div>
 
-                <div className="flex flex-col items-center text-center gap-0.5">
-                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider truncate">
-                    To Pay
-                  </span>
-                  <span className="text-lg font-bold text-rose-600 tracking-tight tabular-nums truncate">
-                    {formatCompactAmount(totalBorrowed)}
-                  </span>
-                </div>
+              {/* To Pay */}
+              <div className="bg-rose-50/60 hover:bg-rose-50/90 border border-rose-100/80 rounded-2xl p-2.5 sm:p-3 flex flex-col items-center text-center transition-colors">
+                <span className="text-[10px] font-bold text-rose-800/80 uppercase tracking-wider">
+                  To Pay
+                </span>
+                <span className="text-base sm:text-lg font-bold text-rose-600 tracking-tight tabular-nums mt-0.5">
+                  {formatCompactAmount(totalBorrowed)}
+                </span>
+              </div>
 
-                <div className="flex flex-col items-center text-center gap-0.5">
-                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider truncate">
-                    Balance
-                  </span>
-                  <span
-                    className={cn(
-                      "text-lg font-bold tracking-tight tabular-nums truncate",
-                      netDebtPosition >= 0 ? "text-slate-900" : "text-rose-600"
-                    )}
-                  >
-                    {netDebtPosition >= 0 ? "+" : ""}{formatCompactAmount(netDebtPosition)}
-                  </span>
-                </div>
+              {/* Balance */}
+              <div className="bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/60 rounded-2xl p-2.5 sm:p-3 flex flex-col items-center text-center transition-colors">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  Balance
+                </span>
+                <span
+                  className={cn(
+                    "text-base sm:text-lg font-bold tracking-tight tabular-nums mt-0.5",
+                    netDebtPosition > 0 ? "text-emerald-600" : netDebtPosition < 0 ? "text-rose-600" : "text-slate-900"
+                  )}
+                >
+                  {netDebtPosition >= 0 ? "+" : ""}{formatCompactAmount(netDebtPosition)}
+                </span>
               </div>
             </div>
 
-            {/* Filter Segmented Pills: All | Lent | Borrowed */}
-            <div className="flex items-center justify-between overflow-x-auto no-scrollbar border-b border-slate-100 pb-2">
-              <div className="flex items-center gap-4">
+            {/* Filter Segmented Control & Currency Indicator */}
+            <div className="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar pt-1 border-b border-slate-100 pb-3">
+              <div className="inline-flex p-1 bg-slate-100/90 rounded-xl">
                 {(["all", "lent", "borrowed"] as const).map((tab) => (
                   <button
                     key={tab}
                     type="button"
                     onClick={() => setDebtFilter(tab)}
                     className={cn(
-                      "text-[12px] font-bold tracking-wider uppercase transition-all duration-150 cursor-pointer whitespace-nowrap relative pb-1",
+                      "px-2.5 sm:px-3 py-1 text-xs font-semibold rounded-lg transition-all duration-150 cursor-pointer whitespace-nowrap",
                       debtFilter === tab
-                        ? "text-slate-900"
-                        : "text-slate-400 hover:text-slate-600"
+                        ? "bg-white text-slate-900 shadow-xs"
+                        : "text-slate-500 hover:text-slate-800"
                     )}
                   >
                     {tab === "all" ? "All" : tab === "lent" ? "To Collect" : "To Pay"}
-                    {debtFilter === tab && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 rounded-full" />
-                    )}
                   </button>
                 ))}
               </div>
-              <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+
+              <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 bg-slate-100/80 border border-slate-200/50 px-2.5 py-1 rounded-lg shrink-0">
                 Amounts in {userCurrencySymbol}
               </span>
             </div>
 
-            {/* Debt Rows List (Rules #1, #2, #3, #4, #5, #7, #8, #9, #10, #11, #12) */}
-            <div className="pt-1">
+            {/* Debt Rows List */}
+            <div>
               {isLoadingDebts ? (
                 <div className="flex flex-col gap-2">
                   <DebtCardSkeleton />
                   <DebtCardSkeleton />
                 </div>
               ) : filteredDebts.length === 0 ? (
-                /* Friendly Empty State (Rule #11) */
-                <div className="py-12 flex flex-col items-center justify-center text-center gap-3 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 p-6">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                /* Empty State */
+                <div className="py-10 flex flex-col items-center justify-center text-center gap-2.5 bg-slate-50/60 rounded-2xl border border-dashed border-slate-200 p-6">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200/60 flex items-center justify-center text-slate-400">
                     <Calendar size={18} />
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <h4 className="text-sm font-semibold text-slate-900">No debts yet</h4>
                     <p className="text-xs text-slate-500 max-w-xs">
-                      Track money you've lent or borrowed from friends effortlessly.
+                      Track money you've lent or borrowed effortlessly.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setIsAddDebtOpen(true)}
-                    className="mt-1 px-4 py-1.5 rounded-full bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
+                    className="mt-1 px-4 py-1.5 rounded-full bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
                   >
                     <Plus size={14} />
                     <span>Add Record</span>
@@ -878,47 +880,47 @@ export const PortfolioPage: React.FC = () => {
                     const isMenuOpen = activeDebtMenuId === d.id;
 
                     if (d.isSettled) {
-                      /* Settled Row (Rule #10 - Archived look, low opacity, clean text link instead of disabled buttons) */
+                      /* Settled Row */
                       return (
                         <div
                           key={d.id}
-                          className="py-2.5 grid grid-cols-[12px_minmax(0,1fr)_80px_35px] items-center opacity-40 hover:opacity-75 transition-opacity group cursor-pointer rounded-lg"
+                          className="py-3 px-2 sm:px-2.5 rounded-xl flex items-center justify-between gap-3 hover:bg-slate-50/80 transition-colors group cursor-pointer"
                           onClick={() => toggleSettled(d.id)}
                         >
-                          {/* Dot Indicator */}
-                          <div className="flex items-center justify-center">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                          </div>
+                          {/* Left: Indicator + Name & Details */}
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            <div className="w-2 h-2 rounded-full bg-slate-300 shrink-0" />
 
-                          {/* Name & Details */}
-                          <div className="flex flex-col gap-0.5 min-w-0 pr-2 pl-1.5">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-[14px] text-slate-700 tracking-tight truncate line-through">
-                                {d.name}
-                              </span>
-                              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase bg-slate-100 text-slate-500">
-                                Settled
-                              </span>
+                            <div className="flex flex-col min-w-0 gap-0.5">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="font-medium text-[13.5px] text-slate-400 tracking-tight truncate line-through">
+                                  {d.name}
+                                </span>
+                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase bg-slate-100 text-slate-500 shrink-0">
+                                  Settled
+                                </span>
+                              </div>
+                              {d.note && (
+                                <span className="text-xs text-slate-400 font-normal truncate line-through">
+                                  {d.note}
+                                </span>
+                              )}
                             </div>
-                            {d.note && <span className="text-[12px] text-slate-400 font-normal truncate line-through">{d.note}</span>}
                           </div>
 
-                          {/* Tabular Amount */}
-                          <div className="text-right">
-                            <span className="font-semibold text-[14px] sm:text-[15px] tabular-nums text-slate-400 line-through">
+                          {/* Right: Amount & Reopen action (Separated flex containers - zero overlap) */}
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className="font-semibold text-sm tabular-nums text-slate-400 line-through">
                               {d.type === "lent" ? "+" : "-"}{formatCompactAmount(d.amount)}
                             </span>
-                          </div>
 
-                          {/* Reopen Action */}
-                          <div className="relative flex justify-end">
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 toggleSettled(d.id);
                               }}
-                              className="text-[10px] sm:text-[11px] font-semibold text-slate-400 hover:text-slate-700 underline cursor-pointer pr-1"
+                              className="px-2 py-0.5 rounded text-xs font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 transition-colors cursor-pointer"
                             >
                               Reopen
                             </button>
@@ -931,79 +933,83 @@ export const PortfolioPage: React.FC = () => {
                     return (
                       <div
                         key={d.id}
-                        className="py-2.5 grid grid-cols-[12px_minmax(0,1fr)_80px_35px] items-center hover:bg-slate-50/50 rounded-lg transition-colors relative group cursor-pointer"
+                        className="py-3 px-2 sm:px-2.5 rounded-xl flex items-center justify-between gap-3 hover:bg-slate-50/80 transition-colors relative group cursor-pointer"
                       >
-                        {/* Dot Indicator */}
-                        <div className="flex items-center justify-center">
-                          <span
-                            className={cn(
-                              "w-1.5 h-1.5 rounded-full",
-                              d.type === "lent" ? "bg-emerald-500" : "bg-rose-500"
-                            )}
-                          />
-                        </div>
-
-                        {/* Name & Details */}
-                        <div className="flex flex-col gap-0.5 min-w-0 pr-2 pl-1.5">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-[14px] text-slate-900 tracking-tight truncate">
-                              {d.name}
-                            </span>
-
-                            {/* Minimal Tag */}
+                        {/* Left: Indicator + Name & Details */}
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="flex items-center justify-center shrink-0">
                             <span
                               className={cn(
-                                "px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase",
+                                "w-2 h-2 rounded-full ring-4",
                                 d.type === "lent"
-                                  ? "bg-emerald-50 text-emerald-600"
-                                  : "bg-rose-50 text-rose-600"
+                                  ? "bg-emerald-500 ring-emerald-50"
+                                  : "bg-rose-500 ring-rose-50"
                               )}
-                            >
-                              {d.type === "lent" ? "Get" : "Pay"}
-                            </span>
-
-                            {d.hasReminder && (
-                              <BellRing size={11} className="text-sky-500 shrink-0" />
-                            )}
+                            />
                           </div>
 
-                          <span className="text-[12px] text-slate-500 font-normal truncate">
-                            {d.note ? `${d.note} • ` : ""}{formatNaturalDueDate(d.dueDate ?? "")}
-                          </span>
+                          <div className="flex flex-col min-w-0 gap-0.5">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="font-semibold text-[13.5px] text-slate-900 tracking-tight truncate">
+                                {d.name}
+                              </span>
+
+                              <span
+                                className={cn(
+                                  "px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase shrink-0",
+                                  d.type === "lent"
+                                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200/50"
+                                    : "bg-rose-50 text-rose-700 border border-rose-200/50"
+                                )}
+                              >
+                                {d.type === "lent" ? "Collect" : "Pay"}
+                              </span>
+
+                              {d.hasReminder && (
+                                <BellRing size={12} className="text-sky-500 shrink-0" />
+                              )}
+                            </div>
+
+                            {(d.note || d.dueDate) && (
+                              <span className="text-xs text-slate-500 font-normal truncate">
+                                {d.note ? `${d.note}` : ""}
+                                {d.note && d.dueDate ? " • " : ""}
+                                {d.dueDate ? formatNaturalDueDate(d.dueDate) : ""}
+                              </span>
+                            )}
+                          </div>
                         </div>
 
-                        {/* Tabular Amount */}
-                        <div className="text-right">
+                        {/* Right: Amount & Actions Menu */}
+                        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                           <span
                             className={cn(
-                              "font-semibold text-[14px] sm:text-[15px] tabular-nums",
-                              d.type === "lent" ? "text-emerald-600" : "text-slate-900"
+                              "font-semibold text-sm sm:text-[15px] tabular-nums tracking-tight",
+                              d.type === "lent" ? "text-emerald-600 font-bold" : "text-slate-900"
                             )}
                           >
                             {d.type === "lent" ? "+" : "-"}{formatCompactAmount(d.amount)}
                           </span>
-                        </div>
 
-                        {/* Menu */}
-                        <div className="relative flex justify-end">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveDebtMenuId((prev) => (prev === d.id ? null : d.id));
-                            }}
-                            className="w-7 h-7 rounded-md hover:bg-slate-200/60 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
-                            aria-label="Options"
-                          >
-                            <MoreVertical size={14} />
-                          </button>
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveDebtMenuId((prev) => (prev === d.id ? null : d.id));
+                              }}
+                              className="w-7 h-7 rounded-lg hover:bg-slate-200/60 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+                              aria-label="Options"
+                            >
+                              <MoreVertical size={15} />
+                            </button>
 
                             {/* Dropdown Options */}
                             {isMenuOpen && (
                               <>
                                 {/* Invisible overlay to detect clicks outside */}
-                                <div 
-                                  className="fixed inset-0 z-20" 
+                                <div
+                                  className="fixed inset-0 z-20"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setActiveDebtMenuId(null);
@@ -1013,48 +1019,49 @@ export const PortfolioPage: React.FC = () => {
                                   className="absolute right-0 top-8 z-30 w-44 bg-white border border-slate-200 rounded-xl p-1.5 shadow-lg animate-in fade-in zoom-in-95 duration-100 flex flex-col gap-0.5 text-xs font-medium"
                                   onClick={(e) => e.stopPropagation()}
                                 >
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    toggleSettled(d.id);
-                                    setActiveDebtMenuId(null);
-                                  }}
-                                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-700 hover:bg-slate-100 flex items-center gap-2 cursor-pointer"
-                                >
-                                  <CheckCircle2 size={13} className="text-emerald-600" />
-                                  <span>Mark as Settled</span>
-                                </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      toggleSettled(d.id);
+                                      setActiveDebtMenuId(null);
+                                    }}
+                                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-700 hover:bg-slate-100 flex items-center gap-2 cursor-pointer"
+                                  >
+                                    <CheckCircle2 size={13} className="text-emerald-600" />
+                                    <span>Mark as Settled</span>
+                                  </button>
 
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    toggleReminder(d.id);
-                                    setActiveDebtMenuId(null);
-                                  }}
-                                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-700 hover:bg-slate-100 flex items-center gap-2 cursor-pointer"
-                                >
-                                  <Bell size={13} className="text-sky-600" />
-                                  <span>{d.hasReminder ? "Remove Reminder" : "Set Reminder"}</span>
-                                </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      toggleReminder(d.id);
+                                      setActiveDebtMenuId(null);
+                                    }}
+                                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-slate-700 hover:bg-slate-100 flex items-center gap-2 cursor-pointer"
+                                  >
+                                    <Bell size={13} className="text-sky-600" />
+                                    <span>{d.hasReminder ? "Remove Reminder" : "Set Reminder"}</span>
+                                  </button>
 
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    deleteDebtMutation.mutate(d.id);
-                                    setActiveDebtMenuId(null);
-                                    showToast(`Deleted debt record for "${d.name}"`);
-                                  }}
-                                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer"
-                                >
-                                  <Trash2 size={13} />
-                                  <span>Delete Record</span>
-                                </button>
-                              </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      deleteDebtMutation.mutate(d.id);
+                                      setActiveDebtMenuId(null);
+                                      showToast(`Deleted debt record for "${d.name}"`);
+                                    }}
+                                    className="w-full text-left px-2.5 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer"
+                                  >
+                                    <Trash2 size={13} />
+                                    <span>Delete Record</span>
+                                  </button>
+                                </div>
                               </>
                             )}
                           </div>
                         </div>
-                      );
+                      </div>
+                    );
                   })}
                 </div>
               )}
@@ -1346,53 +1353,91 @@ export const PortfolioPage: React.FC = () => {
 
       {/* ADD DEBT MODAL */}
       {isAddDebtOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-xs animate-in fade-in duration-150">
           <form
             onSubmit={handleAddDebt}
-            className="w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-5 shadow-xl flex flex-col gap-4 animate-in zoom-in-95 duration-150 text-slate-900"
+            className="w-full max-w-sm bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col gap-4 animate-in zoom-in-95 duration-150 text-slate-900"
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="font-semibold text-base text-slate-900">Add Debt / Loan Record</h3>
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={cn(
+                    "w-8 h-8 rounded-xl flex items-center justify-center transition-colors shadow-xs shrink-0",
+                    newDebtType === "lent"
+                      ? "bg-emerald-50 text-emerald-600 border border-emerald-200/60"
+                      : "bg-rose-50 text-rose-600 border border-rose-200/60"
+                  )}
+                >
+                  {newDebtType === "lent" ? (
+                    <ArrowDownLeft size={16} />
+                  ) : (
+                    <ArrowUpRight size={16} />
+                  )}
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="font-bold text-base text-slate-900 tracking-tight leading-tight">
+                    Add Debt Record
+                  </h3>
+                  <span className="text-[11px] text-slate-400 font-medium">
+                    {newDebtType === "lent"
+                      ? "Money you gave to someone"
+                      : "Money you owe to someone"}
+                  </span>
+                </div>
+              </div>
+
               <button
                 type="button"
                 onClick={() => setIsAddDebtOpen(false)}
-                className="w-7 h-7 rounded-lg bg-slate-100 text-slate-500 hover:text-slate-800 hover:bg-slate-200 flex items-center justify-center"
+                className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 flex items-center justify-center transition-colors cursor-pointer"
+                aria-label="Close"
               >
                 <X size={15} />
               </button>
             </div>
 
-            <div className="flex flex-col gap-3">
-              {/* Type Toggle */}
-              <div className="flex items-center p-1 bg-slate-100 rounded-full border border-slate-200">
+            <div className="flex flex-col gap-3.5">
+              {/* Type Segmented Control */}
+              <div className="grid grid-cols-2 p-1 bg-slate-100/90 rounded-2xl gap-1">
                 <button
                   type="button"
                   onClick={() => setNewDebtType("lent")}
                   className={cn(
-                    "flex-1 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 text-center cursor-pointer",
+                    "py-2 px-3 rounded-xl text-xs font-semibold transition-all duration-150 text-center cursor-pointer flex items-center justify-center gap-1.5",
                     newDebtType === "lent"
-                      ? "bg-white text-emerald-700 shadow-xs border border-slate-200"
+                      ? "bg-white text-emerald-700 shadow-xs border border-slate-200/60 font-bold"
                       : "text-slate-500 hover:text-slate-900"
                   )}
                 >
-                  Lent (I gave)
+                  {newDebtType === "lent" && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  )}
+                  <span>Lent</span>
+                  <span className="font-normal opacity-70">(I gave)</span>
                 </button>
+
                 <button
                   type="button"
                   onClick={() => setNewDebtType("borrowed")}
                   className={cn(
-                    "flex-1 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 text-center cursor-pointer",
+                    "py-2 px-3 rounded-xl text-xs font-semibold transition-all duration-150 text-center cursor-pointer flex items-center justify-center gap-1.5",
                     newDebtType === "borrowed"
-                      ? "bg-white text-rose-700 shadow-xs border border-slate-200"
+                      ? "bg-white text-rose-700 shadow-xs border border-slate-200/60 font-bold"
                       : "text-slate-500 hover:text-slate-900"
                   )}
                 >
-                  Borrowed (I owe)
+                  {newDebtType === "borrowed" && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                  )}
+                  <span>Borrowed</span>
+                  <span className="font-normal opacity-70">(I owe)</span>
                 </button>
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">
+              {/* Person Name */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                   Person Name
                 </label>
                 <input
@@ -1401,38 +1446,46 @@ export const PortfolioPage: React.FC = () => {
                   placeholder="e.g. Rahul"
                   value={newDebtName}
                   onChange={(e) => setNewDebtName(e.target.value)}
-                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-400 focus:bg-white placeholder:text-slate-400"
+                  className="w-full h-10 px-3.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-100 focus:border-slate-400 focus:bg-white placeholder:text-slate-400 shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-all"
                 />
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">
+              {/* Amount with integrated currency symbol */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                   Amount ({userCurrencySymbol})
                 </label>
-                <input
-                  required
-                  type="number"
-                  placeholder="0"
-                  value={newDebtAmount}
-                  onChange={(e) => setNewDebtAmount(e.target.value)}
-                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-400 focus:bg-white placeholder:text-slate-400"
-                />
+                <div className="relative flex items-center rounded-xl bg-slate-50 border border-slate-200/80 focus-within:border-slate-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-slate-100 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)] overflow-hidden">
+                  <span className="pl-3.5 pr-1 text-sm font-bold text-slate-400 select-none">
+                    {userCurrencySymbol}
+                  </span>
+                  <input
+                    required
+                    type="number"
+                    placeholder="0"
+                    value={newDebtAmount}
+                    onChange={(e) => setNewDebtAmount(e.target.value)}
+                    className="w-full h-11 pr-3 bg-transparent text-sm sm:text-base font-bold text-slate-900 placeholder:text-slate-300 focus:outline-none tabular-nums"
+                  />
+                </div>
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">
+              {/* Due Date */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                   Due Date
                 </label>
                 <input
                   type="date"
                   value={newDebtDueDate}
                   onChange={(e) => setNewDebtDueDate(e.target.value)}
-                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-400 focus:bg-white placeholder:text-slate-400"
+                  className="w-full h-10 px-3.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-100 focus:border-slate-400 focus:bg-white transition-all cursor-pointer shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
                 />
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">
+              {/* Note / Reason */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                   Note / Reason (Optional)
                 </label>
                 <input
@@ -1440,26 +1493,54 @@ export const PortfolioPage: React.FC = () => {
                   placeholder="e.g. Trip expenses"
                   value={newDebtNote}
                   onChange={(e) => setNewDebtNote(e.target.value)}
-                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-400 focus:bg-white placeholder:text-slate-400"
+                  className="w-full h-10 px-3.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-100 focus:border-slate-400 focus:bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-all"
                 />
               </div>
 
-              <label className="flex items-center gap-2 pt-1 cursor-pointer select-none">
+              {/* Due Date Reminder Toggle Card */}
+              <label
+                className={cn(
+                  "flex items-center justify-between p-3 rounded-2xl border transition-all cursor-pointer select-none",
+                  newDebtEnableReminder
+                    ? "bg-sky-50/60 border-sky-200/80 text-sky-950 shadow-xs"
+                    : "bg-slate-50/50 border-slate-200/70 text-slate-600 hover:bg-slate-50"
+                )}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className={cn(
+                      "w-7 h-7 rounded-xl flex items-center justify-center transition-colors shrink-0",
+                      newDebtEnableReminder
+                        ? "bg-sky-100 text-sky-600"
+                        : "bg-slate-200/60 text-slate-400"
+                    )}
+                  >
+                    <BellRing size={14} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-semibold leading-tight">
+                      Due date reminder
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-normal">
+                      Alert when repayment date arrives
+                    </span>
+                  </div>
+                </div>
                 <input
                   type="checkbox"
                   checked={newDebtEnableReminder}
                   onChange={(e) => setNewDebtEnableReminder(e.target.checked)}
-                  className="w-4 h-4 rounded bg-slate-50 border-slate-300 text-slate-900 focus:ring-0 cursor-pointer"
+                  className="w-4 h-4 rounded text-sky-600 focus:ring-sky-500 border-slate-300 cursor-pointer"
                 />
-                <span className="text-xs font-medium text-slate-700">Set automatic due date reminder</span>
               </label>
             </div>
 
+            {/* Submit Action */}
             <button
               type="submit"
-              className="w-full h-10 mt-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold text-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shadow-xs"
+              className="w-full h-11 mt-1 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold text-xs transition-all duration-150 active:scale-[0.98] cursor-pointer shadow-xs hover:shadow flex items-center justify-center gap-1.5"
             >
-              Save Debt Record
+              <span>Save Debt Record</span>
             </button>
           </form>
         </div>

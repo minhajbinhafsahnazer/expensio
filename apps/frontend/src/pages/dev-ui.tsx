@@ -18,7 +18,12 @@ import {
   type ReceiptItem,
 } from "@expenseflow/ui";
 
+import { useToast } from "../core/providers/ToastProvider";
+import { useNavigate } from "react-router-dom";
+
 export const DevUIPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { toast, showToast } = useToast();
   // Demo States
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [currencyVal, setCurrencyVal] = useState<number | undefined>(undefined);
@@ -27,7 +32,6 @@ export const DevUIPage: React.FC = () => {
     { id: "1", icon: "☕", label: "Coffee", amount: 220 },
     { id: "2", icon: "🍔", label: "Burger", amount: 450 },
   ]);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const quickChoices = [
     { id: "coffee", icon: "☕", label: "Coffee", amount: 220 },
@@ -51,7 +55,7 @@ export const DevUIPage: React.FC = () => {
     };
     setReceiptItems((prev) => [...prev, newItem]);
     setCurrencyVal(undefined);
-    showToast(`Added ${choice.label} ${currencyVal}`);
+    toast.success(`Added ${choice.label} ₹${currencyVal}`);
   };
 
   const handleDone = () => {
@@ -59,14 +63,12 @@ export const DevUIPage: React.FC = () => {
       handleAddAnother();
     }
     setIsSheetOpen(false);
-    showToast("Expense saved. [Undo]");
-  };
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage((current) => (current === msg ? null : current));
-    }, 5000);
+    toast.success("Expense saved successfully", {
+      action: {
+        label: "Undo",
+        onClick: () => toast.info("Expense addition reverted"),
+      },
+    });
   };
 
   return (
@@ -201,6 +203,73 @@ export const DevUIPage: React.FC = () => {
               />
             </Stack>
           </section>
+
+          {/* Section 4: Mobile-Friendly Toast Notifications */}
+          <section className="bg-white dark:bg-slate-900/40 p-5 rounded-lg border border-slate-200 dark:border-slate-800">
+            <Heading level={2} className="mb-1">
+              4. Mobile Toast Notifications (Dynamic Island / Pill)
+            </Heading>
+            <Text className="text-xs text-slate-500 mb-4">
+              Swipe up to dismiss, top safe-area positioning, frosted glass pill design, haptics & action buttons.
+            </Text>
+            <Divider />
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mt-4">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => toast.success("Personal details updated successfully")}
+              >
+                Success Toast
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => toast.error("Cannot sync while offline")}
+              >
+                Error Toast
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => toast.warning("Please enter an expense amount")}
+              >
+                Warning Toast
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => toast.info("Export data feature coming soon")}
+              >
+                Info Toast
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  toast.success("Expense ₹450 deleted", {
+                    action: {
+                      label: "Undo",
+                      onClick: () => toast.info("Expense restored!"),
+                    },
+                  })
+                }
+              >
+                Action / Undo
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  toast.info(
+                    "Smart analysis waiting for you — map your custom categories once and forget!",
+                    { duration: 5000 }
+                  )
+                }
+              >
+                Long Message
+              </Button>
+            </div>
+          </section>
         </Stack>
       </Container>
 
@@ -259,19 +328,7 @@ export const DevUIPage: React.FC = () => {
         </Stack>
       </CaptureSheet>
 
-      {/* Apple Undo Toast Pattern */}
-      {toastMessage && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-5 py-3 rounded-full shadow-xl flex items-center gap-4 text-sm font-medium animate-in fade-in slide-in-from-bottom duration-200">
-          <span>{toastMessage}</span>
-          <button
-            type="button"
-            onClick={() => setToastMessage(null)}
-            className="text-emerald-400 dark:text-emerald-600 font-bold hover:underline select-none"
-          >
-            Undo
-          </button>
-        </div>
-      )}
+
     </AppShell>
   );
 };

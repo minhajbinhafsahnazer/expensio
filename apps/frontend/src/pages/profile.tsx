@@ -8,13 +8,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AppShell, Container, Stack, BottomNav, cn } from "@expenseflow/ui";
 import { OnboardingTour } from "../components/OnboardingTour";
 import { CURRENCIES, CurrencyCode } from "../constants/currencies";
+import { useToast } from "../core/providers/ToastProvider";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { user, logout, updateUser } = useAuth();
   const { pendingCount, syncStatus, isOnline, flush } = useSyncEngine();
   const queryClient = useQueryClient();
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { showToast, toast } = useToast();
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [isManualSyncing, setIsManualSyncing] = useState(false);
@@ -75,12 +76,6 @@ export default function ProfilePage() {
     }
   };
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 3000);
-  };
 
   const toggleMultiCurrency = () => {
     const next = !multiCurrency;
@@ -971,12 +966,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-4 py-2 rounded-full shadow-lg text-sm font-medium animate-in slide-in-from-bottom-5">
-          {toastMessage}
-        </div>
-      )}
 
       {/* Floating Bottom Nav (Home Only) */}
       <BottomNav

@@ -26,6 +26,8 @@ import PrivacyPage from './pages/privacy';
 import { LoginPage } from './pages/auth/login';
 import { RegisterPage } from './pages/auth/register';
 
+import { ToastProvider } from './core/providers/ToastProvider';
+
 const App = () => (
   <BrowserRouter>
     <TourProvider>
@@ -58,7 +60,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <QueryProvider>
       <AuthProvider>
         <SyncProvider>
-          <App />
+          <ToastProvider>
+            <App />
+          </ToastProvider>
         </SyncProvider>
       </AuthProvider>
     </QueryProvider>

@@ -12,6 +12,7 @@ import { SectionInfoModal } from "../components/SectionInfoModal";
 import { ReviewTransactionsModal } from "../components/ReviewTransactionsModal";
 import { EditTransactionCategoryModal } from "../components/EditTransactionCategoryModal";
 import { AnalyticsPageSkeleton } from "../components/AnalyticsSkeleton";
+import { useToast } from "../core/providers/ToastProvider";
 
 type Timeframe = "today" | "week" | "month" | "custom";
 
@@ -67,9 +68,7 @@ export default function AnalyticsPage() {
 
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
-  const [categoryError, setCategoryError] = useState<string | null>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
+  const { showToast, toast } = useToast();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -85,11 +84,6 @@ export default function AnalyticsPage() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isCustomMonthOpen]);
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
 
   const { mutate: createCategory, isPending: isCreatingCategory } = useCreateCustomCategory();
 
@@ -531,12 +525,7 @@ export default function AnalyticsPage() {
         </div>
       )}
       
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[100] bg-slate-900/95 backdrop-blur text-white px-5 py-3 rounded-2xl shadow-xl text-sm font-medium animate-in slide-in-from-bottom-5 duration-300 max-w-[90vw] sm:max-w-sm w-max text-center leading-relaxed">
-          {toastMessage}
-        </div>
-      )}
+
     </AppShell>
   );
 }

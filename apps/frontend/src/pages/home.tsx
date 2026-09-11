@@ -28,6 +28,7 @@ import { useSyncEngine } from "../core/sync/SyncEngine";
 import { queue } from "../core/sync/db";
 import { useAuth } from "../core/providers/AuthContext";
 import { CURRENCIES } from "../constants/currencies";
+import { useToast } from "../core/providers/ToastProvider";
 import { formatCurrency } from "../utils/currency";
 
 export interface ExpenseEntry {
@@ -121,7 +122,7 @@ export const HomePage: React.FC = () => {
   }, []);
 
   const [receiptItems, setReceiptItems] = useState<(ReceiptItem & { spentAtISO?: string })[]>([]);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { showToast, toast } = useToast();
   const [isTourOpen, setIsTourOpen] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -282,12 +283,6 @@ export const HomePage: React.FC = () => {
   const todayTotal = todayGroup ? todayGroup.total : 0;
 
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 3000);
-  };
 
   const getDateLabel = () => {
     if (selectedDateTag === "Today") return "Today";
@@ -1241,12 +1236,7 @@ export const HomePage: React.FC = () => {
         </Stack>
       </CaptureSheet>
 
-      {/* Apple Undo Toast Pattern */}
-      {toastMessage && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-5 py-3 rounded-full shadow-xl flex items-center gap-4 text-sm font-medium animate-in fade-in slide-in-from-bottom duration-200">
-          <span>{toastMessage}</span>
-        </div>
-      )}
+
     </AppShell>
   );
 };

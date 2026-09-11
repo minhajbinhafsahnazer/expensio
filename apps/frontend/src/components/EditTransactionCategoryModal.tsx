@@ -7,6 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useCustomCategories } from '../core/api/categories';
 import { useAuth } from "../core/providers/AuthContext";
 import { formatCurrency } from "../utils/currency";
+import { useToast } from '../core/providers/ToastProvider';
 
 const CATEGORIES = [
   "Food",
@@ -39,6 +40,7 @@ export function EditTransactionCategoryModal({ isOpen, onClose, transaction }: E
   const { user } = useAuth();
   const userCurrency = user?.currency || "INR";
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: customCategories } = useCustomCategories();
 
@@ -70,10 +72,11 @@ export function EditTransactionCategoryModal({ isOpen, onClose, transaction }: E
       // Invalidate relevant queries
       await queryClient.invalidateQueries({ queryKey: ['analytics'] });
       await queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      toast.success(`Category updated to "${selectedCategory}"`);
       onClose();
     } catch (error) {
       console.error('Failed to update transaction', error);
-      // Ideally show a toast here
+      toast.error('Failed to update category. Please try again.');
     } finally {
       setIsSaving(false);
     }
