@@ -69,7 +69,7 @@ export default function AnalyticsPage() {
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [categoryError, setCategoryError] = useState<string | null>(null);
-  const { showToast, toast } = useToast();
+  const { showToast } = useToast();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
