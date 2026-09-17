@@ -1,7 +1,46 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.cdnfonts.com/css/google-sans-2');
+@import url('https://fonts.cdnfonts.com/css/product-sans');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.font-google-sans {
+  font-family: 'Google Sans', 'Product Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* Rare Kinetic Arc Loading Circle */
+@keyframes rareSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rareArc {
+  0% {
+    stroke-dasharray: 2 92;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 64 92;
+    stroke-dashoffset: -18;
+  }
+  100% {
+    stroke-dasharray: 2 92;
+    stroke-dashoffset: -94;
+  }
+}
+
+.animate-rare-spin {
+  animation: rareSpin 2.2s linear infinite;
+}
+
+.animate-rare-arc {
+  animation: rareArc 1.7s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
 
 :root {
   --background: #f6f6f6;

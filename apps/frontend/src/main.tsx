@@ -10,7 +10,7 @@ import { SyncProvider } from './core/sync/SyncEngine';
 import { TourProvider } from './core/providers/TourProvider';
 
 // Layout
-import { ProtectedRoute } from './components/layout/ProtectedRoute';
+import { ProtectedRoute, ExpensioLoadingScreen } from './components/layout/ProtectedRoute';
 
 // Pages — authenticated
 import { HomePage } from './pages/home';
@@ -38,6 +38,8 @@ const App = () => (
         <Route path="/privacy"  element={<PrivacyPage />} />
         <Route path="/login"    element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/preview/loader" element={<ExpensioLoadingScreen />} />
+        <Route path="/dev/loader" element={<ExpensioLoadingScreen />} />
 
         {/* ── Protected routes ───────────────────────────────────── */}
         <Route element={<ProtectedRoute />}>
