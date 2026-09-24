@@ -1,7 +1,7 @@
 /**
  * logger.ts
  *
- * Minimal structured logger for Expencio backend.
+ * Minimal structured logger for Wazn backend.
  * Mirrors the Perslace Loguru pattern:
  *
  *   22:53:41 | INFO     | GET /api/v1/financial-goals - 200 (91ms)

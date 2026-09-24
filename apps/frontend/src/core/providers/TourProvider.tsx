@@ -31,7 +31,7 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isActive, setIsActive] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const tourStorageKey = user ? `expencio_tour_seen_${user.id}` : "expencio_tour_seen_guest";
+  const tourStorageKey = user ? `wazn_tour_seen_${user.id}` : "wazn_tour_seen_guest";
 
   const startTour = () => {
     setIsActive(true);

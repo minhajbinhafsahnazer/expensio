@@ -6,7 +6,7 @@ This guide provides step-by-step instructions for developers to manually verify 
 
 1. Ensure the backend and frontend are running (`docker-compose up -d` and `npm run dev`).
 2. Log into the application (or register a new user).
-3. Open the main **ExpenseFlow** dashboard.
+3. Open the main **Wazn** dashboard.
 
 ---
 
@@ -34,7 +34,7 @@ This guide provides step-by-step instructions for developers to manually verify 
 1. Create a transaction with description: `ivy` and amount `50`.
    - **Expected**: Appears as **Uncategorized** in the transaction list.
 2. Navigate to the **Analytics** page.
-   - **Expected**: You should see a banner stating **"✨ Teach Expensio 1 thing"** (or a similar prompt indicating transactions need review).
+   - **Expected**: You should see a banner stating **"✨ Teach Wazn 1 thing"** (or a similar prompt indicating transactions need review).
 
 ---
 
@@ -42,7 +42,7 @@ This guide provides step-by-step instructions for developers to manually verify 
 
 **Goal**: Verify that a user can map an unknown term to a specific category, and that it retroactively and proactively applies.
 
-1. Click on the **"Teach Expensio"** prompt on the Analytics page.
+1. Click on the **"Teach Wazn"** prompt on the Analytics page.
 2. In the Review Modal, locate the `ivy` term.
 3. Select **Travel** from the category dropdown for `ivy`.
 4. Click **Save Mappings**.
@@ -67,7 +67,7 @@ This guide provides step-by-step instructions for developers to manually verify 
    - `randomword` disappears from the review modal.
    - Refresh the page and confirm `randomword` does not reappear.
 6. **Persistence Test**: Create another transaction with description `randomword` and amount `10`.
-   - **Expected**: It is categorized as **Uncategorized**, but it does **not** trigger a new "Teach Expensio" prompt.
+   - **Expected**: It is categorized as **Uncategorized**, but it does **not** trigger a new "Teach Wazn" prompt.
 
 ---
 

@@ -6,7 +6,7 @@ import { auditLogs } from '../../database/schema/audit_logs';
 import { eq, and } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 
-// In Expensio, ULIDs are used often. We'll use a simple fallback if no ULID lib is present,
+// In Wazn, ULIDs are used often. We'll use a simple fallback if no ULID lib is present,
 // but UUID or a custom string is fine based on schema (`id: text('id')`).
 // Let's use a time-sorted string for basic ULID-like behavior.
 function generateId(): string {

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 
 const NUDGES = [
-  "With Expencio, your personal income tracking is made simple",
+  "With Wazn, understand and balance your money effortlessly",
   "Your data is protected with RLS-grade security",
   "Offline-first sync ensures your data is always accessible"
 ];
@@ -27,7 +27,7 @@ export default function WelcomePage() {
         <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white shadow-md flex items-center justify-center bg-slate-950 mt-1">
           <img
             src="/logo.jpg"
-            alt="Expencio"
+            alt="Wazn"
             className="w-full h-full object-cover scale-[1.35]"
           />
         </div>
@@ -35,19 +35,19 @@ export default function WelcomePage() {
         {/* Brand & Tagline */}
         <div className="flex flex-col gap-1.5">
           <h1 className="text-xl sm:text-2xl font-bold text-slate-950 tracking-tight">
-            Welcome to Expencio
+            Welcome to Wazn
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed max-w-[260px] mx-auto">
-            Personal income & expense tracking, made simple.
+            Measure. Understand. Balance.
           </p>
         </div>
 
         {/* Notion / Linear Passby Nudge Pill */}
-        <div className="w-full p-3 bg-gradient-to-r from-sky-50/80 to-indigo-50/80 border border-sky-100/70 rounded-2xl flex items-center gap-2.5 shadow-xs text-left">
+        <div className="w-full p-3 bg-gradient-to-r from-purple-50/80 to-indigo-50/80 border border-purple-100/70 rounded-2xl flex items-center gap-2.5 shadow-xs text-left">
           <div className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center shrink-0 border border-white bg-white shadow-xs">
             <img
               src="/logo.jpg"
-              alt="Expencio"
+              alt="Wazn"
               className="w-full h-full object-cover scale-[1.35]"
             />
           </div>
@@ -66,7 +66,7 @@ export default function WelcomePage() {
           <button
             type="button"
             onClick={() => navigate("/register")}
-            className="w-full py-3 bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer group"
+            className="w-full py-3 bg-purple-600 hover:bg-purple-700 shadow-sm shadow-purple-200 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer group"
           >
             <span>Get Started</span>
             <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />

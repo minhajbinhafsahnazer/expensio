@@ -1,7 +1,7 @@
 /**
  * core/sync/SyncEngine.tsx
  *
- * Offline-first sync engine for ExpenseFlow.
+ * Offline-first sync engine for Wazn.
  *
  * Security guarantees:
  *   - All queue reads are scoped to the authenticated user's ID.

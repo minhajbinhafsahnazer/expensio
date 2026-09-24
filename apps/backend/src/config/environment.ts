@@ -41,7 +41,7 @@ const envSchema = z.object({
 
   // ─── Secrets — required in production, safe defaults in development ────────
   DATABASE_URL: requiredInProd(
-    'postgresql://postgres:postgres@db:5432/expenseflow'
+    'postgresql://postgres:postgres@db:5432/wazn'
   ),
 
   JWT_SECRET: requiredInProd(

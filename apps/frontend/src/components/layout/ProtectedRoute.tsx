@@ -12,17 +12,17 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../../core/providers/AuthContext';
 
 const NUDGES = [
-  "Track your goals from Expensio",
+  "Track your goals with Wazn",
   "Add multiple transactions from a single screen",
   "Smart analysis waiting for you, map once and forget",
   "Track and manage your debts, add reminders",
   "Take your tour",
-  "Expensio is made for the one who's lazy enough to track things one by one",
-  "Our simple UI makes it easy for anyone to handle your expenses",
+  "Wazn is crafted for effortless financial clarity and balance",
+  "Measure. Understand. Balance.",
   "Expenses at your fingertips"
 ];
 
-export function ExpensioLoadingScreen() {
+export function WaznLoadingScreen() {
   const [nudgeIndex, setNudgeIndex] = useState(0);
 
   useEffect(() => {
@@ -135,7 +135,7 @@ export function ExpensioLoadingScreen() {
       {/* Foreground Content */}
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 max-w-md sm:max-w-xl select-none">
         <h1 className="font-google-sans text-4xl sm:text-6xl font-bold tracking-tight bg-gradient-to-r from-[#d8b4fe] via-[#a855f7] to-[#6366f1] bg-clip-text text-transparent mb-2 sm:mb-3 pb-1">
-          Expensio
+          Wazn
         </h1>
         <div className="min-h-[48px] sm:min-h-[32px] flex items-center justify-center">
           <AnimatePresence mode="wait">
@@ -199,7 +199,7 @@ export function ProtectedRoute() {
 
   // While the startup session check is in-flight (or in preview mode), render the minimal loader
   if (status === 'loading' || isPreview) {
-    return <ExpensioLoadingScreen />;
+    return <WaznLoadingScreen />;
   }
 
   if (status === 'unauthenticated') {
@@ -212,7 +212,7 @@ export function ProtectedRoute() {
       <div className="min-h-screen w-full bg-[#08080a] text-white flex items-center justify-center select-none overflow-hidden font-sans">
         <div className="flex flex-col items-center justify-center text-center px-6 max-w-sm select-none">
           <h2 className="text-3xl font-bold tracking-tight text-white mb-2">
-            Expensio
+            Wazn
           </h2>
           <p className="text-sm text-zinc-400 mb-6">
             Can't connect right now. Your local expenses are safe.
@@ -232,3 +232,5 @@ export function ProtectedRoute() {
 }
 
 export default ProtectedRoute;
+
+export const ExpensioLoadingScreen = WaznLoadingScreen;

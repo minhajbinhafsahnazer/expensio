@@ -1,12 +1,12 @@
-# ExpenseFlow: Production-Grade Project Architecture Design
+# Wazn: Production-Grade Project Architecture Design
 
-This document details the architectural blueprint for **ExpenseFlow**, a mobile-only, offline-first Progressive Web App (PWA) expense tracker designed to scale into a multi-tenant financial management SaaS.
+This document details the architectural blueprint for **Wazn**, a mobile-only, offline-first Progressive Web App (PWA) expense tracker designed to scale into a multi-tenant financial management SaaS.
 
 ---
 
 ## 1. Architectural Philosophy
 
-ExpenseFlow uses **Clean Architecture** principles combined with **Feature-Driven Development (FDD)** on the frontend, and a **Modular Monolith** pattern on the backend.
+Wazn uses **Clean Architecture** principles combined with **Feature-Driven Development (FDD)** on the frontend, and a **Modular Monolith** pattern on the backend.
 
 ```mermaid
 graph TD
@@ -389,7 +389,7 @@ export class TransactionService {
 
 ### Virtual Scrolling & Keyset Pagination
 
-*   **Keyset (Cursor-Based) Pagination**: Offsets degrade database read performance at scale. ExpenseFlow uses cursor-based pagination for transaction historical queries:
+*   **Keyset (Cursor-Based) Pagination**: Offsets degrade database read performance at scale. Wazn uses cursor-based pagination for transaction historical queries:
     ```sql
     SELECT * FROM transactions 
     WHERE user_id = $1 AND created_at < $2 

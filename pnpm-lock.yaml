@@ -93,18 +93,18 @@ importers:
 
   apps/frontend:
     dependencies:
-      '@expenseflow/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
-      '@expenseflow/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
       '@tanstack/react-query':
         specifier: ^5.37.1
         version: 5.101.4(react@19.2.8)
       '@tanstack/react-virtual':
         specifier: ^3.5.0
         version: 3.14.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@wazn/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      '@wazn/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       clsx:
         specifier: ^2.1.1
         version: 2.1.1

@@ -19,10 +19,10 @@ export default defineConfig({
         disabled: true,
       },
       manifest: {
-        name: "Expencio",
-        short_name: "Expencio",
-        description: "Mobile-First, Offline-First Expense Tracker",
-        theme_color: "#0f172a",
+        name: "Wazn",
+        short_name: "Wazn",
+        description: "Measure. Understand. Balance. AI-Powered Personal Finance",
+        theme_color: "#9333ea",
         background_color: "#0f172a",
         display: "standalone",
         orientation: "portrait",
@@ -45,7 +45,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@wazn/ui": path.resolve(__dirname, "../../packages/ui/src"),
       "@expenseflow/ui": path.resolve(__dirname, "../../packages/ui/src"),
+      "@wazn/shared": path.resolve(__dirname, "../../packages/shared/src"),
       "@expenseflow/shared": path.resolve(__dirname, "../../packages/shared/src"),
       "clsx": path.resolve(__dirname, "./node_modules/clsx"),
       "tailwind-merge": path.resolve(__dirname, "./node_modules/tailwind-merge"),

@@ -5,7 +5,7 @@ import { useAuth } from "../core/providers/AuthContext";
 import { useSyncEngine } from "../core/sync/SyncEngine";
 import { queue } from "../core/sync/db";
 import { useQueryClient } from "@tanstack/react-query";
-import { AppShell, Container, Stack, BottomNav, cn } from "@expenseflow/ui";
+import { AppShell, Container, Stack, BottomNav, cn } from "@wazn/ui";
 import { OnboardingTour } from "../components/OnboardingTour";
 import { CURRENCIES, CurrencyCode } from "../constants/currencies";
 import { useToast } from "../core/providers/ToastProvider";
@@ -27,11 +27,11 @@ export default function ProfilePage() {
   const [confirmText, setConfirmText] = useState("");
   const [isSubmittingToggle, setIsSubmittingToggle] = useState(false);
   const [multiCurrency, setMultiCurrency] = useState(() => {
-    return localStorage.getItem("expencio_multi_currency") === "true";
+    return (localStorage.getItem("wazn_multi_currency") ?? localStorage.getItem("expencio_multi_currency")) === "true";
   });
-  const superiorCategory = user?.superiorCategoriesEnabled ?? (localStorage.getItem("expencio_superior_category") === "true");
+  const superiorCategory = user?.superiorCategoriesEnabled ?? ((localStorage.getItem("wazn_superior_category") ?? localStorage.getItem("expencio_superior_category")) === "true");
   const [multiBankAccounts, setMultiBankAccounts] = useState(() => {
-    return localStorage.getItem("expencio_multi_bank_accounts") === "true";
+    return (localStorage.getItem("wazn_multi_bank_accounts") ?? localStorage.getItem("expencio_multi_bank_accounts")) === "true";
   });
 
   const [isEditDetailsOpen, setIsEditDetailsOpen] = useState(false);
@@ -80,13 +80,13 @@ export default function ProfilePage() {
   const toggleMultiCurrency = () => {
     const next = !multiCurrency;
     setMultiCurrency(next);
-    localStorage.setItem("expencio_multi_currency", String(next));
+    localStorage.setItem("wazn_multi_currency", String(next));
     showToast(next ? "Multi-currency mode enabled" : "Multi-currency mode disabled");
   };
 
   const toggleSuperiorCategory = async () => {
     const next = !superiorCategory;
-    localStorage.setItem("expencio_superior_category", String(next));
+    localStorage.setItem("wazn_superior_category", String(next));
     try {
       await updateUser({ superiorCategoriesEnabled: next });
       showToast(next ? "Superior categories enabled" : "Superior categories disabled");
@@ -110,7 +110,7 @@ export default function ProfilePage() {
   const toggleMultiBankAccounts = () => {
     const next = !multiBankAccounts;
     setMultiBankAccounts(next);
-    localStorage.setItem("expencio_multi_bank_accounts", String(next));
+    localStorage.setItem("wazn_multi_bank_accounts", String(next));
     showToast(next ? "Multiple bank accounts enabled" : "Multiple bank accounts disabled");
   };
 
@@ -167,14 +167,14 @@ export default function ProfilePage() {
   const handleSignOut = async () => {
     if (pendingCount > 0) {
       const confirmed = window.confirm(
-        `Sign out of Expencio?\n\n` +
+        `Sign out of Wazn?\n\n` +
         `You have ${pendingCount} expense${pendingCount === 1 ? '' : 's'} that haven't synced yet.\n\n` +
         `They're saved on this device and will sync automatically the next time you sign in.\n\n` +
         `Sign out anyway?`
       );
       if (!confirmed) return;
     } else {
-      const confirmed = window.confirm("Sign out of Expencio?");
+      const confirmed = window.confirm("Sign out of Wazn?");
       if (!confirmed) return;
     }
     await logout();
@@ -384,24 +384,24 @@ export default function ProfilePage() {
               </div>
             </section>
 
-            {/* SHARE EXPENSIO */}
+            {/* SHARE WAZN */}
             <section className="flex flex-col gap-1">
               <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2 px-2">
                 Community
               </h3>
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col transition-all">
                 <a
-                  href="whatsapp://send?text=Check%20out%20Expensio!%0A-%20Track%20your%20expenses%0A-%20Track%20your%20debts%0A-%20Manage%20your%20finance%0A-%20Analyze%20your%20spending%0A%0Ahttps://expensio-flax.vercel.app/welcome"
+                  href="whatsapp://send?text=Check%20out%20Wazn!%0A-%20Measure%20and%20balance%20your%20expenses%0A-%20Track%20your%20wealth%20and%20debts%0A-%20AI-powered%20financial%20intelligence%0A%0Ahttps://wazn.app/welcome"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-between p-4 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center shrink-0 shadow-sm border border-slate-200 bg-white">
-                      <img src="/logo.jpg" alt="Expencio Logo" className="w-full h-full object-cover scale-[1.35]" />
+                      <img src="/logo.jpg" alt="Wazn Logo" className="w-full h-full object-cover scale-[1.35]" />
                     </div>
                     <div>
-                      <div className="text-sm font-bold text-slate-900">Love Expensio?</div>
+                      <div className="text-sm font-bold text-slate-900">Love Wazn?</div>
                       <div className="text-xs font-medium text-slate-500">Share with a friend</div>
                     </div>
                   </div>

@@ -6,7 +6,7 @@ import { useAuth } from "../core/providers/AuthContext";
 import { formatCurrency } from "../utils/currency";
 import { useCreateBulkMappings } from "../core/api/transactions";
 import { useCustomCategories, useCreateCustomCategory } from "../core/api/categories";
-import { cn } from "@expenseflow/ui";
+import { cn } from "@wazn/ui";
 
 const CATEGORIES = [
   "Food",
@@ -119,12 +119,12 @@ export const ReviewTransactionsModal: React.FC<ReviewTransactionsModalProps> = (
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h3 className="text-base font-bold text-slate-900 tracking-tight">Teach Expensio</h3>
+                <h3 className="text-base font-bold text-slate-900 tracking-tight">Teach Wazn</h3>
                 <SectionInfoModal
                   content={{
-                    title: "Teach Expensio",
+                    title: "Teach Wazn",
                     subtitle: "Smart Categorization Engine",
-                    description: "Review and map unrecognized transactions to categories. Expensio learns from your choices to auto-categorize future spending automatically.",
+                    description: "Review and map unrecognized transactions to categories. Wazn learns from your choices to auto-categorize future spending automatically.",
                   }}
                   theme="auto"
                   align="center"

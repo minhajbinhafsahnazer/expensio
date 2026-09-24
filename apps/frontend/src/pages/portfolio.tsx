@@ -14,7 +14,7 @@ import {
   GoalCardSkeleton,
   DebtCardSkeleton,
   cn,
-} from "@expenseflow/ui";
+} from "@wazn/ui";
 import { 
   useFinancialGoals, 
   useCreateGoal, 
@@ -474,7 +474,7 @@ export const PortfolioPage: React.FC = () => {
           </div>
 
           <div className="w-9 h-9 rounded-xl border border-slate-200/80 flex items-center justify-center overflow-hidden shrink-0">
-            <img src="/logo.jpg" alt="Expencio Logo" className="w-full h-full object-cover scale-[1.35]" />
+            <img src="/logo.jpg" alt="Wazn Logo" className="w-full h-full object-cover scale-[1.35]" />
           </div>
         </Container>
       </header>

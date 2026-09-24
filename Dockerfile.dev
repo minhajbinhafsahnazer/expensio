@@ -27,4 +27,4 @@ COPY . .
 RUN pnpm install --frozen-lockfile
 
 # The command will be provided by docker-compose.yml, but setting a default
-CMD ["pnpm", "--filter", "expenseflow-backend", "dev"]
+CMD ["pnpm", "--filter", "wazn-backend", "dev"]

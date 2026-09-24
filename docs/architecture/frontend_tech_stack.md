@@ -1,6 +1,6 @@
-# Expensio Frontend Tech Stack
+# Wazn Frontend Tech Stack
 
-This document outlines the architecture and technology stack used in the Expensio frontend application (`apps/frontend`).
+This document outlines the architecture and technology stack used in the Wazn frontend application (`apps/frontend`).
 
 ## Core Framework & Language
 - **React 18**: The core UI library.

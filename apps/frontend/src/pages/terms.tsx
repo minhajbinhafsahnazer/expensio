@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { ChevronLeft, ShieldCheck, FileText } from "lucide-react";
-import { AppShell, Container } from "@expenseflow/ui";
+import { AppShell, Container } from "@wazn/ui";
 
 export default function TermsPage() {
   const navigate = useNavigate();
@@ -19,9 +19,9 @@ export default function TermsPage() {
             </button>
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full overflow-hidden border border-slate-200 shadow-xs flex items-center justify-center bg-slate-950">
-                <img src="/logo.jpg" alt="Expencio" className="w-full h-full object-cover scale-[1.35]" />
+                <img src="/logo.jpg" alt="Wazn" className="w-full h-full object-cover scale-[1.35]" />
               </div>
-              <span className="text-sm font-bold text-slate-900 tracking-tight">Expencio</span>
+              <span className="text-sm font-bold text-slate-900 tracking-tight">Wazn</span>
             </div>
           </div>
 
@@ -55,14 +55,14 @@ export default function TermsPage() {
               <section className="space-y-2">
                 <h2 className="text-sm sm:text-base font-bold text-slate-900">1. Acceptance of Terms</h2>
                 <p>
-                  By creating an account or using Expencio ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.
+                  By creating an account or using Wazn ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.
                 </p>
               </section>
 
               <section className="space-y-2">
                 <h2 className="text-sm sm:text-base font-bold text-slate-900">2. Description of Service</h2>
                 <p>
-                  Expencio provides personal finance tracking, category analysis, income/expense logging, and offline data synchronization. Expencio is a tool for personal record-keeping and does not provide formal tax, legal, or financial advice.
+                  Wazn provides personal finance tracking, category analysis, income/expense logging, and offline data synchronization. Wazn is a tool for personal record-keeping and does not provide formal tax, legal, or financial advice.
                 </p>
               </section>
 
@@ -76,21 +76,21 @@ export default function TermsPage() {
               <section className="space-y-2">
                 <h2 className="text-sm sm:text-base font-bold text-slate-900">4. Privacy & Data Ownership</h2>
                 <p>
-                  Your financial data belongs exclusively to you. Expencio enforces multi-tenant row-level security (RLS) and zero-trust data isolation. We do not sell, rent, or monetize your personal transaction records to third parties.
+                  Your financial data belongs exclusively to you. Wazn enforces multi-tenant row-level security (RLS) and zero-trust data isolation. We do not sell, rent, or monetize your personal transaction records to third parties.
                 </p>
               </section>
 
               <section className="space-y-2">
                 <h2 className="text-sm sm:text-base font-bold text-slate-900">5. Offline Sync & Availability</h2>
                 <p>
-                  Expencio utilizes an offline-first architecture to store local entries on your device before syncing to server storage. While we take maximum effort to ensure 99.9% availability, local cache backups are recommended.
+                  Wazn utilizes an offline-first architecture to store local entries on your device before syncing to server storage. While we take maximum effort to ensure 99.9% availability, local cache backups are recommended.
                 </p>
               </section>
 
               <section className="space-y-2">
                 <h2 className="text-sm sm:text-base font-bold text-slate-900">6. Termination</h2>
                 <p>
-                  You may stop using the Service and request data deletion at any time via your account settings. Expencio reserves the right to suspend accounts that violate security boundaries or attempt malicious system access.
+                  You may stop using the Service and request data deletion at any time via your account settings. Wazn reserves the right to suspend accounts that violate security boundaries or attempt malicious system access.
                 </p>
               </section>
             </div>
@@ -115,7 +115,7 @@ export default function TermsPage() {
 
       {/* Footer */}
       <footer className="w-full border-t border-slate-200/80 bg-white py-4 text-center text-xs text-slate-400">
-        © {new Date().getFullYear()} Expencio. All rights reserved.
+        © {new Date().getFullYear()} Wazn. All rights reserved.
       </footer>
     </AppShell>
   );

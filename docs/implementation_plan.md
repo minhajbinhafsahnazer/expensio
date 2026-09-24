@@ -58,7 +58,7 @@ We will immediately implement Phase 1.2 as requested.
 
 # Roadmap & Product Philosophy: Frictionless Capture (Phase 1.3+)
 
-Following the completion of foundational infrastructure in Phase 1.2, ExpenseFlow adopts an **80% product feature / 20% infrastructure** balance. Tooling complexity is capped to focus exclusively on delivering core user value.
+Following the completion of foundational infrastructure in Phase 1.2, Wazn adopts an **80% product feature / 20% infrastructure** balance. Tooling complexity is capped to focus exclusively on delivering core user value.
 
 ## 1. Core Product Promise & Vision
 * **The Product Promise**: Recording an expense will always be **Fast, Predictable, Offline-capable, Recoverable, Interruptible, and Simple**.

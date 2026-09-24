@@ -1,5 +1,5 @@
 import React from "react";
-import { Skeleton } from "@expenseflow/ui";
+import { Skeleton } from "@wazn/ui";
 
 export const AnalyticsPageSkeleton: React.FC = () => {
   const barHeights = [20, 45, 60, 85, 30, 70, 95, 40, 50, 65, 30, 80, 55, 40];

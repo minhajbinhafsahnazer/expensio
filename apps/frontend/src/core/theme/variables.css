@@ -46,8 +46,10 @@
   --background: #f6f6f6;
   --foreground: #0f172a;
 
-  --primary: #000000;
-  --primary-hover: #171717;
+  --primary: #9333ea;
+  --primary-hover: #7e22ce;
+  --primary-light: #f5f3ff;
+  
   --accent-emerald: #10b981;
 
   --card: #ffffff;

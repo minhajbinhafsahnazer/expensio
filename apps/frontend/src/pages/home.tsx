@@ -18,7 +18,7 @@ import {
   DateSlider,
   type ReceiptItem,
   cn,
-} from "@expenseflow/ui";
+} from "@wazn/ui";
 import { useQuery, useQueries, useQueryClient } from "@tanstack/react-query";
 import { type TransactionCreatePayload } from "../core/api/expense-sessions";
 import { TransactionsApi } from "../core/api/transactions";
@@ -134,7 +134,7 @@ export const HomePage: React.FC = () => {
   // Auto-start guided onboarding tour for first-time logged-in users
   useEffect(() => {
     if (user?.id) {
-      const tourKey = `expencio_tour_seen_${user.id}`;
+      const tourKey = `wazn_tour_seen_${user.id}`;
       const tourSeen = localStorage.getItem(tourKey);
       if (!tourSeen) {
         setIsTourOpen(true);
@@ -607,9 +607,9 @@ export const HomePage: React.FC = () => {
           <div className="flex items-center justify-between px-2 pb-2">
             <div className="font-bold text-slate-900 flex items-center gap-2 tracking-tight">
               <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shrink-0 shadow-sm border border-slate-200">
-                <img src="/logo.jpg" alt="Expencio Logo" className="w-full h-full object-cover scale-[1.35]" />
+                <img src="/logo.jpg" alt="Wazn Logo" className="w-full h-full object-cover scale-[1.35]" />
               </div>
-              <span className="text-lg">Expencio</span>
+              <span className="text-lg">Wazn</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -1061,7 +1061,7 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* 2b. Superior Category Combobox (Advanced Feature) */}
-          {(user?.superiorCategoriesEnabled ?? (localStorage.getItem("expencio_superior_category") === "true")) && (
+          {(user?.superiorCategoriesEnabled ?? ((localStorage.getItem("wazn_superior_category") ?? localStorage.getItem("expencio_superior_category")) === "true")) && (
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">

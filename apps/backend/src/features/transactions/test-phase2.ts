@@ -29,7 +29,7 @@ async function runTest() {
   await transactionsService.createBulkMappings(userA, [
     { normalizedTerm: 'train ticket', category: 'Travel', ignored: false }
   ]);
-  console.log(`User A teaches Expensio: "train ticket" -> Travel`);
+  console.log(`User A teaches Wazn: "train ticket" -> Travel`);
   
   const res2 = await TransactionClassifier.classify('train ticket', userA);
   console.log(`User A enters new "train ticket" => Category: ${res2.category} (Source: ${res2.categorySource}, Conf: ${res2.categoryConfidence})`);

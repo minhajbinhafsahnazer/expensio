@@ -6,7 +6,7 @@ import { ApiError } from '../../core/api/client';
 import { CURRENCIES, CurrencyCode } from '../../constants/currencies';
 
 const NUDGES = [
-  "With Expencio, your personal income tracking is made simple",
+  "With Wazn, understand and balance your money effortlessly",
   "Your data is protected with RLS-grade security",
   "Offline-first sync guarantees privacy and fast access"
 ];
@@ -73,9 +73,9 @@ export function RegisterPage() {
         {/* Logo / Brand */}
         <div style={styles.brand}>
           <div style={styles.logoMark}>
-            <img src="/logo.jpg" alt="Expencio Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.35)' }} />
+            <img src="/logo.jpg" alt="Wazn Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.35)' }} />
           </div>
-          <span style={styles.logoText}>Expencio</span>
+          <span style={styles.logoText}>Wazn</span>
         </div>
 
         <h1 style={styles.heading}>Create account</h1>
@@ -168,7 +168,7 @@ export function RegisterPage() {
               className="w-4 h-4 mt-0.5 rounded border-slate-300 text-slate-900 focus:ring-slate-900 cursor-pointer shrink-0"
             />
             <label htmlFor="reg-terms" className="text-[11px] text-slate-500 cursor-pointer leading-tight">
-              I agree to Expencio's{" "}
+              I agree to Wazn's{" "}
               <Link to="/terms" target="_blank" className="text-slate-800 font-semibold underline hover:text-indigo-600 transition-colors">Terms of Service</Link> &{" "}
               <Link to="/privacy" target="_blank" className="text-slate-800 font-semibold underline hover:text-indigo-600 transition-colors">Privacy Policy</Link>.
             </label>
@@ -225,7 +225,7 @@ export function RegisterPage() {
           }}>
             <img
               src="/logo.jpg"
-              alt="Expencio"
+              alt="Wazn"
               style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.35)' }}
             />
           </div>
@@ -346,7 +346,7 @@ const styles: Record<string, React.CSSProperties> = {
   button: {
     marginTop: '4px',
     padding: '11px 16px',
-    background: '#000000',
+    background: '#9333ea',
     color: '#ffffff',
     border: 'none',
     borderRadius: '10px',
@@ -363,7 +363,7 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: 'center',
   },
   link: {
-    color: '#000000',
+    color: '#9333ea',
     fontWeight: '500',
     textDecoration: 'none',
   },

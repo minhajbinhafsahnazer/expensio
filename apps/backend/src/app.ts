@@ -83,8 +83,8 @@ export async function buildApp() {
   await app.register(swagger, {
     openapi: {
       info: {
-        title:       'ExpenseFlow API',
-        description: 'Production-grade OpenAPI documentation for ExpenseFlow.',
+        title:       'Wazn API',
+        description: 'Production-grade OpenAPI documentation for Wazn.',
         version:     '1.0.0',
       },
       servers: [{ url: '/api/v1' }],

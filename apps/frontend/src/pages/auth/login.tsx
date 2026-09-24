@@ -2,7 +2,7 @@
  * pages/auth/login.tsx
  *
  * Minimal, flat login page. No gradients, no glassmorphism.
- * Follows the Inter/Notion-inspired design already used throughout ExpenseFlow.
+ * Follows the Inter/Notion-inspired design already used throughout Wazn.
  *
  * - Generic "Invalid email or password" on failure (no account enumeration)
  * - Redirects to the originally requested page after login
@@ -14,7 +14,7 @@ import { useAuth } from '../../core/providers/AuthContext';
 import { ApiError } from '../../core/api/client';
 
 const NUDGES = [
-  "With Expencio, your personal income tracking is made simple",
+  "With Wazn, understand and balance your money effortlessly",
   "Your data is protected with RLS-grade security",
   "Zero-trust isolation guarantees privacy for every account"
 ];
@@ -65,9 +65,9 @@ export function LoginPage() {
         {/* Logo / Brand */}
         <div style={styles.brand}>
           <div style={styles.logoMark}>
-            <img src="/logo.jpg" alt="Expencio Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.35)' }} />
+            <img src="/logo.jpg" alt="Wazn Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.35)' }} />
           </div>
-          <span style={styles.logoText}>Expencio</span>
+          <span style={styles.logoText}>Wazn</span>
         </div>
 
         <h1 style={styles.heading}>Sign in</h1>
@@ -156,7 +156,7 @@ export function LoginPage() {
           }}>
             <img
               src="/logo.jpg"
-              alt="Expencio"
+              alt="Wazn"
               style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.35)' }}
             />
           </div>
@@ -184,7 +184,7 @@ export function LoginPage() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 // Plain inline styles to remain completely framework-agnostic.
-// Matches the flat, light, Inter-based design of the rest of ExpenseFlow.
+// Matches the flat, light, Inter-based design of the rest of Wazn.
 
 const styles: Record<string, React.CSSProperties> = {
   root: {
@@ -275,7 +275,7 @@ const styles: Record<string, React.CSSProperties> = {
   button: {
     marginTop: '4px',
     padding: '11px 16px',
-    background: '#000000',
+    background: '#9333ea',
     color: '#ffffff',
     border: 'none',
     borderRadius: '10px',
@@ -292,7 +292,7 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: 'center',
   },
   link: {
-    color: '#000000',
+    color: '#9333ea',
     fontWeight: '500',
     textDecoration: 'none',
   },

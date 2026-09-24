@@ -64,7 +64,7 @@ function getRefreshPromise(): Promise<boolean> {
     // Use Web Locks API to serialize refresh requests across multiple tabs.
     // This prevents the "Refresh token is invalid or has been revoked" 401 error
     // when two tabs get a 401 simultaneously and try to refresh at the exact same millisecond.
-    _refreshPromise = navigator.locks.request('expensio_refresh_lock', async () => {
+    _refreshPromise = navigator.locks.request('wazn_refresh_lock', async () => {
       return await doRefresh();
     }).catch(() => false).finally(() => {
       _refreshPromise = null;

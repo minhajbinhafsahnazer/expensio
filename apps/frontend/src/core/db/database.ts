@@ -30,13 +30,13 @@ export interface OutboxEntry {
   retryCount: number;
 }
 
-export class ExpenseFlowDatabase extends Dexie {
+export class WaznDatabase extends Dexie {
   transactions!: Table<Transaction, string>;
   categories!: Table<Category, string>;
   outbox!: Table<OutboxEntry, string>;
 
   constructor() {
-    super('ExpenseFlowDB');
+    super('WaznDB');
     
     this.version(1).stores({
       transactions: 'id, date, categoryId, type, synced, createdAt',
@@ -46,4 +46,5 @@ export class ExpenseFlowDatabase extends Dexie {
   }
 }
 
-export const db = new ExpenseFlowDatabase();
+export const db = new WaznDatabase();
+export type ExpenseFlowDatabase = WaznDatabase;

@@ -1,7 +1,7 @@
-# ExpenseFlow Product Philosophy & UI Architecture
+# Wazn Product Philosophy & UI Architecture
 
 ## 1. The Product Promise
-ExpenseFlow promises that recording an expense will always be:
+Wazn promises that recording an expense will always be:
 * **Fast**
 * **Predictable**
 * **Offline-capable**
@@ -24,7 +24,7 @@ If the answer is no, it does not belong in the core experience.
 ---
 
 ## 3. The "Notes App" Mental Model & UX Commandments
-ExpenseFlow is **not a banking app or a fintech dashboard**. It is a **note-taking app for money**—sharing the design DNA of **Apple Notes, Google Keep, and Apple Reminders**.
+Wazn is **not a banking app or a fintech dashboard**. It is a **note-taking app for money**—sharing the design DNA of **Apple Notes, Google Keep, and Apple Reminders**.
 
 ### Key Design Mandates:
 * **No Banking Clutter**: No fake credit cards, no "Send/Request/Add Fund" buttons, no decorative wallet widgets.

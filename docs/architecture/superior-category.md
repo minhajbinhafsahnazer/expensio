@@ -92,7 +92,7 @@ export function getAnalyticsCategoryKey(
 
 ## 5. Offline Sync & Idempotency Pipeline
 
-The Superior Category field is fully supported across ExpenseFlow's offline-first queue and synchronization engine.
+The Superior Category field is fully supported across Wazn's offline-first queue and synchronization engine.
 
 ```
 UI Capture Sheet

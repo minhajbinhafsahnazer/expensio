@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Loader2 } from 'lucide-react';
-import { Button } from '@expenseflow/ui';
+import { Button } from '@wazn/ui';
 import { TransactionsApi } from '../core/api/transactions';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCustomCategories } from '../core/api/categories';

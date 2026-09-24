@@ -12,7 +12,7 @@ export const transactionTypeEnum = pgEnum('transaction_type', ['expense', 'incom
  * - user_id is denormalized (also available via session_id → user_id) for direct RLS filtering
  *   without a join. Critical for Row Level Security policies.
  * - category stored as TEXT (not FK to a categories table):
- *     → ExpenseFlow has a fixed small set of categories in the UI
+ *     → Wazn has a fixed small set of categories in the UI
  *     → Avoids a join on every transaction read
  *     → Categories table can be added later if users need custom/colored categories
  * - currency per-transaction (not just per-user) supports future multi-currency tracking

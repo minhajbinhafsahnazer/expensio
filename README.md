@@ -1,13 +1,13 @@
-# Expensio Monorepo
+# Wazn Monorepo
 
-Welcome to the Expensio monorepo. This project is structured using `pnpm` workspaces and `Turborepo` to manage the frontend, backend, and shared code.
+Welcome to the Wazn monorepo. This project is structured using `pnpm` workspaces and `Turborepo` to manage the frontend, backend, and shared code.
 
 ## 🏗️ Architecture
 
 ```text
 GitHub
    │
-   └── expensio monorepo
+   └── wazn monorepo
           │
           ├── apps/frontend (Vite + React)
           │       ↓
@@ -68,8 +68,8 @@ Targeted execution:
 The frontend is designed to be deployed to Vercel with zero-configuration.
 - **Framework Preset**: Vite
 - **Root Directory**: `apps/frontend`
-- **Build Command**: `pnpm turbo run build --filter expenseflow-frontend` (Vercel automatically detects Turbo)
-- **Environment Variables**: Make sure to set `VITE_API_URL` to your production backend URL (e.g., `https://api.expensio.com/api/v1`).
+- **Build Command**: `pnpm turbo run build --filter wazn-frontend` (Vercel automatically detects Turbo)
+- **Environment Variables**: Make sure to set `VITE_API_URL` to your production backend URL (e.g., `https://api.wazn.app/api/v1`).
 
 ### 2. Backend (Render)
 The backend is configured via `render.yaml`.

@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { ChevronLeft, ShieldCheck, Lock } from "lucide-react";
-import { AppShell, Container } from "@expenseflow/ui";
+import { AppShell, Container } from "@wazn/ui";
 
 export default function PrivacyPage() {
   const navigate = useNavigate();
@@ -19,9 +19,9 @@ export default function PrivacyPage() {
             </button>
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full overflow-hidden border border-slate-200 shadow-xs flex items-center justify-center bg-slate-950">
-                <img src="/logo.jpg" alt="Expencio" className="w-full h-full object-cover scale-[1.35]" />
+                <img src="/logo.jpg" alt="Wazn" className="w-full h-full object-cover scale-[1.35]" />
               </div>
-              <span className="text-sm font-bold text-slate-900 tracking-tight">Expencio</span>
+              <span className="text-sm font-bold text-slate-900 tracking-tight">Wazn</span>
             </div>
           </div>
 
@@ -55,7 +55,7 @@ export default function PrivacyPage() {
               <section className="space-y-2">
                 <h2 className="text-sm sm:text-base font-bold text-slate-900">1. Commitment to Privacy</h2>
                 <p>
-                  At Expencio, we believe your personal financial data is strictly private. This Privacy Policy outlines what minimal information we collect, how it is stored, and your control over your data.
+                  At Wazn, we believe your personal financial data is strictly private. This Privacy Policy outlines what minimal information we collect, how it is stored, and your control over your data.
                 </p>
               </section>
 
@@ -112,7 +112,7 @@ export default function PrivacyPage() {
 
       {/* Footer */}
       <footer className="w-full border-t border-slate-200/80 bg-white py-4 text-center text-xs text-slate-400">
-        © {new Date().getFullYear()} Expencio. All rights reserved.
+        © {new Date().getFullYear()} Wazn. All rights reserved.
       </footer>
     </AppShell>
   );

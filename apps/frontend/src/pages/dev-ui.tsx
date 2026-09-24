@@ -16,7 +16,7 @@ import {
   PrimaryInteractionButton,
   CaptureSheet,
   type ReceiptItem,
-} from "@expenseflow/ui";
+} from "@wazn/ui";
 
 import { useToast } from "../core/providers/ToastProvider";
 

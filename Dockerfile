@@ -20,7 +20,7 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 # Compile the backend TypeScript → dist/
-RUN pnpm --filter expenseflow-backend run build
+RUN pnpm --filter wazn-backend run build
 
 # ─── Stage 2: Production image ─────────────────────────────────────────────────
 # Lean image — only the compiled output and production dependencies.

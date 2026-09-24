@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, PieChart, Calendar, CheckCircle2, ChevronDown, Plus, X } from "lucide-react";
-import { AppShell, Container, Stack, cn } from "@expenseflow/ui";
+import { AppShell, Container, Stack, cn } from "@wazn/ui";
 import { motion } from "framer-motion";
 import { useAnalytics } from "../core/api/analytics";
 import { useCreateCustomCategory } from "../core/api/categories";
@@ -139,7 +139,7 @@ export default function AnalyticsPage() {
             {/* The Nudge */}
             <div className="flex items-center gap-3 bg-gradient-to-r from-sky-50/80 to-indigo-50/80 border border-sky-100/60 rounded-xl p-3 shadow-sm mx-1">
               <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shrink-0 shadow-sm border border-white">
-                <img src="/logo.jpg" alt="Expencio Logo" className="w-full h-full object-cover scale-[1.35]" />
+                <img src="/logo.jpg" alt="Wazn Logo" className="w-full h-full object-cover scale-[1.35]" />
               </div>
               <p className="text-[13px] text-slate-700 font-medium leading-relaxed">
                 Let's dive into your spending analytics and track exactly where your money goes.
@@ -154,10 +154,10 @@ export default function AnalyticsPage() {
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-white/20 overflow-hidden flex items-center justify-center shrink-0 border border-white/20">
-                    <img src="/logo.jpg" alt="Expensio Logo" className="w-full h-full object-cover scale-[1.35] grayscale mix-blend-luminosity opacity-90" />
+                    <img src="/logo.jpg" alt="Wazn Logo" className="w-full h-full object-cover scale-[1.35] grayscale mix-blend-luminosity opacity-90" />
                   </div>
                   <div className="text-left">
-                    <p className="text-sm font-bold text-white tracking-tight">Teach Expensio {needsReviewData.total} thing{needsReviewData.total !== 1 ? 's' : ''}</p>
+                    <p className="text-sm font-bold text-white tracking-tight">Teach Wazn {needsReviewData.total} thing{needsReviewData.total !== 1 ? 's' : ''}</p>
                     <p className="text-[11px] text-indigo-100 font-medium opacity-90">Tap to categorize unknown transactions</p>
                   </div>
                 </div>

@@ -1,7 +1,7 @@
 # Offline Sync Architecture
 
 ## Overview
-ExpenseFlow is an offline-first application. The local device acts as the primary source of truth for all immediate reads and writes.
+Wazn is an offline-first application. The local device acts as the primary source of truth for all immediate reads and writes.
 
 ## Flow Pipeline
 1. **User Action**: User creates an expense.

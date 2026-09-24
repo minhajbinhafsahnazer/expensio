@@ -42,7 +42,7 @@ export interface PendingTransaction {
   attempts: number;
 }
 
-interface ExpenseFlowDB {
+export interface WaznDB {
   'pending-transactions': {
     key: string;                 // clientGeneratedId
     value: PendingTransaction;
@@ -55,12 +55,12 @@ interface ExpenseFlowDB {
 
 // ─── Singleton DB connection ──────────────────────────────────────────────────
 
-let _db: IDBPDatabase<ExpenseFlowDB> | null = null;
+let _db: IDBPDatabase<WaznDB> | null = null;
 
-export async function getDb(): Promise<IDBPDatabase<ExpenseFlowDB>> {
+export async function getDb(): Promise<IDBPDatabase<WaznDB>> {
   if (_db) return _db;
 
-  _db = await openDB<ExpenseFlowDB>('expenseflow', 2, {
+  _db = await openDB<WaznDB>('wazn', 2, {
     upgrade(db, oldVersion, _newVersion, transaction) {
       if (oldVersion < 1) {
         // v1 → create the store with queuedAt index
@@ -171,3 +171,5 @@ export const queue = {
     await txn.done;
   },
 };
+
+export type ExpenseFlowDB = WaznDB;

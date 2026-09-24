@@ -24,7 +24,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ isOpen, onClose 
   const [currentStep, setCurrentStep] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
 
-  const tourStorageKey = user ? `expencio_tour_seen_${user.id}` : "expencio_tour_seen_guest";
+  const tourStorageKey = user ? `wazn_tour_seen_${user.id}` : "wazn_tour_seen_guest";
 
   // Prevent background scroll when tour modal is open
   useEffect(() => {
