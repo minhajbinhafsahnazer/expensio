@@ -6,6 +6,7 @@ import { useSyncEngine } from "../core/sync/SyncEngine";
 import { queue } from "../core/sync/db";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell, Container, Stack, BottomNav, cn } from "@wazn/ui";
+import { DesktopHeader } from "../components/layout/DesktopHeader";
 import { OnboardingTour } from "../components/OnboardingTour";
 import { CURRENCIES, CurrencyCode } from "../constants/currencies";
 import { useToast } from "../core/providers/ToastProvider";
@@ -226,10 +227,13 @@ export default function ProfilePage() {
       {/* Onboarding Tour Modal */}
       <OnboardingTour isOpen={isTourOpen} onClose={() => setIsTourOpen(false)} />
 
-      <Container size="sm" className="pt-12 sm:pt-14">
+      {/* Desktop Navigation Bar */}
+      <DesktopHeader />
+
+      <Container size="2xl" className="pt-4 md:pt-8 max-w-md md:max-w-3xl lg:max-w-5xl">
         <Stack gap={6}>
-          {/* Header */}
-          <div className="flex items-center gap-2 px-2 pb-6">
+          {/* Header (Mobile Only) */}
+          <div className="flex md:hidden items-center gap-2 px-2 pb-6">
             <button
               onClick={() => navigate("/")}
               className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors -ml-2 text-slate-600"
@@ -239,202 +243,194 @@ export default function ProfilePage() {
             <h1 className="text-xl font-bold tracking-tight text-slate-900">Profile</h1>
           </div>
 
-          {/* Profile Hero */}
-          <div className="flex flex-col items-center justify-center pt-2 pb-8">
-            <div className="w-20 h-20 bg-slate-900 text-white rounded-full flex items-center justify-center text-3xl font-bold shadow-md mb-4 uppercase">
-              {user?.fullName ? (user.fullName.split(' ').map(n => n[0]).join('').slice(0, 2)) : (user?.email ? (user.email.split('@')[0].charAt(0) + user.email.split('@')[0].slice(-1)).toUpperCase() : "MJ")}
-            </div>
-            <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-              {user?.fullName || (user?.email ? user.email.split("@")[0] : "User")}
-            </h2>
-            <p className="text-sm text-slate-500 font-medium">
-              {user?.email || "minhaj@example.com"}
-            </p>
-          </div>
-
-          {/* Sections */}
-          <div className="flex flex-col gap-6 px-2">
+          {/* Responsive 2-Column Grid on Desktop */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full">
             
-            {/* PERSONAL INFORMATION */}
-            <section className="flex flex-col gap-1">
-              <div className="flex items-center justify-between px-2 mb-2">
-                <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase">
-                  Personal Information
-                </h3>
-                <button
-                  type="button"
-                  onClick={handleOpenEditDetails}
-                  className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer"
-                >
-                  <Edit2 size={13} />
-                  Edit Details
-                </button>
-              </div>
-
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col divide-y divide-slate-100">
-                {/* Full Name */}
-                <div className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-3 text-slate-700 font-medium text-sm">
-                    <User size={18} className="text-slate-400" />
-                    Full Name
-                  </div>
-                  <span className={cn("text-sm font-semibold", user?.fullName ? "text-slate-900" : "text-slate-400 font-normal")}>
-                    {user?.fullName || "Not added"}
-                  </span>
+            {/* Column 1 (5 cols): Profile Hero + Personal Info + Community */}
+            <div className="lg:col-span-5 flex flex-col gap-6 w-full">
+              {/* Profile Hero */}
+              <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs flex flex-col items-center justify-center text-center">
+                <div className="w-20 h-20 bg-slate-900 text-white rounded-full flex items-center justify-center text-3xl font-bold shadow-md mb-4 uppercase">
+                  {user?.fullName ? (user.fullName.split(' ').map(n => n[0]).join('').slice(0, 2)) : (user?.email ? (user.email.split('@')[0].charAt(0) + user.email.split('@')[0].slice(-1)).toUpperCase() : "MJ")}
                 </div>
-
-                {/* Email */}
-                <div className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-3 text-slate-700 font-medium text-sm">
-                    <Mail size={18} className="text-slate-400" />
-                    Email
-                  </div>
-                  <span className="text-sm font-semibold text-slate-900 truncate max-w-[200px] sm:max-w-none">
-                    {user?.email || "Not added"}
-                  </span>
-                </div>
-
-                {/* Phone Number */}
-                <div className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-3 text-slate-700 font-medium text-sm">
-                    <Phone size={18} className="text-slate-400" />
-                    Phone Number
-                  </div>
-                  <span className={cn("text-sm font-semibold", user?.phoneNumber ? "text-slate-900" : "text-slate-400 font-normal")}>
-                    {user?.phoneNumber || "Not added"}
-                  </span>
+                <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+                  {user?.fullName || (user?.email ? user.email.split("@")[0] : "User")}
+                </h2>
+                <p className="text-sm text-slate-500 font-medium truncate max-w-full">
+                  {user?.email || "minhaj@example.com"}
+                </p>
+                <div className="mt-3 px-3 py-1 bg-slate-100 rounded-full text-[11px] font-semibold text-slate-600 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span>Active Account</span>
                 </div>
               </div>
-            </section>
 
-            {/* PREFERENCES */}
-            <section className="flex flex-col gap-1">
-              <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2 px-2">
-                Preferences & Help
-              </h3>
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-                <button
-                  type="button"
-                  onClick={() => setIsTourOpen(true)}
-                  className="flex items-center justify-between p-4 border-b border-slate-100 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left cursor-pointer"
-                >
-                  <div className="flex items-center gap-3 text-slate-700 font-medium">
-                    <Sparkles size={18} className="text-indigo-500" />
-                    Guided App Tour
-                  </div>
-                  <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100">
-                    Replay Tour
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowCurrencyModal(true)}
-                  className="w-full flex items-center justify-between p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer"
-                >
-                  <div className="flex items-center gap-3 text-slate-700 font-medium">
-                    <span className="w-5 h-5 flex items-center justify-center text-slate-400">
-                      {CURRENCIES.find(c => c.code === user?.currency)?.symbol || "₹"}
+              {/* PERSONAL INFORMATION */}
+              <section className="flex flex-col gap-1">
+                <div className="flex items-center justify-between px-2 mb-2">
+                  <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase">
+                    Personal Information
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={handleOpenEditDetails}
+                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer"
+                  >
+                    <Edit2 size={13} />
+                    Edit Details
+                  </button>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col divide-y divide-slate-100">
+                  {/* Full Name */}
+                  <div className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3 text-slate-700 font-medium text-sm">
+                      <User size={18} className="text-slate-400" />
+                      Full Name
+                    </div>
+                    <span className={cn("text-sm font-semibold", user?.fullName ? "text-slate-900" : "text-slate-400 font-normal")}>
+                      {user?.fullName || "Not added"}
                     </span>
-                    Currency
                   </div>
-                  <div className="flex items-center gap-1.5 text-slate-900 font-semibold text-sm">
-                    {CURRENCIES.find(c => c.code === user?.currency)?.name || "Indian Rupee"}
-                    <ChevronDown size={16} className="text-slate-400" />
-                  </div>
-                </button>
-                <div className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-3 text-slate-700 font-medium">
-                    <Palette size={18} className="text-slate-400" />
-                    Appearance
-                  </div>
-                  <span className="text-sm font-semibold text-slate-900">
-                    System
-                  </span>
-                </div>
-              </div>
-            </section>
 
-            {/* DATA */}
-            <section className="flex flex-col gap-1">
-              <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2 px-2">
-                Data
-              </h3>
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-                <button
-                  onClick={() => showToast("Export data feature coming soon")}
-                  className="flex items-center justify-between p-4 border-b border-slate-100 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left"
-                >
-                  <div className="flex items-center gap-3 text-slate-700 font-medium">
-                    <Download size={18} className="text-slate-400" />
-                    Export Data
-                  </div>
-                  <span className="text-slate-400">
-                    <ChevronLeft size={16} className="rotate-180" />
-                  </span>
-                </button>
-                <div className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-3 text-slate-700 font-medium">
-                    <RefreshCw size={18} className="text-slate-400" />
-                    Sync Status
-                  </div>
-                  <span className="text-sm font-semibold">
-                    {renderSyncStatus()}
-                  </span>
-                </div>
-              </div>
-            </section>
-
-            {/* SHARE WAZN */}
-            <section className="flex flex-col gap-1">
-              <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2 px-2">
-                Community
-              </h3>
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col transition-all">
-                <a
-                  href="whatsapp://send?text=Check%20out%20Wazn!%0A-%20Measure%20and%20balance%20your%20expenses%0A-%20Track%20your%20wealth%20and%20debts%0A-%20AI-powered%20financial%20intelligence%0A%0Ahttps://wazn.app/welcome"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between p-4 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center shrink-0 shadow-sm border border-slate-200 bg-white">
-                      <img src="/logo.jpg" alt="Wazn Logo" className="w-full h-full object-cover scale-[1.35]" />
+                  {/* Email */}
+                  <div className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3 text-slate-700 font-medium text-sm">
+                      <Mail size={18} className="text-slate-400" />
+                      Email
                     </div>
-                    <div>
-                      <div className="text-sm font-bold text-slate-900">Love Wazn?</div>
-                      <div className="text-xs font-medium text-slate-500">Share with a friend</div>
+                    <span className="text-sm font-semibold text-slate-900 truncate max-w-[200px] sm:max-w-none">
+                      {user?.email || "Not added"}
+                    </span>
+                  </div>
+
+                  {/* Phone Number */}
+                  <div className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3 text-slate-700 font-medium text-sm">
+                      <Phone size={18} className="text-slate-400" />
+                      Phone Number
                     </div>
+                    <span className={cn("text-sm font-semibold", user?.phoneNumber ? "text-slate-900" : "text-slate-400 font-normal")}>
+                      {user?.phoneNumber || "Not added"}
+                    </span>
                   </div>
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-50 text-emerald-600">
-                    <Heart size={14} className="fill-emerald-500 text-emerald-500" />
-                  </div>
-                </a>
-              </div>
-            </section>
+                </div>
+              </section>
 
-            {/* ACCOUNT */}
-            <section className="flex flex-col gap-1">
-              <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2 px-2">
-                Account
-              </h3>
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-                <button
-                  onClick={handleSignOut}
-                  className="flex items-center justify-between p-4 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left"
-                >
-                  <div className="flex items-center gap-3 text-rose-600 font-medium">
-                    <LogOut size={18} className="text-rose-500" />
-                    Sign Out
-                  </div>
-                </button>
-              </div>
-            </section>
+              {/* SHARE WAZN / COMMUNITY */}
+              <section className="flex flex-col gap-1">
+                <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2 px-2">
+                  Community
+                </h3>
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col transition-all">
+                  <a
+                    href="whatsapp://send?text=Check%20out%20Wazn!%0A-%20Measure%20and%20balance%20your%20expenses%0A-%20Track%20your%20wealth%20and%20debts%0A-%20AI-powered%20financial%20intelligence%0A%0Ahttps://wazn.app/welcome"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-4 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center shrink-0 shadow-sm border border-slate-200 bg-white">
+                        <img src="/logo.jpg" alt="Wazn Logo" className="w-full h-full object-cover scale-[1.35]" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-slate-900">Love Wazn?</div>
+                        <div className="text-xs font-medium text-slate-500">Share with a friend</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-50 text-emerald-600">
+                      <Heart size={14} className="fill-emerald-500 text-emerald-500" />
+                    </div>
+                  </a>
+                </div>
+              </section>
+            </div>
 
-            {/* ADVANCED SECTION */}
-            <section className="flex flex-col gap-1 mt-2">
-              <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2 px-2">
-                Advanced
-              </h3>
+            {/* Column 2 (7 cols): Preferences, Data, Advanced, Account */}
+            <div className="lg:col-span-7 flex flex-col gap-6 w-full">
+
+              {/* PREFERENCES */}
+              <section className="flex flex-col gap-1">
+                <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2 px-2">
+                  Preferences & Help
+                </h3>
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                  <button
+                    type="button"
+                    onClick={() => setIsTourOpen(true)}
+                    className="flex items-center justify-between p-4 border-b border-slate-100 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3 text-slate-700 font-medium">
+                      <Sparkles size={18} className="text-indigo-500" />
+                      Guided App Tour
+                    </div>
+                    <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100">
+                      Replay Tour
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrencyModal(true)}
+                    className="w-full flex items-center justify-between p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3 text-slate-700 font-medium">
+                      <span className="w-5 h-5 flex items-center justify-center text-slate-400">
+                        {CURRENCIES.find(c => c.code === user?.currency)?.symbol || "₹"}
+                      </span>
+                      Currency
+                    </div>
+                    <div className="flex items-center gap-1.5 text-slate-900 font-semibold text-sm">
+                      {CURRENCIES.find(c => c.code === user?.currency)?.name || "Indian Rupee"}
+                      <ChevronDown size={16} className="text-slate-400" />
+                    </div>
+                  </button>
+                  <div className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3 text-slate-700 font-medium">
+                      <Palette size={18} className="text-slate-400" />
+                      Appearance
+                    </div>
+                    <span className="text-sm font-semibold text-slate-900">
+                      System
+                    </span>
+                  </div>
+                </div>
+              </section>
+
+              {/* DATA */}
+              <section className="flex flex-col gap-1">
+                <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2 px-2">
+                  Data
+                </h3>
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                  <button
+                    onClick={() => showToast("Export data feature coming soon")}
+                    className="flex items-center justify-between p-4 border-b border-slate-100 hover:bg-slate-50 active:bg-slate-100 transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-3 text-slate-700 font-medium">
+                      <Download size={18} className="text-slate-400" />
+                      Export Data
+                    </div>
+                    <span className="text-slate-400">
+                      <ChevronLeft size={16} className="rotate-180" />
+                    </span>
+                  </button>
+                  <div className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3 text-slate-700 font-medium">
+                      <RefreshCw size={18} className="text-slate-400" />
+                      Sync Status
+                    </div>
+                    <span className="text-sm font-semibold">
+                      {renderSyncStatus()}
+                    </span>
+                  </div>
+                </div>
+              </section>
+
+              {/* ADVANCED SECTION */}
+              <section className="flex flex-col gap-1">
+                <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2 px-2">
+                  Advanced
+                </h3>
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col transition-all">
                 {/* Main Accordion Trigger */}
                 <button
@@ -591,9 +587,34 @@ export default function ProfilePage() {
               </div>
             </section>
 
+            {/* ACCOUNT */}
+            <section className="flex flex-col gap-1">
+              <h3 className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-2 px-2">
+                Account
+              </h3>
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center justify-between p-4 hover:bg-rose-50/50 active:bg-rose-100/50 transition-colors text-left cursor-pointer group"
+                >
+                  <div className="flex items-center gap-3 text-rose-600 font-medium">
+                    <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center group-hover:bg-rose-100 transition-colors">
+                      <LogOut size={16} />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-rose-600">Sign Out</div>
+                      <div className="text-xs text-rose-400">Log out of your account on this device</div>
+                    </div>
+                  </div>
+                  <ChevronLeft size={16} className="rotate-180 text-rose-300 group-hover:text-rose-500 transition-colors" />
+                </button>
+              </div>
+            </section>
           </div>
-        </Stack>
-      </Container>
+
+        </div>
+      </Stack>
+    </Container>
 
       {/* Superior Category Confirmation Modal */}
       {showSuperiorConfirmModal && (
@@ -967,8 +988,9 @@ export default function ProfilePage() {
       )}
 
 
-      {/* Floating Bottom Nav (Home Only) */}
+      {/* Floating Bottom Nav (Home Only) - Mobile Only */}
       <BottomNav
+        className="md:hidden"
         activeTab="profile"
         variant="hero"
         items={[

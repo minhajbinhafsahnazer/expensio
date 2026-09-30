@@ -20,6 +20,8 @@ import financialGoalsRoutes from './features/financial-goals/financial-goals.rou
 import { budgetsRoutes } from './features/budgets/budgets.routes.js';
 import debtsRoutes from './features/debts/debts.routes.js';
 import { categoriesRoutes } from './features/categories/categories.routes.js';
+import { intelligenceRoutes } from './features/intelligence/intelligence.routes.js';
+import aiRoutes from './features/ai/ai.routes.js';
 
 export async function buildApp() {
   const app = Fastify({
@@ -252,6 +254,8 @@ export async function buildApp() {
     api.register(budgetsRoutes,          { prefix: '/budgets' });
     api.register(debtsRoutes,            { prefix: '/debts' });
     api.register(categoriesRoutes,       { prefix: '/categories' });
+    api.register(intelligenceRoutes,      { prefix: '/intelligence' });
+    api.register(aiRoutes,                { prefix: '/ai' });
   }, { prefix: '/api/v1' });
 
   return app;

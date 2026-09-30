@@ -2,6 +2,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, PieChart, Calendar, CheckCircle2, ChevronDown, Plus, X } from "lucide-react";
 import { AppShell, Container, Stack, cn } from "@wazn/ui";
+import { DesktopHeader } from "../components/layout/DesktopHeader";
 import { motion } from "framer-motion";
 import { useAnalytics } from "../core/api/analytics";
 import { useCreateCustomCategory } from "../core/api/categories";
@@ -109,10 +110,13 @@ export default function AnalyticsPage() {
 
   return (
     <AppShell className="bg-slate-50 min-h-screen pb-28 selection:bg-slate-900 selection:text-white">
-      <Container size="sm" className="pt-12 sm:pt-14">
+      {/* Desktop Navigation Bar */}
+      <DesktopHeader />
+
+      <Container size="2xl" className="pt-4 md:pt-8 max-w-md md:max-w-3xl lg:max-w-7xl">
         <Stack gap={6}>
-          {/* Header & Nudge */}
-          <div className="flex flex-col gap-3 px-2 pb-2">
+          {/* Header & Nudge (Mobile Only) */}
+          <div className="flex md:hidden flex-col gap-3 px-2 pb-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <button
@@ -146,7 +150,7 @@ export default function AnalyticsPage() {
               </p>
             </div>
 
-            {/* Needs Review Banner */}
+            {/* Needs Review Banner (Mobile) */}
             {needsReviewData && needsReviewData.total > 0 && (
               <button
                 onClick={() => setIsReviewModalOpen(true)}
@@ -168,7 +172,12 @@ export default function AnalyticsPage() {
             )}
           </div>
 
-          <section className="bg-white border border-slate-200/80 rounded-2xl p-6 flex flex-col gap-5 shadow-xs">
+          {/* Responsive 2-Column Grid on Desktop */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full">
+            
+            {/* Column 1 (7 cols): Timeframe Filter + Summary Stats + Daily Chart */}
+            <div className="lg:col-span-7 flex flex-col gap-6 w-full">
+              <section className="bg-white border border-slate-200/80 rounded-2xl p-6 flex flex-col gap-5 shadow-xs">
             {/* Header + Timeframe / Custom Filter Pills */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
               <div className="flex gap-2 items-center flex-wrap relative">
@@ -342,17 +351,45 @@ export default function AnalyticsPage() {
                     })}
                   </div>
                 </div>
+              </>
+            )}
+              </section>
+            </div>
 
+            {/* Column 2 (5 cols): Teach Wazn Banner + Where Money Went / Category Breakdown */}
+            <div className="lg:col-span-5 flex flex-col gap-6 w-full">
+              {/* Needs Review Banner (Desktop - Right Top) */}
+              {needsReviewData && needsReviewData.total > 0 && (
+                <button
+                  onClick={() => setIsReviewModalOpen(true)}
+                  className="hidden md:flex items-center justify-between bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-4 shadow-md border border-indigo-400/50 cursor-pointer hover:shadow-lg transition-all group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-white/20 overflow-hidden flex items-center justify-center shrink-0 border border-white/20">
+                      <img src="/logo.jpg" alt="Wazn Logo" className="w-full h-full object-cover scale-[1.35] grayscale mix-blend-luminosity opacity-90" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-bold text-white tracking-tight">Teach Wazn {needsReviewData.total} thing{needsReviewData.total !== 1 ? 's' : ''}</p>
+                      <p className="text-[11px] text-indigo-100 font-medium opacity-90">Click to categorize unknown transactions</p>
+                    </div>
+                  </div>
+                  <div className="text-white opacity-80 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all">
+                    <ChevronLeft size={20} className="rotate-180" />
+                  </div>
+                </button>
+              )}
+
+              <section className="bg-white border border-slate-200/80 rounded-2xl p-6 flex flex-col gap-5 shadow-xs">
                 {/* Where Money Went */}
-                <div className="flex flex-col gap-3 pt-3">
-                  <div className="flex items-center justify-between pb-1 pt-4">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between pb-1">
                     <h2 className="text-sm font-bold text-slate-900 tracking-tight flex items-center gap-2">
                       <PieChart size={16} className="text-purple-600" /> Where Money Went
                     </h2>
                     <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">All amounts in {userCurrencySymbol}</span>
                   </div>
                   <div className="flex flex-col gap-2">
-                    {currentAnalytics.categories.map((cat) => {
+                    {currentAnalytics?.categories.map((cat) => {
                       const isExpanded = expandedCategories.has(cat.name);
                       
                       return (
@@ -408,7 +445,7 @@ export default function AnalyticsPage() {
                         </div>
                       );
                     })}
-                    {currentAnalytics.categories.length === 0 && (
+                    {(!currentAnalytics || currentAnalytics.categories.length === 0) && (
                       <div className="text-center py-6 text-sm text-slate-400">No expenses recorded for this period</div>
                     )}
                     
@@ -422,9 +459,10 @@ export default function AnalyticsPage() {
                     </button>
                   </div>
                 </div>
-              </>
-            )}
-          </section>
+              </section>
+            </div>
+
+          </div>
         </Stack>
       </Container>
       

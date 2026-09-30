@@ -15,11 +15,10 @@ export const MonthSummarySkeleton: React.FC<MonthSummarySkeletonProps> = ({ clas
   return (
     <div className={cn("w-full flex flex-col gap-2 select-none", className)}>
       <div
-        className="relative overflow-hidden group border border-slate-800/80 shadow-xl text-white flex flex-col gap-2.5"
+        className="relative overflow-hidden group border border-slate-800/80 shadow-xl text-white flex flex-col gap-2.5 p-4 sm:p-6"
         style={{
           background: "linear-gradient(135deg, #020617 0%, #0f172a 45%, #1e1b4b 100%)",
           borderRadius: "32px",
-          padding: "22px 24px 18px 24px",
         }}
       >
         {/* Glow Arc Blur Effect */}
@@ -60,15 +59,20 @@ export const MonthSummarySkeleton: React.FC<MonthSummarySkeletonProps> = ({ clas
         </div>
 
         {/* Sub-Stats Footer Row */}
-        <div className="relative z-10 pt-2 border-t border-slate-800/80 flex justify-between items-center w-full">
-          <div className="flex flex-col items-start pl-8">
-            <Skeleton className="h-2.5 w-16 bg-slate-800/80 mb-1" />
-            <Skeleton className="h-4 w-20 bg-slate-800/80" />
+        <div className="relative z-10 pt-2.5 border-t border-slate-800/80 flex items-center justify-between w-full">
+          <div className="flex flex-col items-start min-w-0">
+            <Skeleton className="h-2.5 w-14 bg-slate-800/80 mb-1" />
+            <Skeleton className="h-4 w-16 bg-slate-800/80" />
           </div>
 
-          <div className="flex flex-col items-end">
+          <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
             <Skeleton className="h-2.5 w-16 bg-slate-800/80 mb-1" />
-            <Skeleton className="h-4 w-20 bg-slate-800/80" />
+            <Skeleton className="h-4 w-16 bg-slate-800/80" />
+          </div>
+
+          <div className="flex flex-col items-end min-w-0">
+            <Skeleton className="h-2.5 w-14 bg-slate-800/80 mb-1" />
+            <Skeleton className="h-4 w-16 bg-slate-800/80" />
           </div>
         </div>
       </div>

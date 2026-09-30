@@ -22,7 +22,7 @@ export const AppShell = React.forwardRef<HTMLDivElement, AppShellProps>(
 AppShell.displayName = "AppShell";
 
 export interface ContainerProps extends React.HTMLAttributes<HTMLDivElement> {
-  size?: "sm" | "md" | "lg" | "full";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
 }
 
 export const Container = React.forwardRef<HTMLDivElement, ContainerProps>(
@@ -31,6 +31,8 @@ export const Container = React.forwardRef<HTMLDivElement, ContainerProps>(
       sm: "max-w-md",
       md: "max-w-lg",
       lg: "max-w-2xl",
+      xl: "max-w-5xl",
+      "2xl": "max-w-7xl",
       full: "max-w-full",
     };
 

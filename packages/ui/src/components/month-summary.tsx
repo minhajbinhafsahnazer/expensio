@@ -1,6 +1,6 @@
-import React from "react";
+﻿import React from "react";
 import { cn } from "../utils";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowUpRight } from "lucide-react";
 
 
 export interface MonthSummaryProps {
@@ -12,6 +12,10 @@ export interface MonthSummaryProps {
   currencySymbol?: string;
   dailyData?: Array<{ day: number; amount: number; dateStr?: string; isPeak?: boolean }>;
   className?: string;
+  dailyAllowance?: number;
+  daysRemaining?: number;
+  onAllowanceClick?: () => void;
+  infoButton?: React.ReactNode;
 }
 
 interface DailyPoint {
@@ -192,6 +196,10 @@ export const MonthSummary: React.FC<MonthSummaryProps> = ({
   currencySymbol = "",
   dailyData,
   className,
+  dailyAllowance,
+  daysRemaining,
+  onAllowanceClick,
+  infoButton,
 }) => {
   const formatVal = (num: number) =>
     num.toLocaleString("en-IN", {
@@ -202,13 +210,12 @@ export const MonthSummary: React.FC<MonthSummaryProps> = ({
 
   return (
     <div className={cn("w-full flex flex-col gap-2 select-none", className)}>
-      {/* Perslace Hero Card: Black & Navy Blue Gradient with 32px Border Radius & 24px Inset Padding */}
+      {/* Perslace Hero Card: Black & Navy Blue Gradient with 32px Border Radius & Responsive Padding */}
       <div
-        className="relative overflow-hidden group border border-slate-800/80 shadow-xl hover:shadow-[0_16px_40px_rgba(15,23,42,0.3)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer select-none text-white flex flex-col gap-2.5"
+        className="relative overflow-visible group border border-slate-800/80 shadow-xl hover:shadow-[0_16px_40px_rgba(15,23,42,0.3)] hover:-translate-y-0.5 transition-all duration-300 select-none text-white flex flex-col gap-2.5 p-4 sm:p-6"
         style={{
           background: "linear-gradient(135deg, #020617 0%, #0f172a 45%, #1e1b4b 100%)",
           borderRadius: "32px",
-          padding: "22px 24px 18px 24px",
         }}
       >
         {/* Glow Arc Blur Effect in Soft Navy Accent */}
@@ -218,9 +225,12 @@ export const MonthSummary: React.FC<MonthSummaryProps> = ({
         <div className="relative z-10 flex justify-between items-start">
           {/* Left Column: Perfectly Aligned Title & Amount */}
           <div className="flex flex-col gap-1.5">
-            <p className="text-[10px] sm:text-[11px] font-bold text-slate-300 tracking-wide uppercase">
-              Total Monthly Spend
-            </p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-[10px] sm:text-[11px] font-bold text-slate-300 tracking-wide uppercase">
+                Total Monthly Spend
+              </p>
+              {infoButton}
+            </div>
             <h2 className="text-2xl sm:text-[28px] font-black tracking-tight text-white leading-none font-mono truncate">
               <span className="text-lg sm:text-xl font-semibold text-slate-400 mr-0.5">{currencySymbol}</span>
               {formatVal(spentAmount)}
@@ -228,7 +238,7 @@ export const MonthSummary: React.FC<MonthSummaryProps> = ({
             
             {new Date().getDate() === 1 && spentAmount === 0 && (
               <p className="text-[10px] text-blue-300/90 font-medium mt-1 leading-snug w-[150px]">
-                Happy new month! 🌟 Your tracking has reset.
+                Happy new month! ðŸŒŸ Your tracking has reset.
               </p>
             )}
           </div>
@@ -259,25 +269,60 @@ export const MonthSummary: React.FC<MonthSummaryProps> = ({
           <DailyStripChart data={dailyData} currencySymbol={currencySymbol} />
         </div>
 
-        {/* Sub-Stats Footer Row (Explicit Left & Right Alignment) */}
-        <div
-          className="relative z-10 pt-2 border-t border-slate-800/80"
-          style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}
-        >
-          {/* Left Side: Total Income */}
-          <div style={{ textAlign: "left", display: "flex", flexDirection: "column", alignItems: "flex-start", paddingLeft: "32px" }}>
-            <span className="text-[8.5px] font-semibold text-slate-400 uppercase leading-tight block text-left">
+        {/* Sub-Stats Footer Row: Left (Total Income), Absolutely Centered (Daily Allowance / PDA), Right (Spent Today) */}
+        <div className="relative z-10 pt-2.5 border-t border-slate-800/80 flex items-center justify-between w-full">
+          {/* Left Column: Total Income */}
+          <div className="text-left flex flex-col items-start min-w-0">
+            <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-tight truncate">
               Total Income
             </span>
             <AnimatedIncomeNumber value={totalIncome} currencySymbol={currencySymbol} formatVal={formatVal} />
           </div>
 
-          {/* Right Side: Spent Today */}
-          <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-            <span className="text-[8.5px] font-semibold text-slate-400 uppercase leading-tight block text-right" style={{ textAlign: "right" }}>
+          {/* Center Column: Projected Daily Allowance (PDA) - Infallibly Centered */}
+          <div
+            onClick={onAllowanceClick}
+            className={cn(
+              "absolute left-1/2 -translate-x-1/2 text-center flex flex-col items-center justify-center z-10",
+              onAllowanceClick && "cursor-pointer group/pda"
+            )}
+            title={
+              dailyAllowance !== undefined && dailyAllowance > 0
+                ? `Projected Daily Allowance: ${currencySymbol}${formatVal(dailyAllowance)} / day`
+                : "Configure Daily Spend Limit"
+            }
+          >
+            <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-tight flex items-center justify-center gap-0.5 whitespace-nowrap">
+              <span>Daily Allowance</span>
+              {onAllowanceClick && (
+                <ArrowUpRight className="w-2.5 h-2.5 text-violet-400/60 group-hover/pda:text-violet-300 transition-colors shrink-0" />
+              )}
+            </span>
+            {dailyAllowance !== undefined && dailyAllowance > 0 ? (
+              <div className="flex items-baseline justify-center gap-0.5 sm:gap-1 mt-0.5 whitespace-nowrap">
+                <span className="text-[11px] sm:text-xs font-black text-violet-300 font-mono tracking-tight">
+                  {currencySymbol}{formatVal(dailyAllowance)}
+                  <span className="text-[8.5px] sm:text-[9.5px] text-violet-300/70 font-sans font-medium ml-0.5">/d</span>
+                </span>
+                {daysRemaining !== undefined && daysRemaining > 0 && (
+                  <span className="text-[8px] sm:text-[9px] text-slate-400 font-sans font-normal hidden sm:inline shrink-0">
+                    ({daysRemaining}d left)
+                  </span>
+                )}
+              </div>
+            ) : (
+              <span className="text-[9.5px] sm:text-[10.5px] font-semibold text-slate-500 mt-0.5 hover:text-violet-300 transition-colors whitespace-nowrap">
+                {onAllowanceClick ? "Set target â†’" : "â€”"}
+              </span>
+            )}
+          </div>
+
+          {/* Right Column: Spent Today */}
+          <div className="text-right flex flex-col items-end min-w-0">
+            <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-tight truncate">
               Spent Today
             </span>
-            <span className="text-[11px] sm:text-xs font-black text-white font-mono text-right mt-0.5" style={{ textAlign: "right" }}>
+            <span className="text-[11px] sm:text-xs font-black text-white font-mono mt-0.5 truncate">
               +{currencySymbol}{formatVal(todayAmount)}
             </span>
           </div>
@@ -286,3 +331,4 @@ export const MonthSummary: React.FC<MonthSummaryProps> = ({
     </div>
   );
 };
+

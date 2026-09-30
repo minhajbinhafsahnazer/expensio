@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../core/providers/AuthContext";
 import { CURRENCIES } from "../constants/currencies";
 import { formatCurrency } from "../utils/currency";
 import { useToast } from "../core/providers/ToastProvider";
+import { DesktopHeader } from "../components/layout/DesktopHeader";
 
 import {
   AppShell,
@@ -51,8 +52,7 @@ import {
   Home,
   Settings,
   User,
-  ShieldCheck,
-  Download,
+  ShieldCheck, Download, Target,
 } from "lucide-react";
 import { SectionInfoModal } from "../components/SectionInfoModal";
 
@@ -78,7 +78,7 @@ export const PortfolioPage: React.FC = () => {
   const { user } = useAuth();
   
   const userCurrency = user?.currency || "INR";
-  const userCurrencySymbol = CURRENCIES.find(c => c.code === userCurrency)?.symbol || "₹";
+  const userCurrencySymbol = CURRENCIES.find(c => c.code === userCurrency)?.symbol || "â‚¹";
 
   // Settings modal state & pill navigation state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -320,11 +320,11 @@ export const PortfolioPage: React.FC = () => {
           type: "income",
         });
 
-        showToast(`Deducted ${formatCurrency(numAmt, userCurrency)} — added to your balance.`);
+        showToast(`Deducted ${formatCurrency(numAmt, userCurrency)} â€” added to your balance.`);
       } else {
         // addToBalance = FALSE (default):
         //   Goal decreases by X.
-        //   Available balance does NOT increase — money is spent, not recovered.
+        //   Available balance does NOT increase â€” money is spent, not recovered.
         //   Record as Expense -X so spending history reflects the outflow.
         const txCategory = `Goal Expense: ${depositGoalTitle}`;
 
@@ -352,7 +352,7 @@ export const PortfolioPage: React.FC = () => {
           type: "expense",
         });
 
-        showToast(`Deducted ${formatCurrency(numAmt, userCurrency)} — recorded as an expense.`);
+        showToast(`Deducted ${formatCurrency(numAmt, userCurrency)} â€” recorded as an expense.`);
       }
     } else {
       showToast(`Added ${formatCurrency(numAmt, userCurrency)} to "${depositGoalTitle}"!`);
@@ -412,7 +412,7 @@ export const PortfolioPage: React.FC = () => {
     const nextState = !d.hasReminder;
     updateDebtMutation.mutate({ id, hasReminder: nextState });
     if (nextState) {
-      showToast(`🔔 Reminder set for ${d.name} (${d.type === "lent" ? "Collect" : "Pay"} ${formatCurrency(Number(d.amount), userCurrency)})`);
+      showToast(`ðŸ”” Reminder set for ${d.name} (${d.type === "lent" ? "Collect" : "Pay"} ${formatCurrency(Number(d.amount), userCurrency)})`);
     } else {
       showToast(`Notifications turned off for ${d.name}`);
     }
@@ -454,9 +454,11 @@ export const PortfolioPage: React.FC = () => {
   return (
     <AppShell className="min-h-screen pb-32 bg-white text-slate-900 selection:bg-slate-900 selection:text-white">
 
+      {/* Desktop Navigation Bar */}
+      <DesktopHeader />
 
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-200/80 pt-8 sm:pt-10">
+      {/* Header (Mobile Only) */}
+      <header className="md:hidden sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-200/80 pt-8 sm:pt-10">
         <Container size="md" className="h-16 flex items-center justify-between px-4">
           <button
             type="button"
@@ -480,11 +482,16 @@ export const PortfolioPage: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <Container size="md" className="pt-4 px-4">
+      <Container size="2xl" className="pt-4 md:pt-8 px-4 max-w-md md:max-w-3xl lg:max-w-7xl">
         <Stack gap={6}>
           
-          {/* ==================== 1. FINANCIAL GOALS (Refined Premium Dark Design) ==================== */}
-          <section className="relative bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 border border-slate-800/80 rounded-3xl p-5 sm:p-6 flex flex-col gap-6 shadow-2xl overflow-hidden">
+          {/* Responsive 2-Column Grid on Desktop */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch w-full">
+            
+            {/* Column 1: Financial Goals */}
+            <div className="w-full">
+              {/* ==================== 1. FINANCIAL GOALS (Refined Premium Dark Design) ==================== */}
+              <section className="relative bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 border border-slate-800/80 rounded-3xl p-5 sm:p-6 flex flex-col gap-6 shadow-2xl h-full">
             {/* Ambient glow effects */}
             <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none z-0">
               <div className="absolute top-0 right-0 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
@@ -751,11 +758,12 @@ export const PortfolioPage: React.FC = () => {
               )}
             </div>
           </section>
+        </div>
 
-
-
+        {/* Column 2: Debt & Loan Tracker */}
+        <div className="w-full">
           {/* ==================== 3. DEBT & LOAN TRACKER (Refined Modern Design) ==================== */}
-          <section className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 flex flex-col gap-5 shadow-xs hover:shadow-sm transition-shadow mt-4">
+          <section className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 flex flex-col gap-5 shadow-xs hover:shadow-sm transition-shadow h-full">
             {/* Header + Add Record Button */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -973,7 +981,7 @@ export const PortfolioPage: React.FC = () => {
                             {(d.note || d.dueDate) && (
                               <span className="text-xs text-slate-500 font-normal truncate">
                                 {d.note ? `${d.note}` : ""}
-                                {d.note && d.dueDate ? " • " : ""}
+                                {d.note && d.dueDate ? " â€¢ " : ""}
                                 {d.dueDate ? formatNaturalDueDate(d.dueDate) : ""}
                               </span>
                             )}
@@ -1067,9 +1075,12 @@ export const PortfolioPage: React.FC = () => {
               )}
             </div>
           </section>
+        </div>
 
-        </Stack>
-      </Container>
+      </div>
+
+    </Stack>
+  </Container>
 
       {/* ADD / EDIT GOAL MODAL */}
       {isGoalModalOpen && (
@@ -1314,7 +1325,7 @@ export const PortfolioPage: React.FC = () => {
               {/* Deduct mode: destination selector */}
               {depositMode === "deduct" && (
                 <div className="flex flex-col gap-2">
-                  {/* Default state helper — shown when unchecked */}
+                  {/* Default state helper â€” shown when unchecked */}
                   {!addToTransactions && (
                     <p className="text-[11px] text-slate-500 leading-tight px-0.5">
                       Money will be recorded as an expense.
@@ -1695,8 +1706,9 @@ export const PortfolioPage: React.FC = () => {
         </div>
       )}
 
-      {/* Hero Dark Floating Dock Navigation Pill (Matching Home Screen) */}
+      {/* Hero Dark Floating Dock Navigation Pill (Matching Home Screen) - Mobile Only */}
       <BottomNav
+        className="md:hidden"
         activeTab="portfolio"
         variant="hero"
         items={pillNavItems}
@@ -1713,3 +1725,7 @@ export const PortfolioPage: React.FC = () => {
     </AppShell>
   );
 };
+
+
+
+

@@ -33,7 +33,7 @@ export default function TermsPage() {
 
       {/* Content */}
       <main className="flex-1 py-10 px-4">
-        <Container size="sm">
+        <Container size="2xl" className="max-w-md sm:max-w-2xl lg:max-w-4xl">
           <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-10 shadow-xs flex flex-col gap-6">
             
             {/* Title & Badge */}

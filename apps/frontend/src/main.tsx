@@ -18,6 +18,7 @@ import { PortfolioPage } from './pages/portfolio';
 import { DevUIPage } from './pages/dev-ui';
 import ProfilePage from './pages/profile';
 import AnalyticsPage from './pages/analytics';
+import AiPage from './pages/ai';
 
 // Pages — public & auth
 import WelcomePage from './pages/welcome';
@@ -47,6 +48,7 @@ const App = () => (
           <Route path="/portfolio" element={<PortfolioPage />} />
           <Route path="/profile"   element={<ProfilePage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/ai"        element={<AiPage />} />
           <Route path="/dev/ui"    element={<DevUIPage />} />
         </Route>
 

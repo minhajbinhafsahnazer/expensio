@@ -55,6 +55,17 @@ const envSchema = z.object({
 
   // CORS allowed origin — required in production, Vite dev server in development.
   ALLOWED_ORIGIN: requiredInProd('http://localhost:5173'),
+
+  // ─── AI (optional — chat endpoint is disabled if key is absent) ──────────
+  // Never expose this to the frontend. Backend only.
+  AI_API_KEY: z.string().optional(),
+
+  // Model identifier sent to the LLM API.
+  // OpenAI default: gpt-4o-mini (cheap, fast, capable enough for chat).
+  AI_MODEL: z.string().default('gpt-4o-mini'),
+
+  // Base URL for the LLM API (OpenAI or any OpenAI-compatible endpoint).
+  AI_BASE_URL: z.string().url().default('https://api.openai.com/v1'),
 });
 
 // ─── Parse & fail fast ────────────────────────────────────────────────────────

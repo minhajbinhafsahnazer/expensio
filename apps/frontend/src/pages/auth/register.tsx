@@ -1,15 +1,9 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, TrendingDown } from 'lucide-react';
 import { useAuth } from '../../core/providers/AuthContext';
 import { ApiError } from '../../core/api/client';
 import { CURRENCIES, CurrencyCode } from '../../constants/currencies';
-
-const NUDGES = [
-  "With Wazn, understand and balance your money effortlessly",
-  "Your data is protected with RLS-grade security",
-  "Offline-first sync guarantees privacy and fast access"
-];
 
 export function RegisterPage() {
   const { register } = useAuth();
@@ -20,17 +14,13 @@ export function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [currency, setCurrency] = useState<CurrencyCode>('INR');
-  const [termsAgreed, setTermsAgreed] = useState(false);
+  const [currency, setCurrency] = useState<CurrencyCode>('USD');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [nudgeIndex, setNudgeIndex] = useState(0);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setNudgeIndex((prev) => (prev + 1) % NUDGES.length);
-    }, 4000);
-    return () => clearInterval(timer);
+    setMounted(true);
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -52,7 +42,6 @@ export function RegisterPage() {
         fullName.trim() || undefined,
         currency
       );
-      // Automatically authenticated — redirect to intended destination
       navigate('/', { replace: true });
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
@@ -65,306 +54,173 @@ export function RegisterPage() {
     }
   }
 
-  const isValid = email.trim().length > 0 && password.length >= 8;
-
   return (
-    <div style={styles.root}>
-      <div style={styles.card}>
-        {/* Logo / Brand */}
-        <div style={styles.brand}>
-          <div style={styles.logoMark}>
-            <img src="/logo.jpg" alt="Wazn Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.35)' }} />
+    <div className="min-h-screen bg-[#080811] flex flex-col md:flex-row selection:bg-violet-900 selection:text-white font-sans overflow-hidden">
+      
+      {/* PC Responsive Left Side */}
+      <div className="hidden md:flex md:w-1/2 relative flex-col justify-between p-12 lg:p-20 overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full opacity-60 pointer-events-none">
+          <div className="absolute -top-[20%] -left-[10%] w-[70%] h-[70%] bg-indigo-900/40 rounded-full mix-blend-screen filter blur-[120px] animate-pulse" style={{ animationDuration: '8s' }}></div>
+          <div className="absolute top-[40%] right-[0%] w-[60%] h-[60%] bg-[#7C3AED]/30 rounded-full mix-blend-screen filter blur-[140px] animate-pulse" style={{ animationDuration: '12s', animationDelay: '2s' }}></div>
+        </div>
+        
+        <div className={`relative z-10 flex items-center gap-3 transition-all duration-1000 transform ${mounted ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'}`}>
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-violet-600 rounded-full blur opacity-30 group-hover:opacity-60 transition duration-1000 group-hover:duration-200"></div>
+            <div className="relative w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg overflow-hidden border border-white/10">
+               <img src="/logo.jpg" alt="Wazn Logo" className="w-full h-full object-cover scale-[1.35]" />
+            </div>
           </div>
-          <span style={styles.logoText}>Wazn</span>
+          <span className="text-white font-bold tracking-wider text-2xl">Wazn</span>
+        </div>
+        
+        <div className={`relative z-10 flex flex-col gap-6 mt-16 max-w-lg transition-all duration-1000 delay-300 transform ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+          <h1 className="text-5xl lg:text-7xl font-extrabold text-white leading-[1.1] tracking-tight">
+            Create <br /> account.
+          </h1>
+          <div className="space-y-2 mt-2">
+            <p className="text-white/90 text-xl font-medium tracking-wide">
+              Start your journey today.
+            </p>
+            <p className="text-slate-400 text-lg">
+              Join Wazn to measure, understand, and balance your finances.
+            </p>
+          </div>
+          
         </div>
 
-        <h1 style={styles.heading}>Create account</h1>
-        <p style={styles.subheading}>Start tracking your finances today.</p>
+        <div className={`relative z-10 mt-auto pt-16 transition-all duration-1000 delay-500 opacity-100`}>
+          <p className="text-slate-500 text-sm font-medium tracking-wide">
+            Built for clarity, privacy & control.
+          </p>
+        </div>
+      </div>
 
-        <form onSubmit={handleSubmit} style={styles.form} noValidate>
-          <div style={styles.field}>
-            <label style={styles.label} htmlFor="reg-name">Full name</label>
-            <input
-              id="reg-name"
-              type="text"
-              autoComplete="name"
-              autoFocus
-              value={fullName}
-              onChange={e => setFullName(e.target.value)}
-              style={styles.input}
-              placeholder="Jane Doe"
-              disabled={loading}
-            />
-          </div>
+      {/* Right Side - Action Area */}
+      <div className="w-full md:w-1/2 flex flex-col justify-center p-6 sm:p-12 min-h-screen md:min-h-0 relative overflow-y-auto bg-[#080811] md:bg-transparent border-l border-white/5">
+        
+        <div className="md:hidden absolute top-0 left-0 w-full h-full opacity-40 pointer-events-none">
+           <div className="absolute -top-[10%] -right-[10%] w-[60%] h-[60%] bg-[#7C3AED]/30 rounded-full mix-blend-screen filter blur-[100px] animate-pulse"></div>
+        </div>
 
-          <div style={styles.field}>
-            <label style={styles.label} htmlFor="reg-email">Email</label>
-            <input
-              id="reg-email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              style={styles.input}
-              placeholder="you@example.com"
-              disabled={loading}
-            />
-          </div>
-
-          <div style={styles.field}>
-            <label style={styles.label} htmlFor="reg-password">
-              Password
-              <span style={styles.hint}> (min. 8 characters)</span>
-            </label>
-            <div className="relative w-full">
-              <input
-                id="reg-password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="new-password"
-                required
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                style={styles.input}
-                placeholder="••••••••"
-                disabled={loading}
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors p-1 cursor-pointer"
-                title={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+        <div className={`relative z-10 w-full max-w-md mx-auto flex flex-col items-center py-10 transition-all duration-1000 delay-200 transform ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+          
+          <div className="relative group md:hidden mb-8">
+            <div className="absolute -inset-1 bg-violet-600 rounded-full blur opacity-40"></div>
+            <div className="relative w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-xl overflow-hidden border border-white/10">
+              <img src="/logo.jpg" alt="Wazn" className="w-full h-full object-cover scale-[1.35]" />
             </div>
           </div>
 
-          <div style={styles.field}>
-            <label style={styles.label} htmlFor="reg-currency">Currency</label>
-            <select
-              id="reg-currency"
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
-              style={styles.input}
-              disabled={loading}
-            >
-              {CURRENCIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.name} ({c.symbol})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Interactive Terms & Privacy Acknowledgement Checkbox */}
-          <div className="flex items-start gap-2.5 pt-1 select-none cursor-pointer">
-            <input
-              type="checkbox"
-              id="reg-terms"
-              checked={termsAgreed}
-              onChange={(e) => setTermsAgreed(e.target.checked)}
-              className="w-4 h-4 mt-0.5 rounded border-slate-300 text-slate-900 focus:ring-slate-900 cursor-pointer shrink-0"
-            />
-            <label htmlFor="reg-terms" className="text-[11px] text-slate-500 cursor-pointer leading-tight">
-              I agree to Wazn's{" "}
-              <Link to="/terms" target="_blank" className="text-slate-800 font-semibold underline hover:text-indigo-600 transition-colors">Terms of Service</Link> &{" "}
-              <Link to="/privacy" target="_blank" className="text-slate-800 font-semibold underline hover:text-indigo-600 transition-colors">Privacy Policy</Link>.
-            </label>
-          </div>
-
-          {error && (
-            <p style={styles.errorText} role="alert">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading || !isValid || !termsAgreed}
-            style={{
-              ...styles.button,
-              opacity: (loading || !isValid || !termsAgreed) ? 0.5 : 1,
-              cursor: (loading || !isValid || !termsAgreed) ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {loading ? 'Creating account…' : 'Create account'}
-          </button>
-        </form>
-
-        <p style={styles.footer}>
-          Already have an account?{' '}
-          <Link to="/login" state={{ from: location.state?.from }} style={styles.link}>
-            Sign in
-          </Link>
-        </p>
-
-        {/* Notion / Linear Passby App Nudge Banner */}
-        <div style={{
-          marginTop: '24px',
-          padding: '14px 16px',
-          background: 'linear-gradient(to right, rgba(240, 249, 255, 0.8), rgba(238, 242, 255, 0.8))',
-          border: '1px solid #e0f2fe',
-          borderRadius: '16px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
-        }}>
-          <div style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '50%',
-            overflow: 'hidden',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            border: '2px solid #ffffff',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-            background: '#ffffff',
-          }}>
-            <img
-              src="/logo.jpg"
-              alt="Wazn"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.35)' }}
-            />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p
-              key={nudgeIndex}
-              className="animate-in fade-in slide-in-from-bottom-2 duration-300"
-              style={{
-                margin: 0,
-                fontSize: '12.5px',
-                fontWeight: '500',
-                color: '#334155',
-                lineHeight: '1.45',
-                letterSpacing: '-0.01em',
-              }}
-            >
-              "{NUDGES[nudgeIndex]}"
+          <div className="text-center mb-8 w-full">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-2">
+              Create your account
+            </h1>
+            <p className="text-slate-400 text-sm font-medium">
+              Join Wazn in seconds
             </p>
           </div>
+
+          <div className="w-full bg-[#0d0d1a]/80 backdrop-blur-xl border border-white/10 rounded-[24px] p-8 shadow-2xl hover:border-white/20 transition-colors duration-500">
+            
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-slate-300">Full Name <span className="text-slate-500 font-normal">(Optional)</span></label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={e => setFullName(e.target.value)}
+                  disabled={loading}
+                  placeholder="John Doe"
+                  className="w-full bg-white/5 border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-3.5 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-slate-300">Email address</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  disabled={loading}
+                  required
+                  placeholder="you@example.com"
+                  className="w-full bg-white/5 border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-3.5 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-slate-300">Password</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    disabled={loading}
+                    required
+                    placeholder="••••••••"
+                    className="w-full bg-white/5 border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-3.5 pr-12 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-slate-300">Base Currency</label>
+                <select
+                  value={currency}
+                  onChange={e => setCurrency(e.target.value as CurrencyCode)}
+                  disabled={loading}
+                  className="w-full bg-[#11111a] border border-white/10 text-white rounded-xl px-4 py-3.5 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/50 transition-all appearance-none cursor-pointer"
+                >
+                  {CURRENCIES.map((def) => (
+                    <option key={def.code} value={def.code}>{def.code} - {def.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {error && (
+                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading || !email || !password || password.length < 8}
+                className="w-full mt-4 py-4 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-xl shadow-lg shadow-violet-900/30 transition-all flex items-center justify-center gap-2 border border-violet-500/50"
+              >
+                {loading ? 'Creating account...' : 'Create Account'}
+              </button>
+            </form>
+
+            <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center gap-3">
+              <p className="text-slate-500 text-xs font-medium">Already have an account?</p>
+              <Link
+                to="/login"
+                state={{ from: location.state?.from }}
+                className="text-white text-sm font-semibold hover:text-violet-400 transition-colors cursor-pointer"
+              >
+                Sign In
+              </Link>
+            </div>
+            
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-4 mt-12 text-[11px] text-slate-500 font-medium pb-8">
+             <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-slate-700"></span> Private by design</span>
+             <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-slate-700"></span> Secure by design</span>
+          </div>
+
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
-const styles: Record<string, React.CSSProperties> = {
-  root: {
-    minHeight: '100vh',
-    background: '#f6f6f6',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '24px 16px',
-  },
-  card: {
-    background: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: '20px',
-    padding: '40px 36px',
-    width: '100%',
-    maxWidth: '400px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.05)',
-  },
-  brand: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    marginBottom: '28px',
-  },
-  logoMark: {
-    width: '32px',
-    height: '32px',
-    borderRadius: '50%',
-    overflow: 'hidden',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    border: '1px solid #e2e8f0',
-    flexShrink: 0,
-  },
-  logoText: {
-    fontSize: '16px',
-    fontWeight: '600',
-    color: '#0f172a',
-    letterSpacing: '-0.02em',
-  },
-  heading: {
-    fontSize: '22px',
-    fontWeight: '700',
-    color: '#0f172a',
-    margin: '0 0 6px 0',
-    letterSpacing: '-0.03em',
-  },
-  subheading: {
-    fontSize: '14px',
-    color: '#64748b',
-    margin: '0 0 28px 0',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px',
-  },
-  field: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '6px',
-  },
-  label: {
-    fontSize: '13px',
-    fontWeight: '500',
-    color: '#374151',
-  },
-  hint: {
-    fontWeight: '400',
-    color: '#94a3b8',
-  },
-  input: {
-    padding: '10px 12px',
-    border: '1px solid #e2e8f0',
-    borderRadius: '10px',
-    fontSize: '14px',
-    color: '#0f172a',
-    background: '#ffffff',
-    outline: 'none',
-    transition: 'border-color 0.15s',
-    fontFamily: 'inherit',
-    width: '100%',
-    boxSizing: 'border-box',
-  },
-  errorText: {
-    fontSize: '13px',
-    color: '#dc2626',
-    margin: '0',
-  },
-  button: {
-    marginTop: '4px',
-    padding: '11px 16px',
-    background: '#9333ea',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: '10px',
-    fontSize: '14px',
-    fontWeight: '600',
-    fontFamily: 'inherit',
-    letterSpacing: '-0.01em',
-    transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
-  },
-  footer: {
-    marginTop: '24px',
-    fontSize: '13px',
-    color: '#64748b',
-    textAlign: 'center',
-  },
-  link: {
-    color: '#9333ea',
-    fontWeight: '500',
-    textDecoration: 'none',
-  },
-};

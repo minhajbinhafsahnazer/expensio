@@ -85,7 +85,7 @@ export const CaptureSheet: React.FC<CaptureSheetProps> = ({
           maxHeight: "80vh",
         }}
         className={cn(
-          "relative z-50 w-full max-w-[340px] bg-white border border-slate-200 shadow-2xl p-3 sm:p-3.5 flex flex-col gap-2 transition-all duration-150 animate-in zoom-in-95 fade-in overflow-y-auto selection:bg-slate-900 selection:text-white",
+          "relative z-50 w-full max-w-[340px] sm:max-w-md bg-white border border-slate-200 shadow-2xl p-3 sm:p-5 flex flex-col gap-2 transition-all duration-150 animate-in zoom-in-95 fade-in overflow-y-auto selection:bg-slate-900 selection:text-white",
           className
         )}
       >

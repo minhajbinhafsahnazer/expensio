@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Trash2, ChevronDown, Keyboard, Wifi, WifiOff, RefreshCw, X, ArrowDown, TrendingUp, HelpCircle } from "lucide-react";
+﻿import React, { useState, useRef, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { Trash2, ChevronDown, Keyboard, Wifi, WifiOff, RefreshCw, X, ArrowDown, TrendingUp, HelpCircle, Search, Plus, Target, PieChart, ArrowUpRight } from "lucide-react";
 import { OnboardingTour } from "../components/OnboardingTour";
 import { SectionInfoModal } from "../components/SectionInfoModal";
+import { DesktopHeader } from "../components/layout/DesktopHeader";
 import {
   AppShell,
   Container,
@@ -24,6 +25,7 @@ import { type TransactionCreatePayload } from "../core/api/expense-sessions";
 import { TransactionsApi } from "../core/api/transactions";
 import { ulid } from "ulid";
 import { useAnalytics } from "../core/api/analytics";
+import { useIntelligenceSummary } from "../core/api/intelligence";
 import { useSyncEngine } from "../core/sync/SyncEngine";
 import { queue } from "../core/sync/db";
 import { useAuth } from "../core/providers/AuthContext";
@@ -128,8 +130,42 @@ export const HomePage: React.FC = () => {
   const { user } = useAuth();
   const { enqueue, enqueueMany, pendingCount, syncStatus, isOnline } = useSyncEngine();
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState<"all" | "expense" | "income">("all");
+
+  const handleOpenAddExpense = () => {
+    setEditingTransaction(null);
+    setCurrencyVal(undefined);
+    setReceiptItems([]);
+    setEntryType("expense");
+    setSelectedCategory(expenseCategories[0]);
+    setExpenseName("");
+    const todayStr = new Date().toLocaleDateString('en-CA');
+    setCustomDate(todayStr);
+    setSelectedDateTag("Today");
+    setIsSheetOpen(true);
+  };
+
+  // Keyboard shortcut Ctrl+N / Cmd+N & URL action trigger for desktop
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("action") === "add-expense") {
+      handleOpenAddExpense();
+      navigate("/", { replace: true });
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        handleOpenAddExpense();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const userCurrency = user?.currency || "INR";
-  const userCurrencySymbol = CURRENCIES.find(c => c.code === userCurrency)?.symbol || "₹";
+  const userCurrencySymbol = CURRENCIES.find(c => c.code === userCurrency)?.symbol || "â‚¹";
 
   // Auto-start guided onboarding tour for first-time logged-in users
   useEffect(() => {
@@ -144,6 +180,11 @@ export const HomePage: React.FC = () => {
 
   const currentMonthKey = new Date().toISOString().slice(0, 7);
   const [expandedMonths, setExpandedMonths] = useState<string[]>([currentMonthKey]);
+
+  const { data: intelligenceData } = useIntelligenceSummary(currentMonthKey);
+  const tolerance = intelligenceData?.tolerance;
+  const dailyAllowance = tolerance?.dailyAllowance;
+  const daysRemaining = tolerance?.daysRemaining;
 
   const { data: monthlySummaries = [], isLoading: isLoadingSummaries } = useQuery({
     queryKey: ["monthly-summary"],
@@ -228,7 +269,7 @@ export const HomePage: React.FC = () => {
     
     serverTransactions.forEach(t => {
       const spentAt = new Date(t.spentAt);
-      const dateKey = new Date(spentAt.getFullYear(), spentAt.getMonth(), spentAt.getDate()).toISOString();
+      const dateKey = spentAt.toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
       
       if (!groups[dateKey]) {
         const today = new Date();
@@ -244,7 +285,7 @@ export const HomePage: React.FC = () => {
         
         groups[dateKey] = {
           label,
-          date: new Date(dateKey),
+          date: new Date(spentAt.getFullYear(), spentAt.getMonth(), spentAt.getDate()),
           expenses: [],
           total: 0
         };
@@ -277,6 +318,27 @@ export const HomePage: React.FC = () => {
     
     return Object.values(groups).sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [serverTransactions]);
+
+  // Filter grouped expenses by search query and type filter
+  const displayedGroupedExpenses = React.useMemo(() => {
+    if (!searchQuery.trim() && filterType === "all") return groupedExpenses;
+    const q = searchQuery.trim().toLowerCase();
+    return groupedExpenses
+      .map((group) => {
+        const matching = group.expenses.filter((exp) => {
+          const matchQuery = !q || exp.title.toLowerCase().includes(q) || (exp.superiorCategory && exp.superiorCategory.toLowerCase().includes(q));
+          const matchType = filterType === "all" || exp.type === filterType;
+          return matchQuery && matchType;
+        });
+        const total = matching.reduce((acc, curr) => acc + (curr.type === "income" ? -curr.amount : curr.amount), 0);
+        return {
+          ...group,
+          expenses: matching,
+          total,
+        };
+      })
+      .filter((group) => group.expenses.length > 0);
+  }, [groupedExpenses, searchQuery, filterType]);
 
   // Calculate today's total specifically for the summary card if needed
   const todayGroup = groupedExpenses.find(g => g.label === "Today");
@@ -397,7 +459,7 @@ export const HomePage: React.FC = () => {
     setCurrencyVal(exp.amount);
     // Restore the expense name and category separately:
     // exp.title is the stored description (user-typed name).
-    // We try to find if it matches a known category — if not, it's a custom name.
+    // We try to find if it matches a known category â€” if not, it's a custom name.
     const allKnownCats = [...expenseCategories, ...incomeCategories];
     if (allKnownCats.includes(exp.title)) {
       // Old-style entry: name === category, blank out separate name field
@@ -601,10 +663,13 @@ export const HomePage: React.FC = () => {
       {/* Onboarding Guided Tour Modal */}
       <OnboardingTour isOpen={isTourOpen} onClose={() => setIsTourOpen(false)} />
 
-      <Container size="sm" className="pt-12 sm:pt-14">
+      {/* Responsive Desktop Header */}
+      <DesktopHeader onAddExpense={handleOpenAddExpense} />
+
+      <Container size="2xl" className="pt-4 md:pt-8 max-w-md md:max-w-3xl lg:max-w-7xl">
         <Stack gap={6}>
-          {/* Dashboard Header */}
-          <div className="flex items-center justify-between px-2 pb-2">
+          {/* Dashboard Header (Mobile Only) */}
+          <div className="flex md:hidden items-center justify-between px-2 pb-2">
             <div className="font-bold text-slate-900 flex items-center gap-2 tracking-tight">
               <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center shrink-0 shadow-sm border border-slate-200">
                 <img src="/logo.jpg" alt="Wazn Logo" className="w-full h-full object-cover scale-[1.35]" />
@@ -631,9 +696,9 @@ export const HomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Sync status indicator — only shown when relevant */}
+          {/* Sync status indicator â€” only shown when relevant on mobile */}
           {(!isOnline || pendingCount > 0 || syncStatus === 'syncing') && (
-            <div style={{
+            <div className="md:hidden" style={{
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
@@ -647,202 +712,345 @@ export const HomePage: React.FC = () => {
               border: `1px solid ${!isOnline ? '#fde68a' : syncStatus === 'error' ? '#fca5a5' : '#bbf7d0'}`,
             }}>
               {!isOnline ? (
-                <><WifiOff size={12} /> Offline — {pendingCount} queued</>
+                <><WifiOff size={12} /> Offline â€” {pendingCount} queued</>
               ) : syncStatus === 'syncing' ? (
-                <><RefreshCw size={12} style={{ animation: 'spin 1s linear infinite' }} /> Syncing…</>
+                <><RefreshCw size={12} style={{ animation: 'spin 1s linear infinite' }} /> Syncingâ€¦</>
               ) : syncStatus === 'error' ? (
-                <><RefreshCw size={12} /> Sync failed — will retry</>
+                <><RefreshCw size={12} /> Sync failed â€” will retry</>
               ) : (
                 <><Wifi size={12} /> {pendingCount} pending</>
               )}
             </div>
           )}
 
-          {/* 1. Bluish Gradient Month Summary Card */}
-          <div className="relative group z-30">
-            <div className="absolute left-4 bottom-4 z-40">
-              <SectionInfoModal
-                theme="dark"
-                content={{
-                  title: "Monthly Overview & Net Spend",
-                  subtitle: "Real-time summary of your current month",
-                  badge: "Dashboard",
-                  description: "Shows your total monthly expenditures, today's spending total, and percentage change vs last month.",
-                }}
-                tourStepId="monthly-overview"
-              />
-            </div>
-            {isLoadingAnalytics ? (
-              <MonthSummarySkeleton />
-            ) : (
-              <MonthSummary
-                monthName={analyticsData?.period?.from ? new Date(`${analyticsData.period.from}`).toLocaleString('en-US', { month: 'long', year: 'numeric' }) : "Current Month"}
-                spentAmount={analyticsData?.totalSpent || 0}
-                todayAmount={todayTotal}
-                totalIncome={analyticsData?.totalIncome || 0}
-                percentageChange={analyticsData?.percentageChange || 0}
-                dailyData={filteredDailyData}
-                currencySymbol={userCurrencySymbol}
-              />
-            )}
-          </div>
-
-          {(isTransactionsLoading || isLoadingSummaries) && groupedExpenses.length === 0 ? (
-            <TransactionListSkeleton />
-          ) : groupedExpenses.length === 0 && monthlySummaries.length === 0 ? (
-            <div className="py-6 text-center text-xs font-semibold text-slate-400 font-mono mt-4">
-              No transactions recorded yet
-            </div>
-          ) : (
-            <>
-              {/* Transactions Header */}
-              <div className="flex items-center justify-between px-2 pt-2 pb-1 mt-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Transactions</span>
-                  <SectionInfoModal
-                    content={{
-                      title: "Recent Transactions",
-                      subtitle: "Local-first atomic ledger",
-                      badge: "Activity",
-                      description: "List of your logged expenses and incomes grouped by date.",
-                      highlights: [
-                        { title: "Instant Edit / Delete", desc: "Tap any transaction row to edit details or delete." },
-                        { title: "Offline Storage", desc: "Saved locally in IndexedDB when offline and synced automatically when connected." }
-                      ]
-                    }}
-                    tourStepId="recent-transactions"
+          {/* Responsive Dashboard Grid: Single Column on Mobile, 2 Columns (8 / 4) on Desktop */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full">
+            
+            {/* Left / Main Column (lg:col-span-8): Summary Card + Ledger */}
+            <div className="lg:col-span-8 flex flex-col gap-6 w-full">
+              {/* 1. Bluish Gradient Month Summary Card */}
+              <div className="relative group z-30">
+                {isLoadingAnalytics ? (
+                  <MonthSummarySkeleton />
+                ) : (
+                  <MonthSummary
+                    monthName={analyticsData?.period?.from ? new Date(`${analyticsData.period.from}`).toLocaleString('en-US', { month: 'long', year: 'numeric' }) : "Current Month"}
+                    spentAmount={analyticsData?.totalSpent || 0}
+                    todayAmount={todayTotal}
+                    totalIncome={analyticsData?.totalIncome || 0}
+                    percentageChange={analyticsData?.percentageChange || 0}
+                    dailyData={filteredDailyData}
+                    currencySymbol={userCurrencySymbol}
+                    dailyAllowance={dailyAllowance}
+                    daysRemaining={daysRemaining}
+                    onAllowanceClick={() => navigate("/ai")}
+                    infoButton={
+                      <SectionInfoModal
+                        theme="dark"
+                        iconSize={11}
+                        content={{
+                          title: "Monthly Overview & Net Spend",
+                          subtitle: "Real-time summary of your current month",
+                          badge: "Dashboard",
+                          description: "Shows your total monthly expenditures, today's spending total, projected daily allowance, and percentage change vs last month.",
+                        }}
+                        tourStepId="monthly-overview"
+                      />
+                    }
                   />
-                </div>
-                <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">All amounts in {userCurrencySymbol}</span>
+                )}
               </div>
-              
-              <div className="flex flex-col bg-white border border-slate-200/60 rounded-2xl p-2 shadow-sm">
-                {/* Render Current Month (which is just the matching groups in groupedExpenses) */}
-                {groupedExpenses
-                  .filter(group => group.date.toISOString().slice(0, 7) === currentMonthKey || group.label === "Today" || group.label === "Yesterday")
-                  .map((group, index) => (
-                    <section key={group.date.toISOString()} className={cn("flex flex-col gap-0", index === 0 ? "" : "pt-6")}>
-                      <div className="grid grid-cols-[minmax(0,1fr)_88px] items-center pb-2 border-b border-slate-100 px-2">
-                        <span className="font-semibold text-[14px] text-slate-900 tracking-tight">{group.label}</span>
-                        <span className="font-bold text-[14px] text-purple-600 text-right tabular-nums">
-                          {group.total.toLocaleString("en-IN")}
-                        </span>
-                      </div>
-                      <div className="flex flex-col pt-0.5">
-                        {group.expenses.map((exp) => (
-                          <NoteTransactionRow
-                            key={exp.id}
-                            title={exp.title}
-                            amount={exp.amount}
-                            type={exp.type}
-                            onClick={() => handleEditClick(exp)}
-                            onDelete={() => handleDeleteClick(exp)}
-                          />
-                        ))}
-                      </div>
-                    </section>
-                  ))}
 
-                {/* Render Past Months Summaries and their Expanded Content */}
-                {monthlySummaries
-                  .filter(summary => summary.monthKey !== currentMonthKey)
-                  .map((summary) => {
-                    const isExpanded = expandedMonths.includes(summary.monthKey);
-                    const monthDate = new Date(summary.monthKey + '-01');
-                    const monthName = monthDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+              {(isTransactionsLoading || isLoadingSummaries) && displayedGroupedExpenses.length === 0 ? (
+                <TransactionListSkeleton />
+              ) : displayedGroupedExpenses.length === 0 && monthlySummaries.length === 0 ? (
+                <div className="py-6 text-center text-xs font-semibold text-slate-400 font-mono mt-4">
+                  {searchQuery || filterType !== "all" ? "No matching transactions found" : "No transactions recorded yet"}
+                </div>
+              ) : (
+                <>
+                  {/* Transactions Header & Search / Filter Controls */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-2 pt-2 pb-1 mt-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Transactions</span>
+                      <SectionInfoModal
+                        content={{
+                          title: "Recent Transactions",
+                          subtitle: "Local-first atomic ledger",
+                          badge: "Activity",
+                          description: "List of your logged expenses and incomes grouped by date.",
+                          highlights: [
+                            { title: "Instant Edit / Delete", desc: "Tap any transaction row to edit details or delete." },
+                            { title: "Offline Storage", desc: "Saved locally in IndexedDB when offline and synced automatically when connected." }
+                          ]
+                        }}
+                        tourStepId="recent-transactions"
+                      />
+                    </div>
                     
-                    const monthGroups = groupedExpenses.filter(group => {
-                       // groups that don't fall into "Today" or "Yesterday" can be matched by YYYY-MM
-                       if (group.label === "Today" || group.label === "Yesterday") return false;
-                       return group.date.toISOString().slice(0, 7) === summary.monthKey;
-                    });
-
-                    return (
-                      <div key={summary.monthKey} className="flex flex-col pt-2 border-t border-slate-100 mt-2 first:border-0 first:mt-0 first:pt-2">
-                        <div 
-                          className="flex items-center justify-between px-2 pb-2 cursor-pointer hover:bg-slate-50 rounded-lg transition-colors group"
-                          onClick={() => {
-                            if (isExpanded) {
-                              setExpandedMonths(prev => prev.filter(m => m !== summary.monthKey));
-                            } else {
-                              setExpandedMonths(prev => [...prev, summary.monthKey]);
-                            }
-                          }}
-                        >
-                          <span className="font-bold text-[15px] text-slate-800 tracking-tight">{monthName}</span>
-                          <div className="flex items-center gap-3">
-                            <span className="font-semibold text-[14px] text-slate-500 tabular-nums">
-                              {formatCurrency(summary.total, userCurrency)}
-                            </span>
-                            <ChevronDown size={18} className={cn("text-slate-400 transition-transform duration-200", isExpanded && "rotate-180")} />
-                          </div>
-                        </div>
-
-                        {isExpanded && (
-                          <div className="flex flex-col pt-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                            {monthGroups.length === 0 ? (
-                              <div className="py-4 text-center text-xs text-slate-400">Loading {monthName}...</div>
-                            ) : (
-                              monthGroups.map((group, index) => (
-                                <section key={group.date.toISOString()} className={cn("flex flex-col gap-0", index === 0 ? "" : "pt-6")}>
-                                  <div className="grid grid-cols-[minmax(0,1fr)_88px] items-center pb-2 border-b border-slate-100 px-2 ml-2">
-                                    <span className="font-semibold text-[13px] text-slate-600 tracking-tight">{group.label}</span>
-                                    <span className="font-bold text-[13px] text-purple-600/80 text-right tabular-nums">
-                                      {group.total.toLocaleString("en-IN")}
-                                    </span>
-                                  </div>
-                                  <div className="flex flex-col pt-0.5 ml-2">
-                                    {group.expenses.map((exp) => (
-                                      <NoteTransactionRow
-                                        key={exp.id}
-                                        title={exp.title}
-                                        amount={exp.amount}
-                                        type={exp.type}
-                                        onClick={() => handleEditClick(exp)}
-                                        onDelete={() => handleDeleteClick(exp)}
-                                      />
-                                    ))}
-                                  </div>
-                                </section>
-                              ))
-                            )}
-                          </div>
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      {/* Search Bar */}
+                      <div className="relative flex-1 sm:w-44">
+                        <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="text"
+                          placeholder="Search..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="w-full h-7 pl-7 pr-2 text-xs bg-white border border-slate-200/80 rounded-full focus:outline-none focus:ring-1 focus:ring-slate-900 placeholder-slate-400 font-medium"
+                        />
+                        {searchQuery && (
+                          <button
+                            type="button"
+                            onClick={() => setSearchQuery("")}
+                            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                          >
+                            <X size={12} />
+                          </button>
                         )}
                       </div>
-                    );
-                  })}
+
+                      {/* Type Filter Pills */}
+                      <div className="flex items-center bg-slate-100/90 p-1 rounded-full border border-slate-200/60 shrink-0">
+                        {(["all", "expense", "income"] as const).map((t) => (
+                          <button
+                            key={t}
+                            type="button"
+                            onClick={() => setFilterType(t)}
+                            className={cn(
+                              "px-3 py-1 text-[10px] font-bold uppercase rounded-full transition-all cursor-pointer",
+                              filterType === t ? "bg-white text-slate-900 shadow-2xs" : "text-slate-500 hover:text-slate-800"
+                            )}
+                          >
+                            {t}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col bg-white border border-slate-200/60 rounded-2xl p-2 shadow-sm">
+                    {/* Render Current Month (which is just the matching groups in displayedGroupedExpenses) */}
+                    {displayedGroupedExpenses
+                      .filter(group => {
+                        const groupMonthKey = `${group.date.getFullYear()}-${String(group.date.getMonth() + 1).padStart(2, '0')}`;
+                        return groupMonthKey === currentMonthKey || group.label === "Today" || group.label === "Yesterday";
+                      })
+                      .map((group, index) => (
+                        <section key={group.date.toISOString()} className={cn("flex flex-col gap-0", index === 0 ? "" : "pt-6")}>
+                          <div className="grid grid-cols-[minmax(0,1fr)_88px] items-center pb-2 border-b border-slate-100 px-2">
+                            <span className="font-semibold text-[14px] text-slate-900 tracking-tight">{group.label}</span>
+                            <span className="font-bold text-[14px] text-purple-600 text-right tabular-nums">
+                              {group.total.toLocaleString("en-IN")}
+                            </span>
+                          </div>
+                          <div className="flex flex-col pt-0.5">
+                            {group.expenses.map((exp) => (
+                              <NoteTransactionRow
+                                key={exp.id}
+                                title={exp.title}
+                                amount={exp.amount}
+                                type={exp.type}
+                                onClick={() => handleEditClick(exp)}
+                                onDelete={() => handleDeleteClick(exp)}
+                              />
+                            ))}
+                          </div>
+                        </section>
+                      ))}
+
+                    {/* Render Past Months Summaries and their Expanded Content */}
+                    {monthlySummaries
+                      .filter(summary => summary.monthKey !== currentMonthKey)
+                      .map((summary) => {
+                        const isExpanded = expandedMonths.includes(summary.monthKey);
+                        const monthDate = new Date(summary.monthKey + '-01');
+                        const monthName = monthDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+                        
+                        const monthGroups = displayedGroupedExpenses.filter(group => {
+                          if (group.label === "Today" || group.label === "Yesterday") return false;
+                          const groupMonthKey = `${group.date.getFullYear()}-${String(group.date.getMonth() + 1).padStart(2, '0')}`;
+                          return groupMonthKey === summary.monthKey;
+                        });
+
+                        return (
+                          <div key={summary.monthKey} className="flex flex-col pt-2 border-t border-slate-100 mt-2 first:border-0 first:mt-0 first:pt-2">
+                            <div 
+                              className="flex items-center justify-between px-2 pb-2 cursor-pointer hover:bg-slate-50 rounded-lg transition-colors group"
+                              onClick={() => {
+                                if (isExpanded) {
+                                  setExpandedMonths(prev => prev.filter(m => m !== summary.monthKey));
+                                } else {
+                                  setExpandedMonths(prev => [...prev, summary.monthKey]);
+                                }
+                              }}
+                            >
+                              <span className="font-bold text-[15px] text-slate-800 tracking-tight">{monthName}</span>
+                              <div className="flex items-center gap-3">
+                                <span className="font-semibold text-[14px] text-slate-500 tabular-nums">
+                                  {formatCurrency(summary.total, userCurrency)}
+                                </span>
+                                <ChevronDown size={18} className={cn("text-slate-400 transition-transform duration-200", isExpanded && "rotate-180")} />
+                              </div>
+                            </div>
+
+                            {isExpanded && (
+                              <div className="flex flex-col pt-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                                {monthGroups.length === 0 ? (
+                                  <div className="py-4 text-center text-xs text-slate-400">
+                                    {searchQuery ? "No matching transactions in this month" : `Loading ${monthName}...`}
+                                  </div>
+                                ) : (
+                                  monthGroups.map((group, index) => (
+                                    <section key={group.date.toISOString()} className={cn("flex flex-col gap-0", index === 0 ? "" : "pt-6")}>
+                                      <div className="grid grid-cols-[minmax(0,1fr)_88px] items-center pb-2 border-b border-slate-100 px-2 ml-2">
+                                        <span className="font-semibold text-[13px] text-slate-600 tracking-tight">{group.label}</span>
+                                        <span className="font-bold text-[13px] text-purple-600/80 text-right tabular-nums">
+                                          {group.total.toLocaleString("en-IN")}
+                                        </span>
+                                      </div>
+                                      <div className="flex flex-col pt-0.5 ml-2">
+                                        {group.expenses.map((exp) => (
+                                          <NoteTransactionRow
+                                            key={exp.id}
+                                            title={exp.title}
+                                            amount={exp.amount}
+                                            type={exp.type}
+                                            onClick={() => handleEditClick(exp)}
+                                            onDelete={() => handleDeleteClick(exp)}
+                                          />
+                                        ))}
+                                      </div>
+                                    </section>
+                                  ))
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                  </div>
+                </>
+              )}
+
+              {/* Sync Status Indicator for mobile */}
+              <div className="md:hidden flex items-center justify-center mt-4 mb-2">
+                <span className="text-[10px] font-medium text-slate-400">
+                  {!isOnline && pendingCount > 0 ? "Offline Â· Saved locally" : 
+                   syncStatus === 'syncing' ? "â†» Syncingâ€¦" : 
+                   syncStatus === 'error' ? "Couldn't sync Â· Will retry" : 
+                   "âœ“ Synced"}
+                </span>
               </div>
-            </>
-          )}
+            </div>
 
-          {/* Sync Status Indicator */}
-          <div className="flex items-center justify-center mt-4 mb-2">
-            <span className="text-[10px] font-medium text-slate-400">
-              {!isOnline && pendingCount > 0 ? "Offline · Saved locally" : 
-               syncStatus === 'syncing' ? "↻ Syncing…" : 
-               syncStatus === 'error' ? "Couldn't sync · Will retry" : 
-               "✓ Synced"}
-            </span>
+            {/* Right / Desktop Sidebar Column (hidden on mobile, lg:flex on PC) */}
+            <div className="hidden lg:flex lg:col-span-4 flex-col gap-5 sticky top-24 w-full">
+              
+              {/* 1. Quick Add Transaction Desktop Action Card */}
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
+                      <Plus size={16} strokeWidth={2.5} />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 tracking-tight">Quick Action</h3>
+                      <p className="text-[11px] text-slate-400 font-medium">Log spend or earnings</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono font-semibold bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md border border-slate-200/60">
+                    Ctrl + N
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleOpenAddExpense}
+                  className="w-full py-3 px-4 bg-slate-950 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+                >
+                  <Plus size={15} strokeWidth={2.5} />
+                  <span>+ Add New Transaction</span>
+                </button>
+              </div>
+
+              {/* 2. Monthly Financial Health Pulse Card */}
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col gap-4">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono">
+                    Month at a Glance
+                  </h3>
+                  <Link
+                    to="/analytics"
+                    className="text-[11px] font-semibold text-purple-600 hover:text-purple-700 flex items-center gap-0.5"
+                  >
+                    <span>Full Analytics</span>
+                    <ArrowUpRight size={12} />
+                  </Link>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex flex-col gap-1">
+                    <span className="text-[11px] font-medium text-slate-500">Today's Spend</span>
+                    <span className="text-base font-bold text-slate-900 tabular-nums">
+                      {userCurrencySymbol}{todayTotal.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex flex-col gap-1">
+                    <span className="text-[11px] font-medium text-slate-500">Total Income</span>
+                    <span className="text-base font-bold text-emerald-600 tabular-nums">
+                      {userCurrencySymbol}{(analyticsData?.totalIncome || 0).toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Quick Nav Shortcut Cards */}
+                <div className="flex flex-col gap-2 pt-1">
+                  <Link
+                    to="/portfolio"
+                    className="p-3 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-slate-100 hover:border-slate-200 transition-all flex items-center justify-between group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                        <Target size={15} />
+                      </div>
+                      <div className="text-left">
+                        <div className="text-xs font-bold text-slate-800 group-hover:text-slate-950">Portfolio & Goals</div>
+                        <div className="text-[10px] text-slate-400">Savings targets & investments</div>
+                      </div>
+                    </div>
+                    <ArrowUpRight size={14} className="text-slate-400 group-hover:text-slate-700 transition-colors" />
+                  </Link>
+
+                  <Link
+                    to="/analytics"
+                    className="p-3 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-slate-100 hover:border-slate-200 transition-all flex items-center justify-between group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+                        <PieChart size={15} />
+                      </div>
+                      <div className="text-left">
+                        <div className="text-xs font-bold text-slate-800 group-hover:text-slate-950">Spending Insights</div>
+                        <div className="text-[10px] text-slate-400">Category breakdown & trends</div>
+                      </div>
+                    </div>
+                    <ArrowUpRight size={14} className="text-slate-400 group-hover:text-slate-700 transition-colors" />
+                  </Link>
+                </div>
+              </div>
+
+            </div>
           </div>
-
 
         </Stack>
       </Container>
 
-      {/* Dominating Floating Action Dock: Analytics, (+) Add Expense, Budget */}
+      {/* Dominating Floating Action Dock: Mobile Only */}
       <HeroActionButton
-        onAddExpense={() => {
-          setEditingTransaction(null);
-          setCurrencyVal(undefined);
-          setReceiptItems([]);
-          setEntryType("expense");
-          setSelectedCategory(expenseCategories[0]);
-          setExpenseName("");
-          const todayStr = new Date().toLocaleDateString('en-CA');
-          setCustomDate(todayStr);
-          setSelectedDateTag("Today");
-          setIsSheetOpen(true);
-        }}
+        className="md:hidden"
+        onAddExpense={handleOpenAddExpense}
         onAnalyticsClick={() => navigate("/portfolio")}
         onBudgetClick={() => navigate("/analytics")}
       />
@@ -1240,3 +1448,4 @@ export const HomePage: React.FC = () => {
     </AppShell>
   );
 };
+

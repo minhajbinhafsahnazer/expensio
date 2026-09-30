@@ -1,4 +1,4 @@
-services:
+﻿services:
   api:
     build:
       context: .
@@ -13,14 +13,16 @@ services:
       - /app/apps/backend/node_modules
       - /app/apps/frontend/node_modules
       - pnpm-store:/root/.local/share/pnpm/store
+    env_file:
+      - ./apps/backend/.env
     environment:
       - NODE_ENV=development
       - PORT=4000
-      # Internal Docker networking — api reaches db and redis by service name.
+      # Internal Docker networking â€” api reaches db and redis by service name.
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/wazn
       - REDIS_URL=redis://redis:6379
       - ALLOWED_ORIGIN=http://localhost:5173
-      # Dev secrets — safe placeholder values for local development only.
+      # Dev secrets â€” safe placeholder values for local development only.
       # In production these MUST be overridden with real secrets.
       # Generate: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
       - JWT_SECRET=051f2e36d4ef8ffed36dbc40393fa23e589d87c41266b6411789f78777dc17d7
@@ -71,3 +73,4 @@ volumes:
   pnpm-store:
   postgres-data:
   redis-data:
+
