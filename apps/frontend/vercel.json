@@ -1,8 +1,12 @@
-{
+﻿{
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "https://expensio-backend-eight.vercel.app/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
