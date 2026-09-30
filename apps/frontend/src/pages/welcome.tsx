@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, TrendingDown } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export default function WelcomePage() {
   const navigate = useNavigate();
@@ -125,3 +125,5 @@ export default function WelcomePage() {
     </div>
   );
 }
+
+

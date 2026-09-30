@@ -52,7 +52,7 @@ import {
   Home,
   Settings,
   User,
-  ShieldCheck, Download, Target,
+  ShieldCheck, Download, 
 } from "lucide-react";
 import { SectionInfoModal } from "../components/SectionInfoModal";
 
@@ -1725,6 +1725,8 @@ export const PortfolioPage: React.FC = () => {
     </AppShell>
   );
 };
+
+
 
 
 

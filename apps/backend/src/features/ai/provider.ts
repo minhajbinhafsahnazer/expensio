@@ -58,7 +58,7 @@ class GeminiProvider implements LLMProvider {
 
     const requested = readEnv('GEMINI_MODEL', 'AI_MODEL') ?? 'gemini-1.5-flash';
     this.model = GEMINI_MODEL_ALIASES[requested] ?? requested;
-    logger.info({ model: this.model, requested }, 'GeminiProvider initialised');
+    logger.info('GeminiProvider initialised');
   }
 
   async chat(messages: ChatMessage[]): Promise<string> {
@@ -104,7 +104,7 @@ class GeminiProvider implements LLMProvider {
 
     if (!response.ok) {
       const body = await response.text().catch(() => '');
-      logger.error({ status: response.status, model: this.model, body }, 'Gemini API error');
+      logger.error('Gemini API error: ' + response.status + ' ' + body);
       if (response.status === 429) throw new Error('AI provider rate limit reached. Please try again.');
       if (response.status === 400) throw new Error(`Gemini rejected the request (400): ${body.slice(0, 200)}`);
       if (response.status === 404) throw new Error(`Gemini model not found: ${this.model}`);
@@ -154,7 +154,7 @@ class OpenAIProvider implements LLMProvider {
     }
     if (!response.ok) {
       const body = await response.text().catch(() => '');
-      logger.error({ status: response.status, body }, 'OpenAI API error');
+      logger.error('OpenAI API error: ' + response.status + ' ' + body);
       if (response.status === 429) throw new Error('AI provider rate limit reached. Please try again.');
       throw new Error(`AI provider error (${response.status})`);
     }
@@ -173,5 +173,6 @@ export function createLLMProvider(): LLMProvider {
   if (provider === 'openai') return new OpenAIProvider();
   return new GeminiProvider();
 }
+
 
 
